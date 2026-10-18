@@ -24,6 +24,7 @@ export const routes = {
   safety: "/securite",
   help: "/aide",
   reportsInfo: "/signalements",
+  offline: "/hors-ligne",
   admin: "/admin",
   adminReports: "/admin/signalements",
   adminUsers: "/admin/utilisateurs",

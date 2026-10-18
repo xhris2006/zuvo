@@ -24,7 +24,7 @@ et échangent directement avec les acheteurs.
 | 6     | Messagerie temps réel                                            | Terminée |
 | 7     | Notifications internes puis Web Push (push à configurer)         | Terminée |
 | 8     | Administration, signalements, blocage                            | Terminée |
-| 9     | PWA, SEO, accessibilité, performances                            | À faire  |
+| 9     | PWA, SEO, accessibilité, performances                            | Terminée |
 | 10    | Tests de sécurité, build final, déploiement Vercel               | À faire  |
 
 Tant que Supabase n'est pas configuré, l'application affiche des états vides

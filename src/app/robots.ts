@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
         routes.settings,
         routes.feed,
         routes.admin,
+        routes.offline,
         "/api/",
       ],
     },

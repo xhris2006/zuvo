@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 /**
- * En-têtes de sécurité appliqués à toutes les réponses.
- * Une Content-Security-Policy complète (scripts, connexions Supabase) sera
- * ajoutée lors de la phase de durcissement, une fois les domaines connus.
+ * En-têtes de sécurité appliqués à toutes les réponses. La
+ * Content-Security-Policy des pages, avec un nonce par requête, est ajoutée
+ * par src/proxy.ts (voir src/lib/security/csp.ts).
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -16,10 +16,6 @@ const securityHeaders = [
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains",
-  },
-  {
-    key: "Content-Security-Policy",
-    value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
   },
 ];
 

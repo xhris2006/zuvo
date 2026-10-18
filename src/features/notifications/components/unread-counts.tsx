@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { getDictionary } from "@/i18n";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export type UnreadCounts = { messages: number; notifications: number };
@@ -35,53 +34,64 @@ export function UnreadCountsProvider({ userId, initial, children }: UnreadCounts
   const refreshRef = useRef<() => void>(() => {});
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    if (!userId || !supabase) return;
-
+    if (!userId) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let cleanup = () => {};
 
-    const fetchCounts = async () => {
-      const [messages, notifications] = await Promise.all([
-        supabase.rpc("get_unread_messages_count"),
-        supabase
-          .from("notifications")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("is_read", false)
-          .neq("type", "new_message"),
-      ]);
-      if (cancelled) return;
-      setCounts((current) => ({
-        messages: messages.error ? current.messages : messages.data,
-        notifications: notifications.error
-          ? current.notifications
-          : (notifications.count ?? current.notifications),
-      }));
-    };
+    // Client Supabase chargé à la demande : rien n'est téléchargé pour les visiteurs.
+    void import("@/lib/supabase/client").then(({ getSupabaseBrowserClient }) => {
+      const supabase = getSupabaseBrowserClient();
+      if (cancelled || !supabase) return;
 
-    // Regroupe les rafales d'événements (plusieurs messages lus d'un coup).
-    const refresh = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => void fetchCounts(), 400);
-    };
-    refreshRef.current = refresh;
+      const fetchCounts = async () => {
+        const [messages, notifications] = await Promise.all([
+          supabase.rpc("get_unread_messages_count"),
+          supabase
+            .from("notifications")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("is_read", false)
+            .neq("type", "new_message"),
+        ]);
+        if (cancelled) return;
+        setCounts((current) => ({
+          messages: messages.error ? current.messages : messages.data,
+          notifications: notifications.error
+            ? current.notifications
+            : (notifications.count ?? current.notifications),
+        }));
+      };
 
-    const channel = supabase
-      .channel(`unread:${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, refresh)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-        refresh,
-      )
-      .subscribe();
+      // Regroupe les rafales d'événements (plusieurs messages lus d'un coup).
+      const refresh = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => void fetchCounts(), 400);
+      };
+      refreshRef.current = refresh;
+
+      const channel = supabase
+        .channel(`unread:${userId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, refresh)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          refresh,
+        )
+        .subscribe();
+      cleanup = () => void supabase.removeChannel(channel);
+    });
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
       refreshRef.current = () => {};
-      void supabase.removeChannel(channel);
+      cleanup();
     };
   }, [userId]);
 

@@ -44,3 +44,26 @@ describe("getSiteUrl", () => {
     );
   });
 });
+
+describe("parsePublicEnv (formats)", () => {
+  it("n'accepte que des URL http(s), une adresse e-mail et une clé VAPID valides", () => {
+    expect(() => parsePublicEnv({ NEXT_PUBLIC_SITE_URL: "javascript:alert(1)" })).toThrow(
+      /NEXT_PUBLIC_SITE_URL/,
+    );
+    expect(() => parsePublicEnv({ NEXT_PUBLIC_CONTACT_EMAIL: "contact" })).toThrow(
+      /NEXT_PUBLIC_CONTACT_EMAIL/,
+    );
+    expect(() => parsePublicEnv({ NEXT_PUBLIC_VAPID_PUBLIC_KEY: "trop-courte" })).toThrow(
+      /NEXT_PUBLIC_VAPID_PUBLIC_KEY/,
+    );
+    expect(
+      parsePublicEnv({
+        NEXT_PUBLIC_CONTACT_EMAIL: "contact@zuvo.cm",
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: "B".repeat(87),
+      }),
+    ).toEqual({
+      NEXT_PUBLIC_CONTACT_EMAIL: "contact@zuvo.cm",
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: "B".repeat(87),
+    });
+  });
+});

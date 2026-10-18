@@ -1,28 +1,46 @@
-import { z } from "zod";
+/*
+ * Variables d'environnement publiques (exposées au navigateur). Validation
+ * volontairement sans bibliothèque : ce module est chargé sur toutes les
+ * pages, côté client compris.
+ */
 
-/** Les chaînes vides issues d'un fichier .env sont traitées comme absentes. */
-const optional = <T extends z.ZodType>(schema: T) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
+type Validator = (value: string) => boolean;
 
-const publicEnvSchema = z.object({
-  NEXT_PUBLIC_SITE_URL: optional(z.url()),
-  NEXT_PUBLIC_CONTACT_EMAIL: optional(z.email()),
-  NEXT_PUBLIC_SUPABASE_URL: optional(z.url()),
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
+const isHttpUrl: Validator = (value) => {
+  if (!URL.canParse(value)) return false;
+  const { protocol } = new URL(value);
+  return protocol === "https:" || protocol === "http:";
+};
+
+const rules = {
+  NEXT_PUBLIC_SITE_URL: isHttpUrl,
+  NEXT_PUBLIC_CONTACT_EMAIL: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+  NEXT_PUBLIC_SUPABASE_URL: isHttpUrl,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: (value) => value.trim().length > 0,
   // Clé publique VAPID (Web Push), encodée en base64url : elle peut être
   // exposée au navigateur. La clé privée reste côté serveur (server-env.ts).
-  NEXT_PUBLIC_VAPID_PUBLIC_KEY: optional(z.string().regex(/^[A-Za-z0-9_-]{80,100}$/)),
-});
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: (value) => /^[A-Za-z0-9_-]{80,100}$/.test(value),
+} satisfies Record<string, Validator>;
 
-export type PublicEnv = z.infer<typeof publicEnvSchema>;
+type PublicEnvName = keyof typeof rules;
 
+export type PublicEnv = Partial<Record<PublicEnvName, string>>;
+
+/** Les chaînes vides issues d'un fichier .env sont traitées comme absentes. */
 export function parsePublicEnv(source: Record<string, string | undefined>): PublicEnv {
-  const result = publicEnvSchema.safeParse(source);
-  if (!result.success) {
-    const invalid = result.error.issues.map((issue) => issue.path.join(".")).join(", ");
-    throw new Error(`Variables d'environnement publiques invalides : ${invalid}`);
+  const env: PublicEnv = {};
+  const invalid: string[] = [];
+  for (const name of Object.keys(rules) as PublicEnvName[]) {
+    const value = source[name];
+    if (value === undefined || value === "") continue;
+    if (rules[name](value)) env[name] = value;
+    else invalid.push(name);
   }
-  return result.data;
+  if (invalid.length > 0) {
+    // Seuls les noms sont indiqués, jamais les valeurs.
+    throw new Error(`Variables d'environnement publiques invalides : ${invalid.join(", ")}`);
+  }
+  return env;
 }
 
 // Les variables NEXT_PUBLIC_* doivent être lues littéralement pour être

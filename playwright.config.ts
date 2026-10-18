@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = Number(process.env.E2E_PORT ?? 3100);
+
+// Permet d'intercepter les requêtes émises par le service worker (test hors connexion).
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= "1";
 const baseURL = `http://localhost:${port}`;
 
 // Permet d'utiliser un Chromium déjà installé (ex. environnements cloud)

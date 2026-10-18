@@ -8,7 +8,7 @@ type EmptyStateProps = {
   description?: ReactNode;
   action?: ReactNode;
   className?: string;
-  headingLevel?: "h2" | "h3";
+  headingLevel?: "h1" | "h2" | "h3";
 };
 
 export function EmptyState({

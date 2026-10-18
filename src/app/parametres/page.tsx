@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { routes } from "@/config/routes";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { UpdatePasswordForm } from "@/features/auth/components/update-password-form";
+import { DeleteAccountDialog } from "@/features/account/components/delete-account-dialog";
 import { requireUser } from "@/features/auth/session";
 import { BlockedList } from "@/features/moderation/components/blocked-list";
 import { getBlockedUsers } from "@/features/moderation/queries";
 import { PreferencesForm } from "@/features/notifications/components/preferences-form";
 import { PushSettings } from "@/features/notifications/components/push-settings";
 import { getNotificationPreferences } from "@/features/notifications/queries";
+import { getCurrentProfile } from "@/features/profiles/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -21,9 +23,10 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
-  const [preferences, blockedUsers] = await Promise.all([
+  const [preferences, blockedUsers, profile] = await Promise.all([
     getNotificationPreferences(),
     getBlockedUsers(user.id),
+    getCurrentProfile(),
   ]);
 
   return (
@@ -85,6 +88,19 @@ export default async function SettingsPage() {
           <UpdatePasswordForm />
         </CardContent>
       </Card>
+      {profile ? (
+        <Card id="suppression" className="border-danger/30">
+          <CardHeader>
+            <CardTitle>Supprimer mon compte</CardTitle>
+            <CardDescription>
+              Suppression définitive de votre compte et de vos annonces.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteAccountDialog username={profile.username} />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

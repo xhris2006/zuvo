@@ -216,9 +216,12 @@ Le profil, les annonces, favoris, abonnements, blocages, notifications et
 abonnements push sont supprimés avec le compte. Les **conversations, messages et
 signalements sont conservés** (auteur remplacé par `NULL`) pour ne pas priver
 l'autre participant de son historique ni la modération de ses éléments.
-Les fichiers du Storage doivent être supprimés par l'application (une clé
-étrangère ne peut pas les atteindre) : ce sera traité avec la suppression de
-compte côté serveur.
+Les fichiers du Storage (photo de profil, photos d'annonces) sont supprimés par
+l'application (`src/features/account`), une clé étrangère ne pouvant pas les
+atteindre ; les pièces jointes de messages sont conservées avec les
+conversations. La suppression est demandée depuis **Paramètres → Supprimer mon
+compte** (saisie du nom d'utilisateur) et utilise, côté serveur uniquement, la
+clé `SUPABASE_SERVICE_ROLE_KEY`. Testée dans `supabase/tests/account-deletion.test.ts`.
 
 ### Index
 

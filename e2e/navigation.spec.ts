@@ -18,6 +18,7 @@ const publicPages = [
   "/mot-de-passe-oublie",
   "/inscription/verification",
   "/auth/confirm",
+  "/fil",
 ];
 
 test.describe("pages publiques", () => {

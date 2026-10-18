@@ -13,6 +13,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
 import { CategoryList } from "@/features/categories/components/category-list";
 import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
+import { getCurrentUser } from "@/features/auth/session";
+import { ListingResults } from "@/features/listings/components/listing-results";
+import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
+import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
 
 const heroTiles = ["mode-femme", "telephones-tablettes", "chaussures", "maison"] as const;
@@ -48,8 +52,26 @@ function HeroIllustration() {
   );
 }
 
-export default function HomePage() {
+/** Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage. */
+async function loadHomeListings(): Promise<{
+  recent: ListingCardData[];
+  followed: ListingCardData[];
+}> {
+  try {
+    const user = await getCurrentUser();
+    const [recent, feed] = await Promise.all([
+      getRecentListings(12),
+      user ? getFollowedFeed(user.id, 1) : Promise.resolve(null),
+    ]);
+    return { recent, followed: feed?.items.slice(0, 4) ?? [] };
+  } catch {
+    return { recent: [], followed: [] };
+  }
+}
+
+export default async function HomePage() {
   const t = getDictionary();
+  const { recent, followed } = await loadHomeListings();
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
     { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
@@ -101,24 +123,55 @@ export default function HomePage() {
         <CategoryList categories={defaultCategories} />
       </section>
 
+      {followed.length > 0 ? (
+        <section aria-labelledby="feed-title" className="container-page">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <h2 id="feed-title" className="text-xl font-bold tracking-tight sm:text-2xl">
+              De vos abonnements
+            </h2>
+            <Link
+              href={routes.feed}
+              className="text-sm font-semibold text-primary hover:text-primary-hover"
+            >
+              {t.common.seeAll}
+            </Link>
+          </div>
+          <ListingResults listings={followed} />
+        </section>
+      ) : null}
+
       <section aria-labelledby="recent-title" className="container-page">
-        <h2 id="recent-title" className="mb-5 text-xl font-bold tracking-tight sm:text-2xl">
-          {t.home.recentTitle}
-        </h2>
-        <EmptyState
-          icon={PackageOpen}
-          headingLevel="h3"
-          title={t.home.recentEmptyTitle}
-          description={t.home.recentEmptyBody}
-          action={
-            <Button asChild>
-              <Link href={routes.sell}>
-                <Plus aria-hidden="true" />
-                {t.nav.sellCta}
-              </Link>
-            </Button>
-          }
-        />
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <h2 id="recent-title" className="text-xl font-bold tracking-tight sm:text-2xl">
+            {t.home.recentTitle}
+          </h2>
+          {recent.length > 0 ? (
+            <Link
+              href={routes.explore}
+              className="text-sm font-semibold text-primary hover:text-primary-hover"
+            >
+              {t.common.seeAll}
+            </Link>
+          ) : null}
+        </div>
+        {recent.length > 0 ? (
+          <ListingResults listings={recent} priorityCount={4} />
+        ) : (
+          <EmptyState
+            icon={PackageOpen}
+            headingLevel="h3"
+            title={t.home.recentEmptyTitle}
+            description={t.home.recentEmptyBody}
+            action={
+              <Button asChild>
+                <Link href={routes.sell}>
+                  <Plus aria-hidden="true" />
+                  {t.nav.sellCta}
+                </Link>
+              </Button>
+            }
+          />
+        )}
       </section>
 
       <section aria-labelledby="values-title" className="container-page">

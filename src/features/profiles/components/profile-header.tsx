@@ -1,7 +1,10 @@
 import { CalendarDays, MapPin } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { getCity } from "@/config/locations";
+import { followersHref, followingHref } from "@/config/routes";
 import { formatCount, formatMonthYear } from "@/lib/format";
 import { avatarUrl } from "../avatar-url";
 import type { ProfileStats, PublicProfile } from "../queries";
@@ -14,9 +17,17 @@ type ProfileHeaderProps = {
 
 export function ProfileHeader({ profile, stats, actions }: ProfileHeaderProps) {
   const city = profile.city ? (getCity(profile.city)?.name ?? profile.city) : null;
-  const items = [
-    { label: stats.followers > 1 ? "abonnés" : "abonné", value: stats.followers },
-    { label: stats.following > 1 ? "abonnements" : "abonnement", value: stats.following },
+  const items: { label: string; value: number; href?: Route }[] = [
+    {
+      label: stats.followers > 1 ? "abonnés" : "abonné",
+      value: stats.followers,
+      href: followersHref(profile.username),
+    },
+    {
+      label: stats.following > 1 ? "abonnements" : "abonnement",
+      value: stats.following,
+      href: followingHref(profile.username),
+    },
     { label: stats.activeListings > 1 ? "annonces" : "annonce", value: stats.activeListings },
   ];
 
@@ -54,8 +65,16 @@ export function ProfileHeader({ profile, stats, actions }: ProfileHeaderProps) {
       </div>
       <dl className="grid grid-cols-3 divide-x divide-border rounded-xl bg-muted/60 py-3 text-center">
         {items.map((item) => (
-          <div key={item.label} className="flex flex-col-reverse px-2">
-            <dt className="text-xs text-muted-foreground">{item.label}</dt>
+          <div key={item.label} className="relative flex flex-col-reverse px-2">
+            <dt className="text-xs text-muted-foreground">
+              {item.href ? (
+                <Link href={item.href} className="after:absolute after:inset-0 hover:underline">
+                  {item.label}
+                </Link>
+              ) : (
+                item.label
+              )}
+            </dt>
             <dd className="text-lg font-bold">{formatCount(item.value)}</dd>
           </div>
         ))}

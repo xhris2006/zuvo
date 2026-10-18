@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildPrefixTsQuery } from "@/features/search/text-query";
 import {
   addImage,
   asAnon,
@@ -347,6 +348,40 @@ describe("recherche plein texte", () => {
       ),
     );
     expect(rows.map((row) => row.id)).toContain(listingId);
+  });
+});
+
+describe("recherche par préfixe (requête construite par l'application)", () => {
+  it.each(["telephon", "TÉLÉPHONES samsung", "galax", "écran chargeur"])(
+    "trouve l'annonce pour %j",
+    async (input) => {
+      const seller = await createUser();
+      const listingId = await createActiveListing(seller.id, {
+        title: "Téléphone Samsung Galaxy",
+        description: "Écran intact, livré avec son chargeur d'origine.",
+      });
+      const { rows } = await asAnon((sql) =>
+        sql(
+          `select id from public.listings
+           where search_vector @@ to_tsquery('public.french_unaccent', $1)`,
+          [buildPrefixTsQuery(input)],
+        ),
+      );
+      expect(rows.map((row) => row.id)).toContain(listingId);
+    },
+  );
+
+  it("ne trouve pas une annonce sans rapport", async () => {
+    const seller = await createUser();
+    const listingId = await createActiveListing(seller.id, { title: "Table basse en bois" });
+    const { rows } = await asAnon((sql) =>
+      sql(
+        `select id from public.listings
+         where search_vector @@ to_tsquery('public.french_unaccent', $1)`,
+        [buildPrefixTsQuery("iphone")],
+      ),
+    );
+    expect(rows.map((row) => row.id)).not.toContain(listingId);
   });
 });
 

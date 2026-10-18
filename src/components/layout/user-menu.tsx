@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Pencil, Settings, UserRound } from "lucide-react";
+import { Heart, LogOut, Pencil, Rss, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -39,6 +39,18 @@ export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
           <Link href={routes.profile}>
             <UserRound aria-hidden="true" />
             Mon profil
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.feed}>
+            <Rss aria-hidden="true" />
+            Mon fil
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.favorites}>
+            <Heart aria-hidden="true" />
+            Mes favoris
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

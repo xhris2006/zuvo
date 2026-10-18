@@ -32,7 +32,15 @@ test.describe("authentification configurée (service injoignable)", () => {
   test.skip(mode !== "unreachable", "Mode Supabase injoignable uniquement");
 
   test("redirige les pages membres vers la connexion avec retour", async ({ page }) => {
-    for (const path of ["/profil", "/vendre", "/messages", "/parametres", "/profil/modifier"]) {
+    for (const path of [
+      "/profil",
+      "/vendre",
+      "/messages",
+      "/parametres",
+      "/profil/modifier",
+      "/fil",
+      "/favoris",
+    ]) {
       await page.goto(path);
       await expect(page).toHaveURL(`/connexion?next=${encodeURIComponent(path)}`);
     }

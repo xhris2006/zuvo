@@ -115,3 +115,42 @@ export async function getOwnPrivateContact(userId: string) {
     .maybeSingle();
   return data;
 }
+
+export type ProfileSummary = Pick<
+  ProfileRow,
+  "id" | "username" | "display_name" | "avatar_path" | "city"
+>;
+
+const SUMMARY_COLUMNS = "id, username, display_name, avatar_path, city";
+
+/** Abonnés ou abonnements d'un profil, paginés (profils visibles uniquement). */
+export async function getFollowList(
+  profileId: string,
+  direction: "followers" | "following",
+  page = 1,
+  pageSize = 30,
+): Promise<{ items: ProfileSummary[]; total: number; pageSize: number }> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { items: [], total: 0, pageSize };
+  const from = (page - 1) * pageSize;
+  const base =
+    direction === "followers"
+      ? supabase
+          .from("follows")
+          .select(`created_at, profile:profiles!follows_follower_id_fkey(${SUMMARY_COLUMNS})`, {
+            count: "exact",
+          })
+          .eq("following_id", profileId)
+      : supabase
+          .from("follows")
+          .select(`created_at, profile:profiles!follows_following_id_fkey(${SUMMARY_COLUMNS})`, {
+            count: "exact",
+          })
+          .eq("follower_id", profileId);
+  const { data, error, count } = await base
+    .order("created_at", { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error && error.code !== "PGRST103") throw new ProfileQueryError();
+  const items = (data ?? []).flatMap((row) => (row.profile ? [row.profile] : []));
+  return { items, total: count ?? 0, pageSize };
+}

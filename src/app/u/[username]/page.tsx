@@ -11,8 +11,7 @@ import { siteConfig } from "@/config/site";
 import { signInHref } from "@/features/auth/links";
 import { getCurrentUser } from "@/features/auth/session";
 import { avatarUrl } from "@/features/profiles/avatar-url";
-import { ListingCard } from "@/features/listings/components/listing-card";
-import { ListingGrid } from "@/features/listings/components/listing-grid";
+import { ListingResults } from "@/features/listings/components/listing-results";
 import { getSellerListings } from "@/features/listings/queries";
 import { FollowButton } from "@/features/profiles/components/follow-button";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
@@ -93,11 +92,7 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
         </h2>
         {listings.items.length > 0 ? (
           <>
-            <ListingGrid>
-              {listings.items.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </ListingGrid>
+            <ListingResults listings={listings.items} />
             <Pagination
               page={page}
               pageCount={pageCount}

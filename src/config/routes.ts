@@ -10,6 +10,7 @@ export const routes = {
   editProfile: "/profil/modifier",
   settings: "/parametres",
   favorites: "/favoris",
+  feed: "/fil",
   notifications: "/notifications",
   signIn: "/connexion",
   signUp: "/inscription",
@@ -32,6 +33,7 @@ export const protectedRoutePrefixes = [
   routes.profile,
   routes.settings,
   routes.favorites,
+  routes.feed,
   routes.notifications,
   routes.resetPassword,
 ] as const;
@@ -60,4 +62,12 @@ export function exploreHref(params?: URLSearchParams): Route {
 /** Profil public d'un utilisateur. */
 export function publicProfileHref(username: string): Route {
   return `/u/${encodeURIComponent(username)}` as Route;
+}
+
+export function followersHref(username: string): Route {
+  return `/u/${encodeURIComponent(username)}/abonnes` as Route;
+}
+
+export function followingHref(username: string): Route {
+  return `/u/${encodeURIComponent(username)}/abonnements` as Route;
 }

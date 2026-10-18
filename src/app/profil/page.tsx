@@ -1,4 +1,4 @@
-import { PackageOpen, Pencil, Plus, Settings } from "lucide-react";
+import { PackageOpen, Pencil, Plus, Rss, Settings } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -10,8 +10,7 @@ import { publicProfileHref, routes } from "@/config/routes";
 import { AuthRequired } from "@/features/auth/components/auth-required";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { requireUser } from "@/features/auth/session";
-import { ListingCard } from "@/features/listings/components/listing-card";
-import { ListingGrid } from "@/features/listings/components/listing-grid";
+import { ListingResults } from "@/features/listings/components/listing-results";
 import { getOwnListings } from "@/features/listings/queries";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
@@ -77,11 +76,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
           <Alert variant="success">L&apos;annonce a été supprimée.</Alert>
         ) : null}
         {listings.length > 0 ? (
-          <ListingGrid>
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
-          </ListingGrid>
+          <ListingResults listings={listings} />
         ) : (
           <EmptyState
             icon={PackageOpen}
@@ -101,6 +96,12 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
       </section>
 
       <section className="flex flex-wrap items-center gap-2 border-t border-border pt-6">
+        <Button asChild variant="ghost">
+          <Link href={routes.feed}>
+            <Rss aria-hidden="true" />
+            Mon fil
+          </Link>
+        </Button>
         <Button asChild variant="ghost">
           <Link href={routes.settings}>
             <Settings aria-hidden="true" />

@@ -19,6 +19,9 @@ export async function createSupabaseServerClient(): Promise<TypedSupabaseClient 
   const cookieStore = await cookies();
   return createServerClient<Database>(config.url, config.key, {
     global: { fetch: fetchWithTimeout },
+    // Pas de nouvelles tentatives côté serveur : en cas de panne, le rendu
+    // échoue vite (l'utilisateur peut recharger) au lieu d'attendre ~7 s.
+    db: { retry: false },
     cookies: {
       getAll() {
         return cookieStore.getAll();

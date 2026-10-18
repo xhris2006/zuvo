@@ -9,15 +9,15 @@ import { getCity } from "@/config/locations";
 import { exploreHref, routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { getCurrentUser } from "@/features/auth/session";
-import { ListingCard } from "@/features/listings/components/listing-card";
+import { FavoriteButton } from "@/features/favorites/components/favorite-button";
 import { ListingGallery } from "@/features/listings/components/listing-gallery";
-import { ListingGrid } from "@/features/listings/components/listing-grid";
 import { ListingJsonLd } from "@/features/listings/components/listing-json-ld";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
+import { ListingResults } from "@/features/listings/components/listing-results";
 import { OwnerPanel } from "@/features/listings/components/owner-panel";
 import { SellerCard } from "@/features/listings/components/seller-card";
 import { listingHref } from "@/features/listings/links";
-import { getListingDetail, getSimilarListings } from "@/features/listings/queries";
+import { getFavoriteIds, getListingDetail, getSimilarListings } from "@/features/listings/queries";
 import { toSearchParams } from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
@@ -55,7 +55,10 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
   const viewer = await getCurrentUser();
   const isOwner = viewer?.id === listing.seller_id;
   const city = listing.city ? (getCity(listing.city)?.name ?? listing.city) : null;
-  const similar = await getSimilarListings(listing.id, listing.category?.id ?? null);
+  const [similar, favorites] = await Promise.all([
+    getSimilarListings(listing.id, listing.category?.id ?? null),
+    getFavoriteIds(viewer?.id ?? null, [listing.id]),
+  ]);
   const url = `${getSiteUrl()}${listingHref(listing.id)}`;
 
   return (
@@ -132,6 +135,15 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           </ul>
 
           <div className="flex flex-wrap gap-2" data-listing-actions>
+            {isOwner ? null : (
+              <FavoriteButton
+                listingId={listing.id}
+                initialFavorited={favorites.has(listing.id)}
+                signedIn={Boolean(viewer)}
+                returnTo={listingHref(listing.id)}
+                variant="button"
+              />
+            )}
             <ShareButton title={listing.title} url={url} />
           </div>
 
@@ -172,11 +184,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           <h2 id="similar-title" className="text-xl font-bold tracking-tight">
             Annonces similaires
           </h2>
-          <ListingGrid>
-            {similar.map((item) => (
-              <ListingCard key={item.id} listing={item} />
-            ))}
-          </ListingGrid>
+          <ListingResults listings={similar} />
         </section>
       ) : null}
     </div>

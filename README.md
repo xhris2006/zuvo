@@ -23,7 +23,7 @@ et échangent directement avec les acheteurs.
 | 5     | Recherche, filtres, favoris, abonnements                         | Terminée |
 | 6     | Messagerie temps réel                                            | Terminée |
 | 7     | Notifications internes puis Web Push (push à configurer)         | Terminée |
-| 8     | Administration, signalements, blocage                            | À faire  |
+| 8     | Administration, signalements, blocage                            | Terminée |
 | 9     | PWA, SEO, accessibilité, performances                            | À faire  |
 | 10    | Tests de sécurité, build final, déploiement Vercel               | À faire  |
 

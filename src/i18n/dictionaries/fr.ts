@@ -150,6 +150,41 @@ export const fr = {
         `Votre annonce ${quote(listing)} a été retirée par la modération.`,
     },
   },
+  reports: {
+    reasons: {
+      scam: "Arnaque ou fraude",
+      prohibited_item: "Article interdit",
+      counterfeit: "Contrefaçon",
+      inappropriate: "Contenu inapproprié",
+      harassment: "Harcèlement ou propos insultants",
+      spam: "Spam ou publicité",
+      fake_account: "Faux compte ou usurpation",
+      other: "Autre motif",
+    },
+    statuses: {
+      pending: "En attente",
+      in_review: "En cours d'examen",
+      resolved: "Traité",
+      dismissed: "Classé sans suite",
+    },
+    targets: {
+      listing: "Annonce",
+      user: "Utilisateur",
+      message: "Message",
+    },
+  },
+  admin: {
+    actions: {
+      listing_removed: "Annonce retirée",
+      listing_restored: "Annonce restaurée",
+      user_suspended: "Compte suspendu",
+      user_unsuspended: "Compte réactivé",
+      report_in_review: "Signalement pris en charge",
+      report_resolved: "Signalement traité",
+      report_dismissed: "Signalement classé sans suite",
+      message_viewed: "Message signalé consulté",
+    },
+  },
   footer: {
     about: "Zuvo est une plateforme gratuite de vente entre particuliers.",
     legal: "Informations",

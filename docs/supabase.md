@@ -150,6 +150,13 @@ select id, 'admin' from auth.users where email = 'adresse@exemple.com';
 
 Pour le retirer : `delete from public.user_roles where user_id = '<uuid>';`
 
+L'espace `/admin` (tableau de bord, signalements, utilisateurs, journal)
+n'apparaît qu'aux administrateurs ; les autres reçoivent une page 404. Chaque
+action passe par une fonction `admin_*` qui vérifie elle-même le rôle en base et
+s'inscrit dans `moderation_actions` (journal non modifiable). Les messages
+privés ne sont jamais lisibles par l'administration, sauf le message précis
+visé par un signalement, et chaque consultation est journalisée.
+
 ---
 
 ## 2. Schéma
@@ -171,6 +178,7 @@ Pour le retirer : `delete from public.user_roles where user_id = '<uuid>';`
 | `notifications`            | Notifications internes                                               |
 | `push_subscriptions`       | Abonnements Web Push par navigateur                                  |
 | `reports`                  | Signalements (annonce, utilisateur, message) et leur traitement      |
+| `moderation_actions`       | Journal des actions de modération (lecture réservée aux admins)      |
 
 ### Écarts justifiés par rapport au cahier des charges
 
@@ -237,8 +245,14 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
 - **Fonctions appelables par l'application** (`get_or_create_conversation`,
   `mark_conversation_read`, `mark_all_notifications_read`,
   `reorder_listing_images`, `sync_listing_images`, `get_my_conversations`,
-  `get_unread_messages_count`, `register_push_subscription`) : elles
+  `get_unread_messages_count`, `register_push_subscription`, `admin_*`) : elles
   s'exécutent avec les droits de l'appelant, donc sous RLS.
+- **Administration** : `admin_remove_listing`, `admin_restore_listing`,
+  `admin_set_user_suspension`, `admin_update_report`,
+  `admin_get_reported_message`, `admin_get_stats` délèguent à des fonctions
+  `private.admin_*` (`SECURITY DEFINER`) qui refusent tout appelant non
+  administrateur (`42501`) ; un administrateur ne peut ni se suspendre ni
+  suspendre un autre administrateur.
 - **Notifications** : créées uniquement par des déclencheurs (voir
   [`notifications.md`](notifications.md)), selon les préférences du
   destinataire et jamais entre utilisateurs bloqués.

@@ -19,6 +19,7 @@ import { SellerCard } from "@/features/listings/components/seller-card";
 import { listingHref } from "@/features/listings/links";
 import { getFavoriteIds, getListingDetail, getSimilarListings } from "@/features/listings/queries";
 import { ContactSellerButton } from "@/features/messaging/components/contact-seller-button";
+import { ReportDialog } from "@/features/moderation/components/report-dialog";
 import { toSearchParams } from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
@@ -158,6 +159,14 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
               />
             )}
             <ShareButton title={listing.title} url={url} />
+            {!isOwner && canContact ? (
+              <ReportDialog
+                targetType="listing"
+                targetId={listing.id}
+                signedIn={Boolean(viewer)}
+                returnTo={listingHref(listing.id)}
+              />
+            ) : null}
           </div>
 
           {isOwner ? (

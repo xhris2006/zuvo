@@ -24,6 +24,10 @@ export const routes = {
   safety: "/securite",
   help: "/aide",
   reportsInfo: "/signalements",
+  admin: "/admin",
+  adminReports: "/admin/signalements",
+  adminUsers: "/admin/utilisateurs",
+  adminLog: "/admin/journal",
 } as const satisfies Record<string, Route>;
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */
@@ -36,6 +40,7 @@ export const protectedRoutePrefixes = [
   routes.feed,
   routes.notifications,
   routes.resetPassword,
+  routes.admin,
 ] as const;
 
 /** Pages d'authentification inutiles une fois connecté. */

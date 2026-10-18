@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LogOut, Pencil, Rss, Settings, UserRound } from "lucide-react";
+import { Heart, LogOut, Pencil, Rss, Settings, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -19,9 +19,11 @@ type UserMenuProps = {
   displayName: string;
   username: string;
   avatarUrl: string | null;
+  /** Affichage seulement : l'accès à l'administration est vérifié côté serveur. */
+  isAdmin?: boolean;
 };
 
-export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
+export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -66,6 +68,14 @@ export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
             Paramètres
           </Link>
         </DropdownMenuItem>
+        {isAdmin ? (
+          <DropdownMenuItem asChild>
+            <Link href={routes.admin}>
+              <ShieldCheck aria-hidden="true" />
+              Administration
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         <form action={signOutAction}>
           <PushEndpointField />

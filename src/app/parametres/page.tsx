@@ -6,6 +6,8 @@ import { routes } from "@/config/routes";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { UpdatePasswordForm } from "@/features/auth/components/update-password-form";
 import { requireUser } from "@/features/auth/session";
+import { BlockedList } from "@/features/moderation/components/blocked-list";
+import { getBlockedUsers } from "@/features/moderation/queries";
 import { PreferencesForm } from "@/features/notifications/components/preferences-form";
 import { PushSettings } from "@/features/notifications/components/push-settings";
 import { getNotificationPreferences } from "@/features/notifications/queries";
@@ -19,7 +21,10 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
-  const preferences = await getNotificationPreferences();
+  const [preferences, blockedUsers] = await Promise.all([
+    getNotificationPreferences(),
+    getBlockedUsers(user.id),
+  ]);
 
   return (
     <div className="container-page flex max-w-2xl flex-col gap-6 pt-6 sm:pt-10">
@@ -55,6 +60,18 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <PushSettings />
+        </CardContent>
+      </Card>
+      <Card id="blocages">
+        <CardHeader>
+          <CardTitle>Utilisateurs bloqués</CardTitle>
+          <CardDescription>
+            Ils ne peuvent plus vous écrire ni vous suivre, et vous ne voyez plus leurs
+            notifications.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BlockedList users={blockedUsers} />
         </CardContent>
       </Card>
       <Card>

@@ -352,6 +352,55 @@ export type Database = {
           },
         ];
       };
+      moderation_actions: {
+        Row: {
+          action: Database["public"]["Enums"]["moderation_action_type"];
+          admin_id: string | null;
+          created_at: string;
+          id: string;
+          note: string | null;
+          report_id: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+        };
+        ComputedFields: never;
+        Insert: {
+          action: Database["public"]["Enums"]["moderation_action_type"];
+          admin_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          report_id?: string | null;
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["moderation_action_type"];
+          admin_id?: string | null;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          report_id?: string | null;
+          target_id?: string;
+          target_type?: Database["public"]["Enums"]["report_target_type"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "moderation_actions_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "moderation_actions_report_id_fkey";
+            columns: ["report_id"];
+            isOneToOne: false;
+            referencedRelation: "reports";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notification_preferences: {
         Row: {
           followed_user_listing: boolean;
@@ -653,6 +702,38 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_get_reported_message: {
+        Args: { p_report_id: string };
+        Returns: {
+          body: string;
+          conversation_id: string;
+          created_at: string;
+          message_id: string;
+          sender_id: string;
+          sender_username: string;
+        }[];
+      };
+      admin_get_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_remove_listing: {
+        Args: { p_listing_id: string; p_reason: string; p_report_id?: string };
+        Returns: undefined;
+      };
+      admin_restore_listing: {
+        Args: { p_listing_id: string; p_note?: string };
+        Returns: undefined;
+      };
+      admin_set_user_suspension: {
+        Args: { p_reason?: string; p_report_id?: string; p_suspended: boolean; p_user_id: string };
+        Returns: undefined;
+      };
+      admin_update_report: {
+        Args: {
+          p_note?: string;
+          p_report_id: string;
+          p_status: Database["public"]["Enums"]["report_status"];
+        };
+        Returns: undefined;
+      };
       get_my_conversations: {
         Args: { p_limit?: number; p_offset?: number };
         Returns: {
@@ -693,6 +774,15 @@ export type Database = {
       listing_condition:
         "new_with_tags" | "new_without_tags" | "very_good" | "good" | "fair" | "for_parts";
       listing_status: "draft" | "active" | "reserved" | "sold" | "withdrawn";
+      moderation_action_type:
+        | "listing_removed"
+        | "listing_restored"
+        | "user_suspended"
+        | "user_unsuspended"
+        | "report_in_review"
+        | "report_resolved"
+        | "report_dismissed"
+        | "message_viewed";
       notification_type:
         | "new_message"
         | "new_follower"
@@ -831,6 +921,16 @@ export const Constants = {
         "for_parts",
       ],
       listing_status: ["draft", "active", "reserved", "sold", "withdrawn"],
+      moderation_action_type: [
+        "listing_removed",
+        "listing_restored",
+        "user_suspended",
+        "user_unsuspended",
+        "report_in_review",
+        "report_resolved",
+        "report_dismissed",
+        "message_viewed",
+      ],
       notification_type: [
         "new_message",
         "new_follower",

@@ -13,9 +13,11 @@ import { ChatView } from "@/features/messaging/components/chat-view";
 import { conversationHref } from "@/features/messaging/links";
 import { getConversation, getMessages } from "@/features/messaging/queries";
 import { MESSAGES_PAGE_SIZE } from "@/features/messaging/schemas";
+import { BlockButton } from "@/features/moderation/components/block-button";
+import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { hasBlocked } from "@/features/moderation/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { formatPrice } from "@/lib/format";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Conversation",
@@ -33,23 +35,12 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
   const messages = await getMessages(conversation.id);
 
   // L'utilisateur ne voit que ses propres blocages.
-  let blockedByMe = false;
-  if (other) {
-    const supabase = await createSupabaseServerClient();
-    const { count } = supabase
-      ? await supabase
-          .from("blocks")
-          .select("blocked_id", { count: "exact", head: true })
-          .eq("blocker_id", user.id)
-          .eq("blocked_id", other.id)
-      : { count: 0 };
-    blockedByMe = (count ?? 0) > 0;
-  }
+  const blockedByMe = other ? await hasBlocked(user.id, other.id) : false;
 
   const disabledReason = !other
     ? "Cet utilisateur a supprimé son compte : vous ne pouvez plus lui écrire."
     : blockedByMe
-      ? "Vous avez bloqué cet utilisateur. Débloquez-le depuis son profil pour lui écrire."
+      ? "Vous avez bloqué cet utilisateur. Débloquez-le pour lui écrire."
       : null;
 
   const listing = conversation.listing;
@@ -84,6 +75,24 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
               {isBuyer ? "Vendeur" : "Acheteur intéressé"}
             </p>
           </div>
+          {other ? (
+            <div className="ml-auto flex shrink-0 items-center">
+              <ReportDialog
+                targetType="user"
+                targetId={other.id}
+                signedIn
+                returnTo={conversationHref(conversation.id)}
+                className="px-2"
+              />
+              <BlockButton
+                userId={other.id}
+                username={other.username}
+                displayName={name}
+                initialBlocked={blockedByMe}
+                className="px-2"
+              />
+            </div>
+          ) : null}
         </div>
         {listing ? (
           <Link

@@ -4,9 +4,11 @@ import { Loader2, SendHorizontal } from "lucide-react";
 import { Fragment, type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ReportDialog } from "@/features/moderation/components/report-dialog";
 import { cn } from "@/lib/utils";
 import { loadOlderMessagesAction, markConversationReadAction, sendMessageAction } from "../actions";
 import { dayKey, formatDayLabel, formatMessageTime } from "../format";
+import { conversationHref } from "../links";
 import { type ChatMessage, MESSAGE_MAX_LENGTH, MESSAGES_PAGE_SIZE } from "../schemas";
 
 type ChatViewProps = {
@@ -168,7 +170,9 @@ export function ChatView({
                   {formatDayLabel(message.created_at)}
                 </p>
               ) : null}
-              <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
+              <div
+                className={cn("group flex items-end gap-1", mine ? "justify-end" : "justify-start")}
+              >
                 <div
                   className={cn(
                     "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-card",
@@ -189,6 +193,16 @@ export function ChatView({
                     {mine && message.id === lastOwnRead?.id && message.read_at ? " · Vu" : ""}
                   </p>
                 </div>
+                {!mine && message.sender_id ? (
+                  <ReportDialog
+                    targetType="message"
+                    targetId={message.id}
+                    signedIn
+                    returnTo={conversationHref(conversationId)}
+                    variant="icon"
+                    className="opacity-60 group-hover:opacity-100 focus-visible:opacity-100"
+                  />
+                ) : null}
               </div>
             </Fragment>
           );

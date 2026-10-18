@@ -52,6 +52,21 @@ describe("garde-fous globaux du schéma", () => {
     expect(rows.map((row) => row.proname)).toEqual(["is_username_available"]);
   });
 
+  it("n'accorde l'exécution d'aucune fonction interne à PUBLIC", async () => {
+    const { rows } = await asOwner((sql) =>
+      sql<{ proname: string }>(
+        `select p.proname from pg_proc p
+         join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname = 'private'
+           and exists (
+             select 1 from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+             where a.grantee = 0 and a.privilege_type = 'EXECUTE'
+           )`,
+      ),
+    );
+    expect(rows).toEqual([]);
+  });
+
   it("fixe search_path sur toutes les fonctions SECURITY DEFINER", async () => {
     const { rows } = await asOwner((sql) =>
       sql<{ proname: string }>(

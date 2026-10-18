@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
+import { isCurrentUserAdmin } from "@/features/admin/queries";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
@@ -46,6 +47,7 @@ function IconLink({
 export async function SiteHeader() {
   const t = getDictionary();
   const profile = await getCurrentProfile();
+  const isAdmin = profile ? await isCurrentUserAdmin() : false;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -82,6 +84,7 @@ export async function SiteHeader() {
                 displayName={profile.display_name}
                 username={profile.username}
                 avatarUrl={avatarUrl(profile.avatar_path)}
+                isAdmin={isAdmin}
               />
             </div>
           ) : (

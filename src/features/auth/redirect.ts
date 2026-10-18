@@ -23,6 +23,9 @@ export function safeRedirectPath(value: unknown, fallback: string = routes.home)
     return fallbackRoute;
   }
   if (url.origin !== ORIGIN) return fallbackRoute;
+  // La normalisation peut produire « //hôte » (ex. « /.//hote », « /a/..//hote ») :
+  // un tel chemin serait interprété comme une URL absolue par le navigateur.
+  if (url.pathname.startsWith("//")) return fallbackRoute;
   if (
     disallowedTargets.some((path) => url.pathname === path || url.pathname.startsWith(`${path}/`))
   ) {

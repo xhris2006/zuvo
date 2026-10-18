@@ -13,6 +13,9 @@ import { getCurrentUser } from "@/features/auth/session";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { getSellerListings } from "@/features/listings/queries";
+import { BlockButton } from "@/features/moderation/components/block-button";
+import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { hasBlocked } from "@/features/moderation/queries";
 import { FollowButton } from "@/features/profiles/components/follow-button";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { getProfileByUsername, getProfileStats, isFollowing } from "@/features/profiles/queries";
@@ -52,9 +55,10 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
 
   const viewer = await getCurrentUser();
   const isOwnProfile = viewer?.id === profile.id;
-  const [stats, following, listings] = await Promise.all([
+  const [stats, following, blocked, listings] = await Promise.all([
     getProfileStats(profile.id),
     viewer && !isOwnProfile ? isFollowing(viewer.id, profile.id) : Promise.resolve(false),
+    viewer && !isOwnProfile ? hasBlocked(viewer.id, profile.id) : Promise.resolve(false),
     getSellerListings(profile.id, page, searchLimits.pageSize),
   ]);
   const profilePath = publicProfileHref(profile.username);
@@ -69,17 +73,36 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
     );
   } else if (viewer) {
     actions = (
-      <FollowButton
-        profileId={profile.id}
-        username={profile.username}
-        initialFollowing={following}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        {blocked ? null : (
+          <FollowButton
+            profileId={profile.id}
+            username={profile.username}
+            initialFollowing={following}
+          />
+        )}
+        <ReportDialog targetType="user" targetId={profile.id} signedIn returnTo={profilePath} />
+        <BlockButton
+          userId={profile.id}
+          username={profile.username}
+          displayName={profile.display_name}
+          initialBlocked={blocked}
+        />
+      </div>
     );
   } else {
     actions = (
-      <Button asChild>
-        <Link href={signInHref(profilePath)}>Suivre</Link>
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild>
+          <Link href={signInHref(profilePath)}>Suivre</Link>
+        </Button>
+        <ReportDialog
+          targetType="user"
+          targetId={profile.id}
+          signedIn={false}
+          returnTo={profilePath}
+        />
+      </div>
     );
   }
 

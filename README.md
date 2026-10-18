@@ -13,52 +13,69 @@ et échangent directement avec les acheteurs.
 
 ## État d'avancement
 
+Les dix phases prévues sont terminées dans le code. La mise en production
+demande encore des actions du propriétaire du projet (voir
+[« Avant l'ouverture au public »](#avant-louverture-au-public)).
+
 | Phase | Contenu                                                          | État     |
 | ----- | ---------------------------------------------------------------- | -------- |
 | 0     | Audit du dépôt et plan                                           | Terminée |
 | 1     | Fondations : Next.js, design system, navigation, pages publiques | Terminée |
 | 2     | Supabase : schéma SQL, migrations, RLS, Storage                  | Terminée |
 | 3     | Authentification, sessions, profils                              | Terminée |
-| 4     | Annonces : création, photos, statuts                             | À faire  |
-| 5     | Recherche, filtres, favoris, abonnements                         | À faire  |
-| 6     | Messagerie temps réel                                            | À faire  |
-| 7     | Notifications internes puis Web Push                             | À faire  |
-| 8     | Administration, signalements, blocage                            | À faire  |
-| 9     | PWA, SEO, accessibilité, performances                            | À faire  |
-| 10    | Tests de sécurité, build final, déploiement Vercel               | À faire  |
+| 4     | Annonces : création, photos, statuts                             | Terminée |
+| 5     | Recherche, filtres, favoris, abonnements                         | Terminée |
+| 6     | Messagerie temps réel                                            | Terminée |
+| 7     | Notifications internes puis Web Push (push à configurer)         | Terminée |
+| 8     | Administration, signalements, blocage                            | Terminée |
+| 9     | PWA, SEO, accessibilité, performances                            | Terminée |
+| 10    | Tests de sécurité, suppression de compte, documentation          | Terminée |
 
 Tant que Supabase n'est pas configuré, l'application affiche des états vides
 explicites (aucune donnée fictive) et les pages de connexion indiquent que
 l'authentification n'est pas encore disponible.
 
-**Base de données** : schéma, sécurité (RLS), stockage et procédure de
-configuration du projet Supabase sont décrits dans [`docs/supabase.md`](docs/supabase.md).
+## Fonctionnalités
 
-## Authentification et profils
+- **Comptes** : inscription par e-mail vérifié, connexion (Google en option),
+  mot de passe oublié, profil public `/u/<nom>` avec compteurs réels, photo de
+  profil, téléphone privé, paramètres, suppression du compte.
+- **Annonces** : création en brouillon, jusqu'à 8 photos réduites dans le
+  navigateur et réordonnables, publication, statuts (en vente, réservé, vendu,
+  retiré), modification, suppression, annonces similaires, partage.
+- **Recherche** : plein texte insensible aux accents, filtres (catégorie,
+  ville, état, prix), tri, pagination.
+- **Social** : favoris, abonnements, fil des profils suivis.
+- **Messagerie** : une conversation par acheteur et par annonce, temps réel,
+  accusés de lecture, compteur de non-lus.
+- **Notifications** : nouveaux abonnés, favoris, nouvelles annonces des
+  profils suivis, retrait par la modération ; préférences ; Web Push
+  (à configurer, voir [`docs/notifications.md`](docs/notifications.md)).
+- **Confiance** : signalement d'annonces, d'utilisateurs et de messages,
+  blocage, espace d'administration `/admin` (signalements, suspensions,
+  retraits, journal).
+- **PWA** : installable, page hors connexion, icônes.
+- **SEO** : métadonnées, Open Graph, sitemap des annonces, données structurées.
 
-- Inscription par e-mail et mot de passe (8 caractères minimum, lettres et
-  chiffres), vérification obligatoire de l'adresse, connexion, déconnexion,
-  mot de passe oublié et changement de mot de passe.
-- Connexion Google affichée uniquement si le fournisseur est activé dans Supabase.
-- Session rafraîchie par `src/proxy.ts` ; chaque page et chaque action serveur
-  revérifient l'utilisateur (`requireUser`), et la base applique ses politiques RLS.
-- Aucune information ne révèle si une adresse possède déjà un compte.
-- Profil public `/u/<nom>` (photo, bio, ville, date d'inscription, nombre réel
-  d'abonnés, d'abonnements et d'annonces, bouton Suivre) ; profil personnel
-  `/profil`, modification `/profil/modifier` (photo recadrée et allégée dans le
-  navigateur), paramètres `/parametres`. Le téléphone reste privé.
+## Documentation
 
-Configuration côté Supabase (modèles d'e-mails, URL de redirection, Google) :
-voir [`docs/supabase.md`](docs/supabase.md#14-authentification).
+| Document                                         | Contenu                                                    |
+| ------------------------------------------------ | ---------------------------------------------------------- |
+| [`docs/deployment.md`](docs/deployment.md)       | Mise en ligne sur Vercel, variables, vérifications         |
+| [`docs/supabase.md`](docs/supabase.md)           | Projet Supabase, migrations, schéma, RLS, Storage, tests   |
+| [`docs/notifications.md`](docs/notifications.md) | Notifications internes et Web Push (configuration, essais) |
+| [`docs/security.md`](docs/security.md)           | Modèle de sécurité, secrets, en-têtes, tests               |
 
 ## Stack
 
 - [Next.js 16](https://nextjs.org) (App Router, Turbopack, Server Components par défaut)
 - React 19, TypeScript strict
 - Tailwind CSS 4, composants maison inspirés de shadcn/ui sur [Radix UI](https://www.radix-ui.com), icônes [Lucide](https://lucide.dev)
-- Zod pour la validation (client et serveur)
-- Supabase (PostgreSQL, Auth, Storage, Realtime) — à partir de la phase 2
-- Vitest (tests unitaires) et Playwright (tests de bout en bout mobile et ordinateur)
+- Zod pour la validation côté serveur
+- Supabase (PostgreSQL, Auth, Storage, Realtime), `@supabase/ssr`
+- Web Push (`web-push`, clés VAPID), service worker maison
+- Vitest (tests unitaires et tests de la base), Playwright + axe (tests de bout
+  en bout mobile et ordinateur, accessibilité)
 
 ## Prérequis
 
@@ -83,6 +100,11 @@ Voir [`.env.example`](.env.example). Aucune valeur secrète ne doit être commit
 | `NEXT_PUBLIC_CONTACT_EMAIL`            | Adresse affichée sur la page Aide (facultatif) | `.env.local`, Vercel |
 | `NEXT_PUBLIC_SUPABASE_URL`             | URL du projet Supabase                         | `.env.local`, Vercel |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publique Supabase (protégée par RLS)       | `.env.local`, Vercel |
+| `SUPABASE_SERVICE_ROLE_KEY`            | **Secrète**, serveur : push, suppression       | Vercel uniquement    |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | Clé publique Web Push                          | `.env.local`, Vercel |
+| `VAPID_PRIVATE_KEY`                    | **Secrète**, serveur : envoi Web Push          | Vercel uniquement    |
+| `VAPID_SUBJECT`                        | Contact du service push (`mailto:`…)           | Vercel               |
+| `PUSH_WEBHOOK_SECRET`                  | **Secret** partagé avec le webhook Supabase    | Vercel uniquement    |
 
 Sur Vercel, si `NEXT_PUBLIC_SITE_URL` est absente, l'URL de production du
 projet (`VERCEL_PROJECT_PRODUCTION_URL`) est utilisée.
@@ -120,17 +142,21 @@ supabase/
   migrations/          Schéma SQL versionné (tables, RLS, Storage, temps réel)
   tests/               Tests d'accès autorisés et refusés sur PostgreSQL
   config.toml          Configuration Supabase locale
-docs/                  Documentation (Supabase)
+docs/                  Documentation (déploiement, Supabase, notifications, sécurité)
+public/                Service worker (sw.js) et icônes
 src/
   app/                 Routes (App Router). (info)/ regroupe les pages d'information
   components/ui/       Design system : Button, Input, Select, Field, Badge, Card,
                        Dialog, Alert, Skeleton, EmptyState, Avatar…
   components/layout/   En-tête, navigation mobile, pied de page, mises en page
   config/              Nom du produit, routes, villes, limites métier
-  features/            Code par domaine : listings, categories, search, auth…
+  features/            Code par domaine : auth, profiles, listings, search,
+                       favorites, messaging, notifications, moderation,
+                       admin, account…
   i18n/                Dictionnaires de traduction (fr)
-  lib/                 Utilitaires : env, formatage (prix XAF, dates),
-                       types générés de la base (lib/supabase)
+  lib/                 Utilitaires : env, CSP, formatage (prix XAF, dates),
+                       clients et types générés de la base (lib/supabase)
+  proxy.ts             Session, redirections, Content-Security-Policy
 e2e/                   Tests Playwright
 ```
 
@@ -146,17 +172,12 @@ e2e/                   Tests Playwright
   Messages, Profil), favoris et notifications dans l'en-tête.
 - Les animations sont désactivées si l'utilisateur préfère réduire les mouvements.
 
-## Sécurité (déjà en place)
+## Sécurité
 
-- Base de données : RLS sur toutes les tables, privilèges colonne par colonne,
-  identité imposée côté base, limites anti-spam, Storage cloisonné par
-  utilisateur — détails et tests dans [`docs/supabase.md`](docs/supabase.md).
-- En-têtes HTTP : `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
-  `Permissions-Policy`, HSTS, CSP partielle (`frame-ancestors`, `base-uri`, `object-src`).
-- Les paramètres d'URL de recherche sont validés côté serveur (Zod) : une valeur
-  invalide est ignorée sans faire échouer la page.
-- Les variables d'environnement publiques sont validées au démarrage, sans
-  jamais afficher leur valeur dans les erreurs.
+RLS sur toutes les tables, rôle administrateur attribué uniquement en SQL,
+validation serveur de toutes les entrées, CSP stricte à nonce, secrets
+uniquement côté serveur, aucune page privée en cache. Détails et tests :
+[`docs/security.md`](docs/security.md).
 
 ## Pages juridiques
 
@@ -167,6 +188,23 @@ validé par un professionnel du droit avant la mise en production.
 
 ## Déploiement
 
-Le déploiement Vercel sera documenté en détail à la phase 10. En résumé :
-importer le dépôt GitHub dans Vercel, définir les variables d'environnement
-ci-dessus, puis déployer (aucune configuration de build spécifique).
+Voir [`docs/deployment.md`](docs/deployment.md) : projet Supabase, projet
+Vercel, variables d'environnement, domaine et vérifications après mise en
+ligne.
+
+## Avant l'ouverture au public
+
+À réaliser par le propriétaire du projet (aucune de ces étapes ne peut être
+faite depuis le code) :
+
+1. Créer le projet Supabase, appliquer les migrations, régler
+   l'authentification et un **fournisseur SMTP**.
+2. Créer le projet Vercel et renseigner les variables d'environnement.
+3. Désigner au moins un administrateur (SQL).
+4. Faire relire et compléter les **pages juridiques** (brouillons) par un
+   professionnel du droit.
+5. Facultatif : connexion Google ; notifications push (clés VAPID, webhook,
+   **essais sur appareils** — tant qu'ils ne sont pas faits, le push ne doit
+   pas être annoncé comme disponible).
+6. Dérouler la liste de vérifications de `docs/deployment.md` sur la
+   production.

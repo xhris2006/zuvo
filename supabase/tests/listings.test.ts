@@ -203,13 +203,15 @@ describe("modération et suspension", () => {
     );
     expect(await visibleTo(listingId, null)).toBe(false);
     expect(await visibleTo(listingId, seller.id)).toBe(true);
-    await expectError(
-      asUser(seller.id, (sql) =>
-        sql("update public.listings set status = 'active' where id = $1", [listingId]),
-      ),
-      "P0001",
-      /listing_removed_by_moderation/,
+    // Le contenu retiré est figé (preuve pour la modération).
+    const updated = await asUser(seller.id, (sql) =>
+      sql("update public.listings set status = 'active', price = 1 where id = $1", [listingId]),
     );
+    expect(updated.rowCount).toBe(0);
+    const images = await asUser(seller.id, (sql) =>
+      sql("delete from public.listing_images where listing_id = $1", [listingId]),
+    );
+    expect(images.rowCount).toBe(0);
     const deleted = await asUser(seller.id, (sql) =>
       sql("delete from public.listings where id = $1", [listingId]),
     );

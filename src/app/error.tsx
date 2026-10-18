@@ -24,6 +24,7 @@ export default function ErrorPage({
   return (
     <div className="container-page max-w-xl pt-12 sm:pt-20">
       <EmptyState
+        headingLevel="h1"
         icon={TriangleAlert}
         title={t.errors.genericTitle}
         description={t.errors.genericBody}

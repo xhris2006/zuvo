@@ -1,28 +1,85 @@
-import { Bell } from "lucide-react";
+import { Bell, CheckCheck, Settings } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { routes } from "@/config/routes";
-import { MemberGate } from "@/features/auth/components/member-gate";
+import { AuthRequired } from "@/features/auth/components/auth-required";
+import { requireUser } from "@/features/auth/session";
+import { markAllNotificationsReadAction } from "@/features/notifications/actions";
+import { NotificationList } from "@/features/notifications/components/notification-list";
+import { getNotifications } from "@/features/notifications/queries";
 import { getDictionary } from "@/i18n";
+import { isSupabaseConfigured } from "@/lib/env";
+import { parsePageParam } from "@/lib/pagination";
 
 export const metadata: Metadata = {
   title: "Notifications",
   robots: { index: false },
 };
 
-export default function NotificationsPage() {
+export default async function NotificationsPage(props: PageProps<"/notifications">) {
   const t = getDictionary();
+  if (!isSupabaseConfigured()) {
+    return (
+      <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
+        <PageHeader title={t.pages.notificationsTitle} />
+        <AuthRequired returnTo={routes.notifications} />
+      </div>
+    );
+  }
+
+  await requireUser(routes.notifications);
+  const page = parsePageParam((await props.searchParams).page);
+  const notifications = await getNotifications(page);
+  const hasUnread = notifications.items.some((item) => !item.isRead);
+
   return (
-    <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
-      <PageHeader title={t.pages.notificationsTitle} />
-      <MemberGate returnTo={routes.notifications}>
+    <div className="container-page flex max-w-2xl flex-col gap-6 pt-6 sm:pt-10">
+      <PageHeader
+        title={t.pages.notificationsTitle}
+        actions={
+          <>
+            {hasUnread ? (
+              <form action={markAllNotificationsReadAction}>
+                <SubmitButton variant="outline" size="sm">
+                  <CheckCheck aria-hidden="true" />
+                  Tout marquer comme lu
+                </SubmitButton>
+              </form>
+            ) : null}
+            <Button asChild variant="ghost" size="sm">
+              <Link href={routes.settings}>
+                <Settings aria-hidden="true" />
+                Préférences
+              </Link>
+            </Button>
+          </>
+        }
+      />
+      {notifications.items.length > 0 ? (
+        <>
+          <NotificationList items={notifications.items} />
+          <Pagination
+            page={page}
+            pageCount={Math.ceil(notifications.total / notifications.pageSize)}
+            hrefFor={(value) =>
+              (value === 1
+                ? routes.notifications
+                : `${routes.notifications}?page=${value}`) as typeof routes.notifications
+            }
+          />
+        </>
+      ) : (
         <EmptyState
           icon={Bell}
           title="Aucune notification"
-          description="Vous serez prévenu ici des nouveaux messages, abonnés et activités sur vos annonces."
+          description="Vous serez prévenu ici des nouveaux abonnés et de l'activité de vos annonces. Les messages ont leur propre boîte de réception."
         />
-      </MemberGate>
+      )}
     </div>
   );
 }

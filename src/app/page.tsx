@@ -8,9 +8,12 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { JsonLd } from "@/components/seo/json-ld";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
+import { siteConfig } from "@/config/site";
 import { CategoryList } from "@/features/categories/components/category-list";
 import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
 import { getCurrentUser } from "@/features/auth/session";
@@ -18,6 +21,7 @@ import { ListingResults } from "@/features/listings/components/listing-results";
 import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
+import { getSiteUrl } from "@/lib/env";
 
 const heroTiles = ["mode-femme", "telephones-tablettes", "chaussures", "maison"] as const;
 
@@ -69,8 +73,9 @@ async function loadHomeListings(): Promise<{
   }
 }
 
-export default async function HomePage() {
+export default async function HomePage(props: PageProps<"/">) {
   const t = getDictionary();
+  const accountDeleted = (await props.searchParams).compte === "supprime";
   const { recent, followed } = await loadHomeListings();
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
@@ -78,8 +83,36 @@ export default async function HomePage() {
     { icon: MessagesSquare, title: t.home.values.directTitle, body: t.home.values.directBody },
   ];
 
+  const siteUrl = getSiteUrl();
+
   return (
     <div className="flex flex-col gap-14 sm:gap-20">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: siteConfig.name,
+          description: siteConfig.description,
+          url: siteUrl,
+          inLanguage: siteConfig.intlLocale,
+          potentialAction: {
+            "@type": "SearchAction",
+            target: {
+              "@type": "EntryPoint",
+              urlTemplate: `${siteUrl}${routes.explore}?q={search_term_string}`,
+            },
+            "query-input": "required name=search_term_string",
+          },
+        }}
+      />
+      {accountDeleted ? (
+        <div className="container-page -mb-8 pt-6 sm:-mb-14">
+          <Alert variant="success" title="Compte supprimé" role="status">
+            Votre compte et vos annonces ont été supprimés. Merci d&apos;avoir utilisé{" "}
+            {siteConfig.name}.
+          </Alert>
+        </div>
+      ) : null}
       <section className="border-b border-border bg-gradient-to-b from-brand-50 to-background">
         <div className="container-page grid items-center gap-10 py-10 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:py-20">
           <div className="flex flex-col gap-5">

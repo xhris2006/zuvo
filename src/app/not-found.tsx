@@ -11,7 +11,7 @@ export default function NotFound() {
     <div className="container-page max-w-xl pt-12 sm:pt-20">
       <EmptyState
         icon={MapPinOff}
-        headingLevel="h2"
+        headingLevel="h1"
         title={t.errors.notFoundTitle}
         description={t.errors.notFoundBody}
         action={

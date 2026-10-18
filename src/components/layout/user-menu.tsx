@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LogOut, Pencil, Rss, Settings, UserRound } from "lucide-react";
+import { Heart, LogOut, Pencil, Rss, Settings, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -13,14 +13,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { routes } from "@/config/routes";
 import { signOutAction } from "@/features/auth/actions";
+import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
 
 type UserMenuProps = {
   displayName: string;
   username: string;
   avatarUrl: string | null;
+  /** Affichage seulement : l'accès à l'administration est vérifié côté serveur. */
+  isAdmin?: boolean;
 };
 
-export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
+export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -65,8 +68,17 @@ export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
             Paramètres
           </Link>
         </DropdownMenuItem>
+        {isAdmin ? (
+          <DropdownMenuItem asChild>
+            <Link href={routes.admin}>
+              <ShieldCheck aria-hidden="true" />
+              Administration
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         <form action={signOutAction}>
+          <PushEndpointField />
           {/* Le menu reste ouvert pendant l'envoi pour ne pas démonter le formulaire. */}
           <DropdownMenuItem asChild onSelect={(event) => event.preventDefault()}>
             <button type="submit" className="w-full">

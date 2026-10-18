@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPrice, formatRelativeTime } from "./format";
+import { formatDateTime, formatPrice, formatRelativeTime } from "./format";
 
 /** Intl utilise des espaces insécables ; on les normalise pour les assertions. */
 const normalize = (value: string) => value.replace(/[  ]/g, " ");
@@ -39,5 +39,11 @@ describe("formatMonthYear et formatCount", () => {
     expect(formatMonthYear("2026-10-18T12:00:00Z")).toBe("octobre 2026");
     expect(formatCount(42)).toBe("42");
     expect(normalize(formatCount(1200))).toBe("1,2 k");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("affiche la date et l'heure du Cameroun", () => {
+    expect(formatDateTime("2026-10-18T13:05:00Z")).toBe("18 oct. 2026, 14:05");
   });
 });

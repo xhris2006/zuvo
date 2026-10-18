@@ -17,6 +17,11 @@ describe("safeRedirectPath", () => {
     "/messages\u0000",
     "",
     "messages",
+    // Chemins que la normalisation transformerait en « //evil.example ».
+    "/.//evil.example",
+    "/%2e//evil.example",
+    "/a/..//evil.example",
+    "/./%2e//evil.example",
   ])("rejette %j", (value) => {
     expect(safeRedirectPath(value)).toBe("/");
   });

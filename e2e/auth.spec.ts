@@ -41,6 +41,9 @@ test.describe("authentification configurée (service injoignable)", () => {
       "/fil",
       "/favoris",
       "/messages/4f1c2a3b-0000-4000-8000-0000000000bb",
+      "/notifications",
+      "/admin",
+      "/admin/signalements",
     ]) {
       await page.goto(path);
       await expect(page).toHaveURL(`/connexion?next=${encodeURIComponent(path)}`);

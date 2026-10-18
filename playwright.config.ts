@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = Number(process.env.E2E_PORT ?? 3100);
+
+// Permet d'intercepter les requêtes émises par le service worker (test hors connexion).
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS ??= "1";
 const baseURL = `http://localhost:${port}`;
 
 // Permet d'utiliser un Chromium déjà installé (ex. environnements cloud)
@@ -20,10 +23,15 @@ export default defineConfig({
     launchOptions: { executablePath },
   },
   projects: [
-    { name: "mobile", use: { ...devices["Pixel 7"], launchOptions: { executablePath } } },
+    // channel « chromium » : vrai Chromium en mode headless (et non le
+    // « headless shell »), nécessaire au test du service worker hors connexion.
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 7"], channel: "chromium", launchOptions: { executablePath } },
+    },
     {
       name: "desktop",
-      use: { ...devices["Desktop Chrome"], launchOptions: { executablePath } },
+      use: { ...devices["Desktop Chrome"], channel: "chromium", launchOptions: { executablePath } },
     },
   ],
   webServer: {

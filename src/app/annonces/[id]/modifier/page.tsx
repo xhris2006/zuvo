@@ -25,32 +25,34 @@ export default async function EditListingPage(props: PageProps<"/annonces/[id]/m
         title={listing.status === "draft" ? "Compléter l'annonce" : "Modifier l'annonce"}
       />
       {listing.removed_at ? (
-        <Alert variant="warning">
-          Cette annonce a été retirée par la modération : vos modifications ne la remettront pas en
-          ligne.
+        <Alert variant="warning" title="Annonce retirée par la modération">
+          Elle ne peut plus être modifiée.{" "}
+          {listing.removed_reason ? `Motif : ${listing.removed_reason}. ` : ""}Si vous pensez
+          qu&apos;il s&apos;agit d&apos;une erreur, contactez-nous depuis la page Aide.
         </Alert>
-      ) : null}
-      <Card>
-        <CardContent>
-          <ListingEditor
-            userId={user.id}
-            categories={categories}
-            listing={{
-              id: listing.id,
-              title: listing.title,
-              description: listing.description,
-              price: listing.price,
-              condition: listing.condition,
-              city: listing.city,
-              categorySlug: listing.category?.slug ?? null,
-              status: listing.status,
-              images: listing.images.flatMap((image) =>
-                image.url ? [{ id: image.id, url: image.url }] : [],
-              ),
-            }}
-          />
-        </CardContent>
-      </Card>
+      ) : (
+        <Card>
+          <CardContent>
+            <ListingEditor
+              userId={user.id}
+              categories={categories}
+              listing={{
+                id: listing.id,
+                title: listing.title,
+                description: listing.description,
+                price: listing.price,
+                condition: listing.condition,
+                city: listing.city,
+                categorySlug: listing.category?.slug ?? null,
+                status: listing.status,
+                images: listing.images.flatMap((image) =>
+                  image.url ? [{ id: image.id, url: image.url }] : [],
+                ),
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

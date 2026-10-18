@@ -1,3 +1,4 @@
+import { JsonLd } from "@/components/seo/json-ld";
 import { siteConfig } from "@/config/site";
 import type { ListingCondition, ListingStatus } from "../constants";
 
@@ -51,11 +52,5 @@ export function ListingJsonLd(props: ListingJsonLdProps) {
             url: props.url,
           },
   };
-  return (
-    <script
-      type="application/ld+json"
-      // Échappement de « < » pour empêcher toute fermeture prématurée de la balise.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
-    />
-  );
+  return <JsonLd data={data} />;
 }

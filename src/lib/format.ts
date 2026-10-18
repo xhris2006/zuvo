@@ -30,6 +30,20 @@ export function formatDate(date: Date | string): string {
   return dateFormatter.format(typeof date === "string" ? new Date(date) : date);
 }
 
+const dateTimeFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: siteConfig.timeZone,
+});
+
+/** « 18 oct. 2026, 14:05 » (heure du Cameroun). */
+export function formatDateTime(date: Date | string): string {
+  return dateTimeFormatter.format(typeof date === "string" ? new Date(date) : date);
+}
+
 const relativeFormatter = new Intl.RelativeTimeFormat(siteConfig.intlLocale, {
   numeric: "auto",
 });

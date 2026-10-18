@@ -129,9 +129,11 @@ Dans **Project Settings → API Keys** :
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | clé _publishable_ (`sb_publishable_…`) ou, à défaut, clé _anon_ |
 
 Ces deux valeurs sont publiques par nature : la sécurité repose sur les
-politiques RLS. **La clé secrète (`sb_secret_…` / `service_role`) n'est pas
-utilisée par l'application à ce stade** ; ne la placez jamais dans une variable
-`NEXT_PUBLIC_*`, dans le code ou dans un commit.
+politiques RLS. La clé secrète (`sb_secret_…` / `service_role`) n'est utilisée
+que côté serveur, dans `SUPABASE_SERVICE_ROLE_KEY` (envoi des notifications
+push, suppression de compte) ; ne la placez jamais dans une variable
+`NEXT_PUBLIC_*`, dans le code ou dans un commit. Les variables du push sont
+décrites dans [`notifications.md`](notifications.md).
 
 Renseignez-les dans `.env.local` (développement) et dans **Vercel → Settings →
 Environment Variables** (production et prévisualisation).
@@ -147,6 +149,13 @@ select id, 'admin' from auth.users where email = 'adresse@exemple.com';
 ```
 
 Pour le retirer : `delete from public.user_roles where user_id = '<uuid>';`
+
+L'espace `/admin` (tableau de bord, signalements, utilisateurs, journal)
+n'apparaît qu'aux administrateurs ; les autres reçoivent une page 404. Chaque
+action passe par une fonction `admin_*` qui vérifie elle-même le rôle en base et
+s'inscrit dans `moderation_actions` (journal non modifiable). Les messages
+privés ne sont jamais lisibles par l'administration, sauf le message précis
+visé par un signalement, et chaque consultation est journalisée.
 
 ---
 
@@ -169,6 +178,7 @@ Pour le retirer : `delete from public.user_roles where user_id = '<uuid>';`
 | `notifications`            | Notifications internes                                               |
 | `push_subscriptions`       | Abonnements Web Push par navigateur                                  |
 | `reports`                  | Signalements (annonce, utilisateur, message) et leur traitement      |
+| `moderation_actions`       | Journal des actions de modération (lecture réservée aux admins)      |
 
 ### Écarts justifiés par rapport au cahier des charges
 
@@ -206,9 +216,12 @@ Le profil, les annonces, favoris, abonnements, blocages, notifications et
 abonnements push sont supprimés avec le compte. Les **conversations, messages et
 signalements sont conservés** (auteur remplacé par `NULL`) pour ne pas priver
 l'autre participant de son historique ni la modération de ses éléments.
-Les fichiers du Storage doivent être supprimés par l'application (une clé
-étrangère ne peut pas les atteindre) : ce sera traité avec la suppression de
-compte côté serveur.
+Les fichiers du Storage (photo de profil, photos d'annonces) sont supprimés par
+l'application (`src/features/account`), une clé étrangère ne pouvant pas les
+atteindre ; les pièces jointes de messages sont conservées avec les
+conversations. La suppression est demandée depuis **Paramètres → Supprimer mon
+compte** (saisie du nom d'utilisateur) et utilise, côté serveur uniquement, la
+clé `SUPABASE_SERVICE_ROLE_KEY`. Testée dans `supabase/tests/account-deletion.test.ts`.
 
 ### Index
 
@@ -234,8 +247,19 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
   `SECURITY DEFINER` appelable via l'API est `is_username_available`.
 - **Fonctions appelables par l'application** (`get_or_create_conversation`,
   `mark_conversation_read`, `mark_all_notifications_read`,
-  `reorder_listing_images`) : elles s'exécutent avec les droits de l'appelant,
-  donc sous RLS.
+  `reorder_listing_images`, `sync_listing_images`, `get_my_conversations`,
+  `get_unread_messages_count`, `register_push_subscription`, `admin_*`,
+  `admin_list_reports`) : elles
+  s'exécutent avec les droits de l'appelant, donc sous RLS.
+- **Administration** : `admin_remove_listing`, `admin_restore_listing`,
+  `admin_set_user_suspension`, `admin_update_report`,
+  `admin_get_reported_message`, `admin_get_stats` délèguent à des fonctions
+  `private.admin_*` (`SECURITY DEFINER`) qui refusent tout appelant non
+  administrateur (`42501`) ; un administrateur ne peut ni se suspendre ni
+  suspendre un autre administrateur.
+- **Notifications** : créées uniquement par des déclencheurs (voir
+  [`notifications.md`](notifications.md)), selon les préférences du
+  destinataire et jamais entre utilisateurs bloqués.
 - **Anti-spam** (erreur `PT429`, transformée en HTTP 429 par l'API) :
 
   | Action                  | Limite                      |
@@ -245,11 +269,19 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
   | Nouvelles conversations | 20 par heure                |
   | Abonnements             | 100 par heure               |
   | Signalements            | 20 par jour                 |
+  | Favoris                 | 200 par heure               |
 
 - **Blocage** : empêche les nouvelles conversations, les messages et les
   abonnements dans les deux sens, et supprime les abonnements existants.
 - **Comptes suspendus** : profil et annonces masqués au public ; création
-  d'annonces, messages et abonnements refusés.
+  d'annonces, messages, abonnements, favoris et modification du profil
+  refusés ; aucune notification émise en leur nom.
+- **Annonces retirées par la modération** : contenu et photos figés pour le
+  vendeur (preuves conservées) jusqu'à une éventuelle restauration.
+- **Signalements** : leur auteur voit leur statut, mais pas l'administrateur
+  qui les a traités ni la note interne (lus par `admin_list_reports`).
+- **Fonctions internes** (`private`) : aucune n'est exécutable par `PUBLIC` ;
+  les droits nécessaires sont accordés explicitement (vérifié par les tests).
 - **Temps réel** : `messages`, `conversations` et `notifications` sont publiés
   dans `supabase_realtime` ; Supabase Realtime applique les politiques RLS de
   chaque abonné.

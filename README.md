@@ -137,9 +137,11 @@ e2e/                   Tests Playwright
 ## Design system
 
 - Couleurs définies comme tokens CSS dans [`src/app/globals.css`](src/app/globals.css) :
-  vert sauge (primaire), blanc cassé (fond), texte foncé, gris chauds, couleurs de statut.
-- Contrastes vérifiés au niveau WCAG AA (texte 15:1, texte secondaire 5,5:1,
-  texte blanc sur primaire 6:1, bordures de champs 3,4:1).
+  bleu (primaire, échelle `brand-50` à `brand-950`), blanc cassé froid (fond), texte
+  bleu nuit, gris bleutés, couleurs de statut. Changer la couleur de marque se fait
+  uniquement dans ce fichier (et `themeColor` dans `src/config/site.ts`).
+- Contrastes vérifiés au niveau WCAG AA (texte 16:1, texte secondaire 5,8:1,
+  texte blanc sur primaire 5,6:1, bordures de champs 3,1:1).
 - Mobile d'abord : navigation basse à 5 entrées (Accueil, Explorer, Vendre,
   Messages, Profil), favoris et notifications dans l'en-tête.
 - Les animations sont désactivées si l'utilisateur préfère réduire les mouvements.

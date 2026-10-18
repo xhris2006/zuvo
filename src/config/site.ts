@@ -13,7 +13,7 @@ export const siteConfig = {
   intlLocale: "fr-CM",
   timeZone: "Africa/Douala",
   defaultLocale: "fr",
-  themeColor: "#53684b",
+  themeColor: "#1f5fe0",
 } as const;
 
 export type SiteConfig = typeof siteConfig;

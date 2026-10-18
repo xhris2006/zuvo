@@ -34,7 +34,7 @@ export function BottomNav() {
                   <span
                     className={cn(
                       "flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card transition-transform active:scale-95",
-                      active && "ring-2 ring-sage-200 ring-offset-1 ring-offset-card",
+                      active && "ring-2 ring-brand-200 ring-offset-1 ring-offset-card",
                     )}
                   >
                     <Icon className="size-5" strokeWidth={2.4} aria-hidden="true" />

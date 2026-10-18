@@ -653,7 +653,28 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_my_conversations: {
+        Args: { p_limit?: number; p_offset?: number };
+        Returns: {
+          conversation_id: string;
+          is_buyer: boolean;
+          last_message_at: string;
+          last_message_body: string;
+          last_message_is_mine: boolean;
+          listing_id: string;
+          listing_image_path: string;
+          listing_price: number;
+          listing_status: Database["public"]["Enums"]["listing_status"];
+          listing_title: string;
+          other_avatar_path: string;
+          other_display_name: string;
+          other_user_id: string;
+          other_username: string;
+          unread_count: number;
+        }[];
+      };
       get_or_create_conversation: { Args: { p_listing_id: string }; Returns: string };
+      get_unread_messages_count: { Args: Record<PropertyKey, never>; Returns: number };
       is_username_available: { Args: { p_username: string }; Returns: boolean };
       mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
       mark_conversation_read: { Args: { p_conversation_id: string }; Returns: number };

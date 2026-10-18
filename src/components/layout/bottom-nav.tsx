@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { getDictionary } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { getPrimaryNavItems, isNavItemActive } from "./nav-items";
@@ -40,9 +41,15 @@ export function BottomNav() {
                     <Icon className="size-5" strokeWidth={2.4} aria-hidden="true" />
                   </span>
                 ) : (
-                  <Icon className="size-6" strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
+                  <span className="relative">
+                    <Icon className="size-6" strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
+                    {item.badge ? (
+                      <UnreadBadge kind={item.badge} className="-top-1.5 -right-2.5" />
+                    ) : null}
+                  </span>
                 )}
                 <span className={cn(item.emphasis && "sr-only")}>{item.label}</span>
+                {item.badge ? <UnreadLabel kind={item.badge} /> : null}
               </Link>
             </li>
           );

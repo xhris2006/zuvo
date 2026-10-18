@@ -42,6 +42,10 @@ export const fr = {
     sellCta: "Vendre un article",
     searchPlaceholder: "Rechercher un article…",
     searchLabel: "Rechercher des annonces",
+    unreadMessages: (count: number) =>
+      count === 1 ? "1 message non lu" : `${count} messages non lus`,
+    unreadNotifications: (count: number) =>
+      count === 1 ? "1 notification non lue" : `${count} notifications non lues`,
   },
   home: {
     heroTitle: "Donnez une seconde vie à vos affaires",

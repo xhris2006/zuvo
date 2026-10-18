@@ -181,3 +181,8 @@
     @apply font-semibold text-foreground;
   }
 }
+
+/* Écrans immersifs (conversation) : pas de pied de page sous la zone de saisie. */
+body:has([data-immersive]) [data-site-footer] {
+  display: none;
+}

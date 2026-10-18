@@ -18,6 +18,7 @@ import { OwnerPanel } from "@/features/listings/components/owner-panel";
 import { SellerCard } from "@/features/listings/components/seller-card";
 import { listingHref } from "@/features/listings/links";
 import { getFavoriteIds, getListingDetail, getSimilarListings } from "@/features/listings/queries";
+import { ContactSellerButton } from "@/features/messaging/components/contact-seller-button";
 import { toSearchParams } from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
@@ -54,6 +55,10 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
   const t = getDictionary();
   const viewer = await getCurrentUser();
   const isOwner = viewer?.id === listing.seller_id;
+  const canContact =
+    (listing.status === "active" || listing.status === "reserved") &&
+    !listing.removed_at &&
+    Boolean(listing.seller);
   const city = listing.city ? (getCity(listing.city)?.name ?? listing.city) : null;
   const [similar, favorites] = await Promise.all([
     getSimilarListings(listing.id, listing.category?.id ?? null),
@@ -133,6 +138,14 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
                 : `Créée ${formatRelativeTime(listing.created_at)}`}
             </li>
           </ul>
+
+          {!isOwner && canContact ? (
+            <ContactSellerButton
+              listingId={listing.id}
+              signedIn={Boolean(viewer)}
+              returnTo={listingHref(listing.id)}
+            />
+          ) : null}
 
           <div className="flex flex-wrap gap-2" data-listing-actions>
             {isOwner ? null : (

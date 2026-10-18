@@ -1,0 +1,149 @@
+import type { ListingCondition, ListingStatus } from "@/features/listings/constants";
+
+const conditions: Record<ListingCondition, string> = {
+  new_with_tags: "Neuf avec étiquette",
+  new_without_tags: "Neuf sans étiquette",
+  very_good: "Très bon état",
+  good: "Bon état",
+  fair: "État correct",
+  for_parts: "Pour pièces",
+};
+
+const statuses: Record<ListingStatus, string> = {
+  draft: "Brouillon",
+  active: "En vente",
+  reserved: "Réservé",
+  sold: "Vendu",
+  withdrawn: "Retiré",
+};
+
+export const fr = {
+  common: {
+    skipToContent: "Aller au contenu principal",
+    loading: "Chargement…",
+    retry: "Réessayer",
+    backHome: "Retour à l'accueil",
+    seeAll: "Tout voir",
+    search: "Rechercher",
+    signIn: "Se connecter",
+    signUp: "Créer un compte",
+    close: "Fermer",
+    free: "Gratuit",
+  },
+  nav: {
+    primary: "Navigation principale",
+    home: "Accueil",
+    explore: "Explorer",
+    sell: "Vendre",
+    messages: "Messages",
+    profile: "Profil",
+    favorites: "Favoris",
+    notifications: "Notifications",
+    sellCta: "Vendre un article",
+    searchPlaceholder: "Rechercher un article…",
+    searchLabel: "Rechercher des annonces",
+  },
+  home: {
+    heroTitle: "Donnez une seconde vie à vos affaires",
+    heroSubtitle:
+      "Vendez gratuitement ce que vous n'utilisez plus et trouvez de bonnes affaires près de chez vous, partout au Cameroun.",
+    heroPrimary: "Vendre un article",
+    heroSecondary: "Explorer les annonces",
+    valueTitle: "Pourquoi vendre sur Zuvo ?",
+    values: {
+      freeTitle: "Publication gratuite",
+      freeBody: "Mettez vos articles en ligne en quelques minutes, sans frais de publication.",
+      noFeeTitle: "Aucune commission",
+      noFeeBody: "Le prix que vous fixez est le prix que vous encaissez.",
+      directTitle: "Contact direct",
+      directBody: "Échangez directement avec l'acheteur ou le vendeur via la messagerie.",
+    },
+    categoriesTitle: "Parcourir par catégorie",
+    recentTitle: "Annonces récentes",
+    recentEmptyTitle: "Aucune annonce pour le moment",
+    recentEmptyBody:
+      "Les premières annonces publiées apparaîtront ici. Lancez-vous et mettez un article en vente.",
+    safetyTitle: "Vendez et achetez en toute sérénité",
+    safetyBody:
+      "Rencontrez-vous dans un lieu public, vérifiez l'article avant de payer et n'envoyez jamais d'argent à l'avance.",
+    safetyCta: "Lire nos conseils de sécurité",
+  },
+  explore: {
+    title: "Explorer",
+    description: "Trouvez des articles de seconde main près de chez vous.",
+    filters: "Filtres",
+    applyFilters: "Appliquer",
+    resetFilters: "Réinitialiser",
+    keywords: "Mots-clés",
+    keywordsPlaceholder: "Ex. : robe, iPhone, baskets",
+    category: "Catégorie",
+    allCategories: "Toutes les catégories",
+    city: "Ville",
+    allCities: "Toutes les villes",
+    condition: "État",
+    allConditions: "Tous les états",
+    priceMin: "Prix min. (FCFA)",
+    priceMax: "Prix max. (FCFA)",
+    sort: "Trier par",
+    sortOptions: {
+      newest: "Plus récentes",
+      price_asc: "Prix croissant",
+      price_desc: "Prix décroissant",
+    },
+    emptyTitle: "Aucune annonce trouvée",
+    emptyBody: "Essayez d'élargir votre recherche ou de modifier les filtres.",
+    unavailableTitle: "Annonces bientôt disponibles",
+    unavailableBody:
+      "La base de données n'est pas encore connectée. Les annonces publiées apparaîtront ici.",
+  },
+  listing: {
+    conditions,
+    statuses,
+    favoriteAdd: "Ajouter aux favoris",
+    favoriteRemove: "Retirer des favoris",
+    photoAlt: (title: string) => `Photo de l'annonce « ${title} »`,
+    noPhoto: "Pas de photo",
+  },
+  auth: {
+    requiredTitle: "Connexion requise",
+    requiredBody: "Connectez-vous ou créez un compte gratuit pour accéder à cette page.",
+    sellRequiredBody: "Connectez-vous ou créez un compte gratuit pour mettre un article en vente.",
+    signInTitle: "Connexion",
+    signUpTitle: "Créer un compte",
+    notConfiguredTitle: "Authentification pas encore disponible",
+    notConfiguredBody:
+      "La connexion sera activée dès que le service d'authentification (Supabase) sera configuré.",
+  },
+  pages: {
+    messagesTitle: "Messages",
+    profileTitle: "Profil",
+    favoritesTitle: "Favoris",
+    notificationsTitle: "Notifications",
+    sellTitle: "Vendre un article",
+  },
+  footer: {
+    about: "Zuvo est une plateforme gratuite de vente entre particuliers.",
+    legal: "Informations",
+    help: "Aide",
+    terms: "Conditions d'utilisation",
+    privacy: "Politique de confidentialité",
+    safety: "Conseils de sécurité",
+    reports: "Signalements et blocage",
+    contact: "Aide et contact",
+    rights: "Tous droits réservés.",
+  },
+  legal: {
+    draftTitle: "Document provisoire",
+    draftBody:
+      "Ce texte est un brouillon. Il doit être relu et validé par un professionnel du droit avant la mise en production.",
+    lastUpdated: "Dernière mise à jour",
+  },
+  errors: {
+    notFoundTitle: "Page introuvable",
+    notFoundBody: "La page que vous cherchez n'existe pas ou a été déplacée.",
+    genericTitle: "Une erreur est survenue",
+    genericBody: "Quelque chose s'est mal passé. Veuillez réessayer dans un instant.",
+  },
+};
+
+export type Dictionary = typeof fr;

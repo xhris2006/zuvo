@@ -21,5 +21,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Ne jamais utiliser `SUPABASE_SERVICE_ROLE_KEY` ni d'autre secret côté client,
   ni les écrire dans un commit ou un log. Toute table exposée au client a RLS activé.
 - Aucune donnée fictive présentée comme réelle (annonces, utilisateurs, compteurs).
+- Base de données : toute modification passe par une nouvelle migration dans
+  `supabase/migrations/` (jamais modifier une migration déjà appliquée). Toute table :
+  RLS activé, privilèges révoqués puis accordés au minimum, politiques par opération,
+  tests d'accès autorisés ET refusés dans `supabase/tests/`, puis `npm run db:types`.
+  Fonctions internes dans le schéma `private` ; `SECURITY DEFINER` avec `search_path = ''`.
 - Avant de committer : `npm run check` puis `npm run build` ; `npm run test:e2e` pour
-  les changements d'interface.
+  les changements d'interface ; `npm run test:db` pour les changements de schéma
+  (`TEST_DATABASE_URL` = PostgreSQL jetable, voir docs/supabase.md).

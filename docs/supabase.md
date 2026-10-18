@@ -129,9 +129,11 @@ Dans **Project Settings → API Keys** :
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | clé _publishable_ (`sb_publishable_…`) ou, à défaut, clé _anon_ |
 
 Ces deux valeurs sont publiques par nature : la sécurité repose sur les
-politiques RLS. **La clé secrète (`sb_secret_…` / `service_role`) n'est pas
-utilisée par l'application à ce stade** ; ne la placez jamais dans une variable
-`NEXT_PUBLIC_*`, dans le code ou dans un commit.
+politiques RLS. La clé secrète (`sb_secret_…` / `service_role`) n'est utilisée
+que côté serveur, dans `SUPABASE_SERVICE_ROLE_KEY` (envoi des notifications
+push, suppression de compte) ; ne la placez jamais dans une variable
+`NEXT_PUBLIC_*`, dans le code ou dans un commit. Les variables du push sont
+décrites dans [`notifications.md`](notifications.md).
 
 Renseignez-les dans `.env.local` (développement) et dans **Vercel → Settings →
 Environment Variables** (production et prévisualisation).
@@ -234,8 +236,12 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
   `SECURITY DEFINER` appelable via l'API est `is_username_available`.
 - **Fonctions appelables par l'application** (`get_or_create_conversation`,
   `mark_conversation_read`, `mark_all_notifications_read`,
-  `reorder_listing_images`) : elles s'exécutent avec les droits de l'appelant,
-  donc sous RLS.
+  `reorder_listing_images`, `sync_listing_images`, `get_my_conversations`,
+  `get_unread_messages_count`, `register_push_subscription`) : elles
+  s'exécutent avec les droits de l'appelant, donc sous RLS.
+- **Notifications** : créées uniquement par des déclencheurs (voir
+  [`notifications.md`](notifications.md)), selon les préférences du
+  destinataire et jamais entre utilisateurs bloqués.
 - **Anti-spam** (erreur `PT429`, transformée en HTTP 429 par l'API) :
 
   | Action                  | Limite                      |

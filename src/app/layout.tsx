@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { siteConfig } from "@/config/site";
 import { getCurrentUser } from "@/features/auth/session";
 import { UnreadCountsProvider } from "@/features/notifications/components/unread-counts";
@@ -64,6 +65,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteFooter />
           <BottomNav />
         </UnreadCountsProvider>
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );

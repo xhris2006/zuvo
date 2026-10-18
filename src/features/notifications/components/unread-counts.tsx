@@ -48,7 +48,8 @@ export function UnreadCountsProvider({ userId, initial, children }: UnreadCounts
           .from("notifications")
           .select("id", { count: "exact", head: true })
           .eq("user_id", userId)
-          .eq("is_read", false),
+          .eq("is_read", false)
+          .neq("type", "new_message"),
       ]);
       if (cancelled) return;
       setCounts((current) => ({

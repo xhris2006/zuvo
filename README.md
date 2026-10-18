@@ -19,10 +19,10 @@ et échangent directement avec les acheteurs.
 | 1     | Fondations : Next.js, design system, navigation, pages publiques | Terminée |
 | 2     | Supabase : schéma SQL, migrations, RLS, Storage                  | Terminée |
 | 3     | Authentification, sessions, profils                              | Terminée |
-| 4     | Annonces : création, photos, statuts                             | À faire  |
-| 5     | Recherche, filtres, favoris, abonnements                         | À faire  |
-| 6     | Messagerie temps réel                                            | À faire  |
-| 7     | Notifications internes puis Web Push                             | À faire  |
+| 4     | Annonces : création, photos, statuts                             | Terminée |
+| 5     | Recherche, filtres, favoris, abonnements                         | Terminée |
+| 6     | Messagerie temps réel                                            | Terminée |
+| 7     | Notifications internes puis Web Push (push à configurer)         | Terminée |
 | 8     | Administration, signalements, blocage                            | À faire  |
 | 9     | PWA, SEO, accessibilité, performances                            | À faire  |
 | 10    | Tests de sécurité, build final, déploiement Vercel               | À faire  |

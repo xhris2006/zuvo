@@ -9,6 +9,9 @@ const publicEnvSchema = z.object({
   NEXT_PUBLIC_CONTACT_EMAIL: optional(z.email()),
   NEXT_PUBLIC_SUPABASE_URL: optional(z.url()),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: optional(z.string().min(1)),
+  // Clé publique VAPID (Web Push), encodée en base64url : elle peut être
+  // exposée au navigateur. La clé privée reste côté serveur (server-env.ts).
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: optional(z.string().regex(/^[A-Za-z0-9_-]{80,100}$/)),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -29,6 +32,7 @@ export const publicEnv = parsePublicEnv({
   NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL,
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
 });
 
 export function isSupabaseConfigured(env: PublicEnv = publicEnv): boolean {

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { routes } from "@/config/routes";
 import { signOutAction } from "@/features/auth/actions";
+import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
 
 type UserMenuProps = {
   displayName: string;
@@ -67,6 +68,7 @@ export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <form action={signOutAction}>
+          <PushEndpointField />
           {/* Le menu reste ouvert pendant l'envoi pour ne pas démonter le formulaire. */}
           <DropdownMenuItem asChild onSelect={(event) => event.preventDefault()}>
             <button type="submit" className="w-full">

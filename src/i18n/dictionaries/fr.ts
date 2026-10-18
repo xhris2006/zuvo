@@ -17,6 +17,9 @@ const statuses: Record<ListingStatus, string> = {
   withdrawn: "Retiré",
 };
 
+/** Citation à la française, avec espaces insécables (« titre » ne se coupe pas). */
+const quote = (value: string) => `«\u00a0${value}\u00a0»`;
+
 export const fr = {
   common: {
     skipToContent: "Aller au contenu principal",
@@ -124,6 +127,28 @@ export const fr = {
     favoritesTitle: "Favoris",
     notificationsTitle: "Notifications",
     sellTitle: "Vendre un article",
+  },
+  notifications: {
+    someone: "Un utilisateur",
+    unavailableListing: "une annonce",
+    titles: {
+      new_message: "Nouveau message",
+      new_follower: "Nouvel abonné",
+      followed_user_listing: "Nouvelle annonce",
+      listing_favorited: "Annonce ajoutée aux favoris",
+      listing_removed: "Annonce retirée",
+    },
+    bodies: {
+      new_message: (actor: string, listing: string | null) =>
+        listing ? `${actor} vous a écrit à propos de ${quote(listing)}.` : `${actor} vous a écrit.`,
+      new_follower: (actor: string) => `${actor} suit désormais votre profil.`,
+      followed_user_listing: (actor: string, listing: string) =>
+        `${actor} a publié une nouvelle annonce : ${quote(listing)}.`,
+      listing_favorited: (actor: string, listing: string) =>
+        `${actor} a ajouté ${quote(listing)} à ses favoris.`,
+      listing_removed: (listing: string) =>
+        `Votre annonce ${quote(listing)} a été retirée par la modération.`,
+    },
   },
   footer: {
     about: "Zuvo est une plateforme gratuite de vente entre particuliers.",

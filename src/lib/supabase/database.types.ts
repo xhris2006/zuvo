@@ -678,6 +678,10 @@ export type Database = {
       is_username_available: { Args: { p_username: string }; Returns: boolean };
       mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
       mark_conversation_read: { Args: { p_conversation_id: string }; Returns: number };
+      register_push_subscription: {
+        Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent?: string };
+        Returns: undefined;
+      };
       reorder_listing_images: {
         Args: { p_image_ids: string[]; p_listing_id: string };
         Returns: undefined;

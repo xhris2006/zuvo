@@ -46,7 +46,22 @@ const nextConfig: NextConfig = {
     remotePatterns: storageRemotePatterns(),
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        // Le service worker doit toujours être revalidé pour que les mises à
+        // jour soient prises en compte rapidement.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self'",
+          },
+        ],
+      },
+    ];
   },
 };
 

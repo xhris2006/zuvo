@@ -6,6 +6,9 @@ import { routes } from "@/config/routes";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { UpdatePasswordForm } from "@/features/auth/components/update-password-form";
 import { requireUser } from "@/features/auth/session";
+import { PreferencesForm } from "@/features/notifications/components/preferences-form";
+import { PushSettings } from "@/features/notifications/components/push-settings";
+import { getNotificationPreferences } from "@/features/notifications/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -16,6 +19,7 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
+  const preferences = await getNotificationPreferences();
 
   return (
     <div className="container-page flex max-w-2xl flex-col gap-6 pt-6 sm:pt-10">
@@ -29,6 +33,28 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <SignOutButton variant="outline" />
+        </CardContent>
+      </Card>
+      <Card id="notifications">
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>
+            Choisissez les événements qui apparaissent dans vos notifications.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PreferencesForm preferences={preferences} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Notifications push</CardTitle>
+          <CardDescription>
+            Alertes sur votre téléphone ou votre ordinateur, même quand le site est fermé.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PushSettings />
         </CardContent>
       </Card>
       <Card>

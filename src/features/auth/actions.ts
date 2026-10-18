@@ -208,9 +208,16 @@ export async function updatePasswordAction(
 // -----------------------------------------------------------------------------
 // Déconnexion et connexion Google
 // -----------------------------------------------------------------------------
-export async function signOutAction() {
+export async function signOutAction(formData?: FormData) {
   const supabase = await createSupabaseServerClient();
-  if (supabase) await supabase.auth.signOut({ scope: "local" });
+  if (supabase) {
+    // Un navigateur partagé ne doit plus recevoir les notifications du compte.
+    const pushEndpoint = formData ? formText(formData, "pushEndpoint") : "";
+    if (pushEndpoint && pushEndpoint.length <= 1000) {
+      await supabase.from("push_subscriptions").delete().eq("endpoint", pushEndpoint);
+    }
+    await supabase.auth.signOut({ scope: "local" });
+  }
   revalidatePath("/", "layout");
   redirect(routes.home);
 }

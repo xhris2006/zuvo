@@ -18,7 +18,7 @@
     "check": "npm run lint && npm run typecheck && npm run test",
     "test:e2e": "playwright test",
     "test:db": "vitest run --config vitest.db.config.mts",
-    "db:types": "node scripts/generate-db-types.ts"
+    "db:types": "node scripts/generate-db-types.mts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

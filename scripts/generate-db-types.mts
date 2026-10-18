@@ -10,7 +10,8 @@
  */
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
-import { createDatabaseFromMigrations } from "../supabase/tests/support/database.ts";
+import pg from "pg";
+import { createDatabaseFromMigrations } from "../supabase/tests/support/database.mts";
 
 const SUPABASE_CLI = "supabase@2.121.0";
 const output = "src/lib/supabase/database.types.ts";
@@ -21,11 +22,31 @@ if (!adminUrl) {
   process.exit(1);
 }
 
-const databaseUrl = await createDatabaseFromMigrations(adminUrl, "zuvo_types");
+const databaseUrl = new URL(await createDatabaseFromMigrations(adminUrl, "zuvo_types"));
+
+// La CLI Supabase exige TLS sauf avec sslmode=disable : on le précise lorsque
+// le serveur jetable n'accepte pas TLS (cas des conteneurs PostgreSQL de CI).
+if (!databaseUrl.searchParams.has("sslmode")) {
+  const client = new pg.Client({ connectionString: databaseUrl.toString() });
+  await client.connect();
+  const { rows } = await client.query<{ ssl: string }>("select current_setting('ssl') as ssl");
+  await client.end();
+  if (rows[0]?.ssl !== "on") databaseUrl.searchParams.set("sslmode", "disable");
+}
 
 const types = execFileSync(
   "npx",
-  ["-y", SUPABASE_CLI, "gen", "types", "typescript", "--db-url", databaseUrl, "--schema", "public"],
+  [
+    "-y",
+    SUPABASE_CLI,
+    "gen",
+    "types",
+    "typescript",
+    "--db-url",
+    databaseUrl.toString(),
+    "--schema",
+    "public",
+  ],
   { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
 );
 

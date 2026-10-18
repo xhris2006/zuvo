@@ -1,5 +1,5 @@
 import type { TestProject } from "vitest/node";
-import { createDatabaseFromMigrations } from "./database";
+import { createDatabaseFromMigrations } from "./database.mts";
 
 /**
  * Prépare une base de test à partir des migrations avant l'exécution des tests.

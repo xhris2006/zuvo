@@ -23,7 +23,10 @@ export async function createDatabaseFromMigrations(
   await admin.connect();
   try {
     await admin.query(`drop database if exists ${databaseName} with (force)`);
-    await admin.query(`create database ${databaseName}`);
+    // UTF-8 comme sur Supabase, quel que soit l'encodage par défaut du serveur.
+    await admin.query(
+      `create database ${databaseName} encoding 'UTF8' template template0 lc_collate 'C' lc_ctype 'C'`,
+    );
   } finally {
     await admin.end();
   }

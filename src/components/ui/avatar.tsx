@@ -1,10 +1,11 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const sizes = {
-  sm: "size-8 text-xs",
-  md: "size-10 text-sm",
-  lg: "size-16 text-lg",
-  xl: "size-24 text-2xl",
+  sm: { className: "size-8 text-xs", pixels: 32 },
+  md: { className: "size-10 text-sm", pixels: 40 },
+  lg: { className: "size-16 text-lg", pixels: 64 },
+  xl: { className: "size-24 text-2xl", pixels: 96 },
 } as const;
 
 type AvatarProps = {
@@ -24,17 +25,26 @@ export function getInitials(name: string): string {
 }
 
 export function Avatar({ name, src, size = "md", className }: AvatarProps) {
+  const { className: sizeClass, pixels } = sizes[size];
   return (
     <span
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary font-semibold text-secondary-foreground",
-        sizes[size],
+        sizeClass,
         className,
       )}
     >
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- remplacé par next/image avec le stockage Supabase
-        <img src={src} alt={name} className="size-full object-cover" />
+        <Image
+          src={src}
+          alt={`Photo de profil de ${name}`}
+          width={pixels}
+          height={pixels}
+          sizes={`${pixels}px`}
+          // Aperçu local (blob:) avant envoi : pas d'optimisation possible.
+          unoptimized={src.startsWith("blob:")}
+          className="size-full object-cover"
+        />
       ) : (
         <span aria-label={name} role="img">
           {getInitials(name)}

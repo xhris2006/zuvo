@@ -28,3 +28,12 @@ describe("formatRelativeTime", () => {
     expect(formatRelativeTime("2026-06-01T12:00:00Z", now)).toBe("il y a 2 semaines");
   });
 });
+
+describe("formatMonthYear et formatCount", () => {
+  it("formatent en français", async () => {
+    const { formatCount, formatMonthYear } = await import("./format");
+    expect(formatMonthYear("2026-10-18T12:00:00Z")).toBe("octobre 2026");
+    expect(formatCount(42)).toBe("42");
+    expect(normalize(formatCount(1200))).toBe("1,2 k");
+  });
+});

@@ -17,8 +17,8 @@ et échangent directement avec les acheteurs.
 | ----- | ---------------------------------------------------------------- | -------- |
 | 0     | Audit du dépôt et plan                                           | Terminée |
 | 1     | Fondations : Next.js, design system, navigation, pages publiques | Terminée |
-| 2     | Supabase : schéma SQL, migrations, RLS, Storage                  | À faire  |
-| 3     | Authentification, sessions, profils                              | À faire  |
+| 2     | Supabase : schéma SQL, migrations, RLS, Storage                  | Terminée |
+| 3     | Authentification, sessions, profils                              | Terminée |
 | 4     | Annonces : création, photos, statuts                             | À faire  |
 | 5     | Recherche, filtres, favoris, abonnements                         | À faire  |
 | 6     | Messagerie temps réel                                            | À faire  |
@@ -33,6 +33,23 @@ l'authentification n'est pas encore disponible.
 
 **Base de données** : schéma, sécurité (RLS), stockage et procédure de
 configuration du projet Supabase sont décrits dans [`docs/supabase.md`](docs/supabase.md).
+
+## Authentification et profils
+
+- Inscription par e-mail et mot de passe (8 caractères minimum, lettres et
+  chiffres), vérification obligatoire de l'adresse, connexion, déconnexion,
+  mot de passe oublié et changement de mot de passe.
+- Connexion Google affichée uniquement si le fournisseur est activé dans Supabase.
+- Session rafraîchie par `src/proxy.ts` ; chaque page et chaque action serveur
+  revérifient l'utilisateur (`requireUser`), et la base applique ses politiques RLS.
+- Aucune information ne révèle si une adresse possède déjà un compte.
+- Profil public `/u/<nom>` (photo, bio, ville, date d'inscription, nombre réel
+  d'abonnés, d'abonnements et d'annonces, bouton Suivre) ; profil personnel
+  `/profil`, modification `/profil/modifier` (photo recadrée et allégée dans le
+  navigateur), paramètres `/parametres`. Le téléphone reste privé.
+
+Configuration côté Supabase (modèles d'e-mails, URL de redirection, Google) :
+voir [`docs/supabase.md`](docs/supabase.md#14-authentification).
 
 ## Stack
 

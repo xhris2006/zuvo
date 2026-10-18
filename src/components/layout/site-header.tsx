@@ -4,11 +4,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
+import { avatarUrl } from "@/features/profiles/avatar-url";
+import { getCurrentProfile } from "@/features/profiles/queries";
 import { getDictionary } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { DesktopNav } from "./desktop-nav";
 import { Logo } from "./logo";
 import { SearchForm } from "./search-form";
+import { UserMenu } from "./user-menu";
 
 function IconLink({
   href,
@@ -30,8 +33,9 @@ function IconLink({
   );
 }
 
-export function SiteHeader() {
+export async function SiteHeader() {
   const t = getDictionary();
+  const profile = await getCurrentProfile();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -57,9 +61,19 @@ export function SiteHeader() {
               {t.nav.sell}
             </Link>
           </Button>
-          <Button asChild variant="outline" className="hidden md:inline-flex">
-            <Link href={routes.signIn}>{t.common.signIn}</Link>
-          </Button>
+          {profile ? (
+            <div className="ml-1 hidden md:block">
+              <UserMenu
+                displayName={profile.display_name}
+                username={profile.username}
+                avatarUrl={avatarUrl(profile.avatar_path)}
+              />
+            </div>
+          ) : (
+            <Button asChild variant="outline" className="hidden md:inline-flex">
+              <Link href={routes.signIn}>{t.common.signIn}</Link>
+            </Button>
+          )}
         </div>
       </div>
 

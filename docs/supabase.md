@@ -86,7 +86,35 @@ Dans **Authentication** :
   fortement limité (quelques e-mails par heure) et réservé aux tests.
   Configurez un fournisseur SMTP avant l'ouverture au public, sans quoi les
   e-mails de vérification ne partiront pas.
-- La connexion Google sera configurée à la phase 3.
+- **Emails → Templates** : remplacez les modèles **Confirm signup**, **Reset
+  password** et **Change email address** par le contenu des fichiers de
+  [`supabase/templates/`](../supabase/templates) (objets indiqués dans
+  `supabase/config.toml`). Leurs liens ouvrent `/auth/confirm`, qui demande une
+  confirmation par bouton : le lien fonctionne même ouvert sur un autre appareil
+  et ne peut pas être consommé par un robot qui précharge les liens des e-mails.
+  Avec les modèles par défaut de Supabase, la confirmation passe par
+  `/auth/callback` et ne fonctionne que dans le navigateur où l'inscription a
+  été faite.
+- **URL Configuration → Redirect URLs** doit contenir les adresses
+  `…/auth/callback` du site (couvertes par `https://votre-domaine/**`).
+
+#### Connexion Google (facultative)
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs et
+   services** → **Écran de consentement OAuth** : type _Externe_, nom de
+   l'application, e-mail d'assistance, domaine autorisé (votre domaine).
+2. **Identifiants → Créer des identifiants → ID client OAuth** → _Application
+   Web_ :
+   - _Origines JavaScript autorisées_ : l'URL du site (et `http://localhost:3000`) ;
+   - _URI de redirection autorisés_ : `https://<ref>.supabase.co/auth/v1/callback`
+     (affiché dans Supabase, fiche du fournisseur Google).
+3. Supabase → **Authentication → Sign In / Providers → Google** : activez et
+   collez l'ID client et le code secret. Ne collez jamais ce secret dans le code,
+   un commit ou une conversation.
+4. Le bouton « Continuer avec Google » apparaît automatiquement : l'application
+   lit la liste des fournisseurs activés (`/auth/v1/settings`). Tant que Google
+   n'est pas activé, aucun bouton n'est affiché en production et une explication
+   apparaît en développement.
 
 Le fichier [`supabase/config.toml`](../supabase/config.toml) reprend ces
 réglages pour l'environnement local (`supabase start`).

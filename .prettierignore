@@ -4,3 +4,5 @@ coverage
 package-lock.json
 next-env.d.ts
 supabase/.temp
+# Modèles d'e-mails Supabase (HTML + gabarits Go) : mise en forme manuelle.
+supabase/templates

@@ -1,0 +1,69 @@
+"use client";
+
+import { LogOut, Pencil, Settings, UserRound } from "lucide-react";
+import Link from "next/link";
+import { Avatar } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { routes } from "@/config/routes";
+import { signOutAction } from "@/features/auth/actions";
+
+type UserMenuProps = {
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+};
+
+export function UserMenu({ displayName, username, avatarUrl }: UserMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="rounded-full outline-offset-2"
+        aria-label={`Menu du compte de ${displayName}`}
+      >
+        <Avatar name={displayName} src={avatarUrl} size="md" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>
+          <p className="truncate text-sm font-semibold">{displayName}</p>
+          <p className="truncate text-xs text-muted-foreground">@{username}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href={routes.profile}>
+            <UserRound aria-hidden="true" />
+            Mon profil
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.editProfile}>
+            <Pencil aria-hidden="true" />
+            Modifier le profil
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.settings}>
+            <Settings aria-hidden="true" />
+            Paramètres
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <form action={signOutAction}>
+          {/* Le menu reste ouvert pendant l'envoi pour ne pas démonter le formulaire. */}
+          <DropdownMenuItem asChild onSelect={(event) => event.preventDefault()}>
+            <button type="submit" className="w-full">
+              <LogOut aria-hidden="true" />
+              Se déconnecter
+            </button>
+          </DropdownMenuItem>
+        </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

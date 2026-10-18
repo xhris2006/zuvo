@@ -1,0 +1,30 @@
+import { describe, expect, it } from "vitest";
+import { formatPrice, formatRelativeTime } from "./format";
+
+/** Intl utilise des espaces insécables ; on les normalise pour les assertions. */
+const normalize = (value: string) => value.replace(/[  ]/g, " ");
+
+describe("formatPrice", () => {
+  it("formats XAF amounts without decimals", () => {
+    expect(normalize(formatPrice(15000))).toBe("15 000 FCFA");
+    expect(normalize(formatPrice(0))).toBe("0 FCFA");
+    expect(normalize(formatPrice(1250000))).toBe("1 250 000 FCFA");
+  });
+});
+
+describe("formatRelativeTime", () => {
+  const now = new Date("2026-06-15T12:00:00Z");
+
+  it("returns « à l'instant » under a minute", () => {
+    expect(formatRelativeTime(new Date("2026-06-15T11:59:30Z"), now)).toBe("à l'instant");
+  });
+
+  it("formats hours and days in French", () => {
+    expect(formatRelativeTime(new Date("2026-06-15T09:00:00Z"), now)).toBe("il y a 3 heures");
+    expect(formatRelativeTime(new Date("2026-06-14T12:00:00Z"), now)).toBe("hier");
+  });
+
+  it("accepts ISO strings", () => {
+    expect(formatRelativeTime("2026-06-01T12:00:00Z", now)).toBe("il y a 2 semaines");
+  });
+});

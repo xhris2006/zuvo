@@ -51,6 +51,13 @@ insertion dans notifications
   « Awa vous a écrit à propos de « … » »).
 - Le service worker (`public/sw.js`) n'ouvre que des chemins internes au site
   et ne met aucune page ni réponse d'API en cache.
+- Le serveur ne contacte que les services push des navigateurs
+  (`fcm.googleapis.com`, `updates.push.services.mozilla.com`,
+  `web.push.apple.com`, `*.notify.windows.com`) : règle imposée en base
+  (contrainte `push_subscriptions_known_service`), à l'enregistrement et à
+  l'envoi. Les abonnements ne peuvent être créés que par la fonction
+  `register_push_subscription` (plafond, comptes suspendus).
+- Aucune notification push n'est envoyée au nom d'un compte suspendu.
 - Un navigateur partagé est retiré du compte à la déconnexion ; un même
   navigateur ne peut appartenir qu'à un compte à la fois ; 10 appareils au
   plus par compte.

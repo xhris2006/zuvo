@@ -43,8 +43,8 @@ const notification = {
 };
 
 const subscriptions = [
-  { id: "s1", endpoint: "https://push.example.test/1", p256dh: "k1", auth: "a1" },
-  { id: "s2", endpoint: "https://push.example.test/2", p256dh: "k2", auth: "a2" },
+  { id: "s1", endpoint: "https://fcm.googleapis.com/fcm/send/1", p256dh: "k1", auth: "a1" },
+  { id: "s2", endpoint: "https://fcm.googleapis.com/fcm/send/2", p256dh: "k2", auth: "a2" },
 ];
 
 beforeEach(() => {
@@ -65,6 +65,45 @@ describe("dispatchNotification", () => {
       reason: "already_read",
     });
     expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("n'envoie rien au nom d'un compte suspendu", async () => {
+    const admin = adminWith({
+      notifications: [
+        queryBuilder({
+          data: {
+            ...notification,
+            actor: { ...notification.actor, suspended_at: "2026-10-18T10:00:00Z" },
+          },
+        }),
+      ],
+    });
+    expect(await dispatchNotification(admin as never, NOTIFICATION_ID, config)).toMatchObject({
+      reason: "actor_suspended",
+    });
+    expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("ne contacte jamais un hôte hors des services push connus", async () => {
+    const remove = queryBuilder();
+    const admin = adminWith({
+      notifications: [queryBuilder({ data: notification })],
+      notification_preferences: [queryBuilder({ data: { push_enabled: true } })],
+      push_subscriptions: [
+        queryBuilder({
+          data: [{ id: "s9", endpoint: "https://10.0.0.5/interne", p256dh: "k", auth: "a" }],
+        }),
+        remove,
+      ],
+    });
+    expect(await dispatchNotification(admin as never, NOTIFICATION_ID, config)).toEqual({
+      status: "done",
+      sent: 0,
+      expired: 1,
+      failed: 0,
+    });
+    expect(sendNotification).not.toHaveBeenCalled();
+    expect(remove.in).toHaveBeenCalledWith("id", ["s9"]);
   });
 
   it("n'envoie rien si le push est désactivé", async () => {

@@ -248,7 +248,8 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
 - **Fonctions appelables par l'application** (`get_or_create_conversation`,
   `mark_conversation_read`, `mark_all_notifications_read`,
   `reorder_listing_images`, `sync_listing_images`, `get_my_conversations`,
-  `get_unread_messages_count`, `register_push_subscription`, `admin_*`) : elles
+  `get_unread_messages_count`, `register_push_subscription`, `admin_*`,
+  `admin_list_reports`) : elles
   s'exécutent avec les droits de l'appelant, donc sous RLS.
 - **Administration** : `admin_remove_listing`, `admin_restore_listing`,
   `admin_set_user_suspension`, `admin_update_report`,
@@ -268,11 +269,19 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
   | Nouvelles conversations | 20 par heure                |
   | Abonnements             | 100 par heure               |
   | Signalements            | 20 par jour                 |
+  | Favoris                 | 200 par heure               |
 
 - **Blocage** : empêche les nouvelles conversations, les messages et les
   abonnements dans les deux sens, et supprime les abonnements existants.
 - **Comptes suspendus** : profil et annonces masqués au public ; création
-  d'annonces, messages et abonnements refusés.
+  d'annonces, messages, abonnements, favoris et modification du profil
+  refusés ; aucune notification émise en leur nom.
+- **Annonces retirées par la modération** : contenu et photos figés pour le
+  vendeur (preuves conservées) jusqu'à une éventuelle restauration.
+- **Signalements** : leur auteur voit leur statut, mais pas l'administrateur
+  qui les a traités ni la note interne (lus par `admin_list_reports`).
+- **Fonctions internes** (`private`) : aucune n'est exécutable par `PUBLIC` ;
+  les droits nécessaires sont accordés explicitement (vérifié par les tests).
 - **Temps réel** : `messages`, `conversations` et `notifications` sont publiés
   dans `supabase_realtime` ; Supabase Realtime applique les politiques RLS de
   chaque abonné.

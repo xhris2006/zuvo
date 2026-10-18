@@ -714,6 +714,27 @@ export type Database = {
         }[];
       };
       admin_get_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_list_reports: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_status: Database["public"]["Enums"]["report_status"];
+        };
+        Returns: {
+          created_at: string;
+          details: string;
+          id: string;
+          reason: Database["public"]["Enums"]["report_reason"];
+          reporter_display_name: string;
+          reporter_username: string;
+          resolution_note: string;
+          reviewed_at: string;
+          status: Database["public"]["Enums"]["report_status"];
+          target_id: string;
+          target_type: Database["public"]["Enums"]["report_target_type"];
+          total_count: number;
+        }[];
+      };
       admin_remove_listing: {
         Args: { p_listing_id: string; p_reason: string; p_report_id?: string };
         Returns: undefined;

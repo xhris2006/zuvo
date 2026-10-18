@@ -73,38 +73,41 @@ describe("notifications", () => {
 });
 
 describe("push_subscriptions", () => {
-  const subscribe = (userId: string, endpoint: string, ownerId?: string) =>
+  const register = (userId: string, endpoint: string) =>
     asUser(userId, (sql) =>
-      ownerId
-        ? sql(
-            "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'cle', 'secret')",
-            [ownerId, endpoint],
-          )
-        : sql(
-            "insert into public.push_subscriptions (endpoint, p256dh, auth) values ($1, 'cle', 'secret')",
-            [endpoint],
-          ),
+      sql("select public.register_push_subscription($1, 'cle', 'secret')", [endpoint]),
     );
 
   it("sont privées à leur propriétaire", async () => {
     const owner = await createUser();
     const other = await createUser();
-    const endpoint = `https://push.example.test/${owner.id}`;
-    await subscribe(owner.id, endpoint);
+    const endpoint = `https://fcm.googleapis.com/fcm/send/${owner.id}`;
+    await register(owner.id, endpoint);
     const query = "select endpoint from public.push_subscriptions where endpoint = $1";
     expect((await asUser(owner.id, (sql) => sql(query, [endpoint]))).rows).toHaveLength(1);
     expect((await asUser(other.id, (sql) => sql(query, [endpoint]))).rows).toHaveLength(0);
     await expectDenied(asAnon((sql) => sql(query, [endpoint])));
   });
 
-  it("ne peuvent pas être enregistrées pour un autre utilisateur", async () => {
+  it("ne s'enregistrent que par la fonction dédiée, pour soi-même", async () => {
     const owner = await createUser();
     const attacker = await createUser();
-    await expectDenied(subscribe(attacker.id, `https://push.example.test/x-${owner.id}`, owner.id));
+    for (const [query, values] of [
+      [
+        "insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1, $2, 'cle', 'secret')",
+        [owner.id, `https://fcm.googleapis.com/fcm/send/x-${owner.id}`],
+      ],
+      [
+        "insert into public.push_subscriptions (endpoint, p256dh, auth) values ($1, 'cle', 'secret')",
+        [`https://fcm.googleapis.com/fcm/send/y-${owner.id}`],
+      ],
+    ] as const) {
+      await expectDenied(asUser(attacker.id, (sql) => sql(query, [...values])));
+    }
   });
 
-  it("exigent une URL HTTPS", async () => {
+  it("exigent un service push HTTPS connu", async () => {
     const owner = await createUser();
-    await expectError(subscribe(owner.id, "http://insecure.example.test"), "23514");
+    await expectError(register(owner.id, "http://insecure.example.test"), "23514");
   });
 });

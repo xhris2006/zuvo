@@ -108,20 +108,16 @@ export async function getAdminReports(
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new AdminQueryError();
 
-  const from = (page - 1) * pageSize;
-  const { data, error, count } = await supabase
-    .from("reports")
-    .select(
-      `id, target_type, target_id, reason, details, status, created_at, reviewed_at, resolution_note,
-       reporter:profiles!reports_reporter_id_fkey(username, display_name)`,
-      { count: "exact" },
-    )
-    .eq("status", status)
-    // Les plus anciens d'abord tant qu'ils attendent un traitement.
-    .order("created_at", { ascending: status === "pending" || status === "in_review" })
-    .range(from, from + pageSize - 1);
-  if (error && error.code !== "PGRST103") throw new AdminQueryError();
+  // Champs internes (note, auteur) lus par une fonction réservée à
+  // l'administration : l'auteur d'un signalement n'y a pas accès.
+  const { data, error } = await supabase.rpc("admin_list_reports", {
+    p_status: status,
+    p_limit: pageSize,
+    p_offset: (page - 1) * pageSize,
+  });
+  if (error) throw new AdminQueryError();
   const rows = data ?? [];
+  const count = rows[0]?.total_count ?? 0;
 
   const idsOf = (type: ReportTargetType) =>
     rows.filter((row) => row.target_type === type).map((row) => row.target_id);
@@ -188,13 +184,14 @@ export async function getAdminReports(
       createdAt: row.created_at,
       reviewedAt: row.reviewed_at,
       resolutionNote: row.resolution_note,
-      reporter: row.reporter
-        ? { username: row.reporter.username, displayName: row.reporter.display_name }
-        : null,
+      reporter:
+        row.reporter_username && row.reporter_display_name
+          ? { username: row.reporter_username, displayName: row.reporter_display_name }
+          : null,
       target,
     };
   });
-  return { items, total: count ?? 0, pageSize };
+  return { items, total: Number(count), pageSize };
 }
 
 // -----------------------------------------------------------------------------

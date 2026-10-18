@@ -11,6 +11,7 @@ import { type FormState, formText } from "@/lib/forms/form-state";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notificationHref } from "./content";
 import { getPushConfig, sendPush } from "./push/send";
+import { isAllowedPushEndpoint } from "./push-endpoint";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SESSION_EXPIRED = "Votre session a expiré. Reconnectez-vous.";
@@ -100,7 +101,7 @@ const base64url = (max: number) =>
     .regex(/^[A-Za-z0-9_-]+={0,2}$/);
 
 const pushSubscriptionSchema = z.object({
-  endpoint: z.url({ protocol: /^https$/ }).max(1000),
+  endpoint: z.string().max(1000).refine(isAllowedPushEndpoint),
   keys: z.object({ p256dh: base64url(200), auth: base64url(100) }),
 });
 

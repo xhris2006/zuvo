@@ -106,14 +106,13 @@ describe("retrait et restauration d'annonce", () => {
     expect((await asAnon((sql) => sql(query, [listingId]))).rows).toHaveLength(0);
     expect((await asUser(seller.id, (sql) => sql(query, [listingId]))).rows).toHaveLength(1);
 
-    // Le vendeur ne peut ni la republier ni la supprimer.
-    await expectError(
-      asUser(seller.id, (sql) =>
-        sql("update public.listings set status = 'active' where id = $1", [listingId]),
-      ),
-      "P0001",
-      /listing_removed_by_moderation/,
+    // Contenu figé pour le vendeur : ni remise en ligne, ni modification.
+    const republished = await asUser(seller.id, (sql) =>
+      sql("update public.listings set status = 'active', title = 'Autre' where id = $1", [
+        listingId,
+      ]),
     );
+    expect(republished.rowCount).toBe(0);
 
     const reportRow = await asOwner((sql) =>
       sql<{ status: string; reviewed_by: string }>(
@@ -216,13 +215,31 @@ describe("signalements", () => {
     await asUser(admin.id, (sql) =>
       sql("select public.admin_update_report($1, 'dismissed', 'Pas de preuve')", [reportId]),
     );
+    // L'auteur voit l'issue, pas les champs internes de la modération.
     const { rows } = await asUser(reporter.id, (sql) =>
-      sql<{ status: string; resolution_note: string }>(
-        "select status, resolution_note from public.reports where id = $1",
-        [reportId],
+      sql<{ status: string }>("select status from public.reports where id = $1", [reportId]),
+    );
+    expect(rows[0]).toEqual({ status: "dismissed" });
+    for (const column of ["resolution_note", "reviewed_by"]) {
+      await expectDenied(
+        asUser(reporter.id, (sql) =>
+          sql(`select ${column} from public.reports where id = $1`, [reportId]),
+        ),
+      );
+    }
+
+    const listed = await asUser(admin.id, (sql) =>
+      sql<{ id: string; resolution_note: string; reporter_username: string; total_count: string }>(
+        "select id, resolution_note, reporter_username, total_count from public.admin_list_reports('dismissed', 100, 0)",
       ),
     );
-    expect(rows[0]).toEqual({ status: "dismissed", resolution_note: "Pas de preuve" });
+    expect(listed.rows.find((row) => row.id === reportId)).toMatchObject({
+      resolution_note: "Pas de preuve",
+      reporter_username: reporter.username,
+    });
+    await expectDenied(
+      asUser(reporter.id, (sql) => sql("select * from public.admin_list_reports('pending')")),
+    );
     expect((await journal(target.id)).map((row) => row.action)).toEqual([
       "report_in_review",
       "report_dismissed",

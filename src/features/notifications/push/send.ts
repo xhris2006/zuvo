@@ -2,6 +2,7 @@ import "server-only";
 import webpush, { WebPushError } from "web-push";
 import { publicEnv } from "@/lib/env";
 import { getServerEnv } from "@/lib/server-env";
+import { isAllowedPushEndpoint } from "../push-endpoint";
 
 export type PushConfig = { publicKey: string; privateKey: string; subject: string };
 
@@ -40,6 +41,11 @@ export async function sendPush(
   const body = JSON.stringify(payload);
   await Promise.all(
     subscriptions.map(async (subscription) => {
+      // Défense en profondeur : aucune requête hors des services push connus.
+      if (!isAllowedPushEndpoint(subscription.endpoint)) {
+        result.expired.push(subscription.id);
+        return;
+      }
       try {
         await webpush.sendNotification(
           {

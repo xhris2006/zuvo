@@ -92,6 +92,20 @@ celui des notifications push dans [`notifications.md`](notifications.md).
   après saisie de son nom d'utilisateur ; profil, annonces, photos, favoris,
   abonnements et notifications sont supprimés.
 
+## Revue de sécurité (phase 10)
+
+Une revue indépendante du code et des migrations a relevé cinq points, tous
+corrigés (migration `20261018170000_security_hardening.sql` et code) et
+couverts par des tests :
+
+| Gravité | Problème                                                                                     | Correction                                                                              |
+| ------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Moyenne | Redirection ouverte : `/.//site-externe` était normalisé en `//site-externe`                 | rejet des chemins normalisés commençant par `//`                                        |
+| Moyenne | Abonnements push vers des adresses arbitraires (requêtes du serveur vers des hôtes internes) | services push connus uniquement (base, validation, envoi) ; insertion directe interdite |
+| Faible  | Un compte suspendu pouvait encore ajouter des favoris (notifications à son nom)              | favoris et modification du profil refusés, notifications ignorées, limite horaire       |
+| Faible  | L'auteur d'un signalement pouvait lire l'administrateur et la note de traitement             | droits par colonne, lecture admin par `admin_list_reports`                              |
+| Faible  | Le vendeur pouvait modifier une annonce retirée et effacer ses photos (preuves)              | contenu et photos figés tant que l'annonce est retirée                                  |
+
 ## Tests de sécurité automatisés
 
 - `npm run test:db` : accès autorisés **et refusés** pour chaque table, les

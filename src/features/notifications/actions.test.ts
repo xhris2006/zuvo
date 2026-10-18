@@ -147,6 +147,7 @@ describe("abonnements push", () => {
       null,
       { ...subscription, endpoint: "http://push.example.test/x" },
       { ...subscription, endpoint: "javascript:alert(1)" },
+      { ...subscription, endpoint: "https://10.0.0.5:8443/interne" },
       { ...subscription, keys: { p256dh: "<script>", auth: "x" } },
     ]) {
       expect(await savePushSubscriptionAction(input)).toMatchObject({ status: "error" });

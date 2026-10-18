@@ -4,7 +4,10 @@ import { describeNotification, type NotificationSubject, notificationHref } from
 import { type PushConfig, sendPush } from "./send";
 
 export type DispatchOutcome =
-  | { status: "skipped"; reason: "not_found" | "already_read" | "push_disabled" | "no_device" }
+  | {
+      status: "skipped";
+      reason: "not_found" | "already_read" | "actor_suspended" | "push_disabled" | "no_device";
+    }
   | { status: "done"; sent: number; expired: number; failed: number };
 
 /**
@@ -21,7 +24,7 @@ export async function dispatchNotification(
     .from("notifications")
     .select(
       `id, user_id, type, is_read, listing_id, conversation_id,
-       actor:profiles!notifications_actor_id_fkey(username, display_name),
+       actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at),
        listing:listings(title)`,
     )
     .eq("id", notificationId)
@@ -29,6 +32,8 @@ export async function dispatchNotification(
   if (error) throw new Error("push_dispatch_query_failed");
   if (!notification) return { status: "skipped", reason: "not_found" };
   if (notification.is_read) return { status: "skipped", reason: "already_read" };
+  // Lecture en service_role : RLS ne masque pas les comptes suspendus.
+  if (notification.actor?.suspended_at) return { status: "skipped", reason: "actor_suspended" };
 
   const [{ data: preferences }, { data: subscriptions }] = await Promise.all([
     admin

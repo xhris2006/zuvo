@@ -67,7 +67,7 @@ async function block(blockerId: string, blockedId: string) {
 
 function fakeSubscription() {
   return {
-    endpoint: `https://push.example.test/${randomBytes(16).toString("hex")}`,
+    endpoint: `https://fcm.googleapis.com/fcm/send/${randomBytes(16).toString("hex")}`,
     p256dh: randomBytes(65).toString("base64url"),
     auth: randomBytes(16).toString("base64url"),
   };
@@ -321,19 +321,40 @@ describe("register_push_subscription", () => {
     expect(Number(rows[0]!.count)).toBe(10);
   });
 
-  it("refuse un point de terminaison non HTTPS, un compte suspendu et l'accès anonyme", async () => {
+  it("refuse un service inconnu, un compte suspendu et l'accès anonyme", async () => {
     const user = await createUser();
     const sub = fakeSubscription();
-    await expectError(
-      asUser(user.id, (sql) =>
+    // Le serveur ne doit contacter que les services push des navigateurs.
+    for (const endpoint of [
+      "http://fcm.googleapis.com/fcm/send/x",
+      "https://10.0.0.5:8443/x",
+      "https://evil.example/fcm.googleapis.com/",
+      "https://fcm.googleapis.com.evil.example/x",
+    ]) {
+      await expectError(
+        asUser(user.id, (sql) =>
+          sql("select public.register_push_subscription($1, $2, $3)", [
+            endpoint,
+            sub.p256dh,
+            sub.auth,
+          ]),
+        ),
+        "23514",
+      );
+    }
+    for (const endpoint of [
+      "https://updates.push.services.mozilla.com/wpush/v2/abc",
+      "https://web.push.apple.com/QGuQyavXutnMH",
+      "https://wns2-par02p.notify.windows.com/w/?token=abc",
+    ]) {
+      await asUser(user.id, (sql) =>
         sql("select public.register_push_subscription($1, $2, $3)", [
-          "http://push.example.test/x",
+          endpoint,
           sub.p256dh,
           sub.auth,
         ]),
-      ),
-      "23514",
-    );
+      );
+    }
     await expectDenied(
       asAnon((sql) =>
         sql("select public.register_push_subscription($1, $2, $3)", [

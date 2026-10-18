@@ -7,10 +7,17 @@ export const routes = {
   sell: "/vendre",
   messages: "/messages",
   profile: "/profil",
+  editProfile: "/profil/modifier",
+  settings: "/parametres",
   favorites: "/favoris",
   notifications: "/notifications",
   signIn: "/connexion",
   signUp: "/inscription",
+  signUpCheckEmail: "/inscription/verification",
+  forgotPassword: "/mot-de-passe-oublie",
+  resetPassword: "/reinitialiser-mot-de-passe",
+  authConfirm: "/auth/confirm",
+  authCallback: "/auth/callback",
   terms: "/conditions",
   privacy: "/confidentialite",
   safety: "/securite",
@@ -18,8 +25,39 @@ export const routes = {
   reportsInfo: "/signalements",
 } as const satisfies Record<string, Route>;
 
+/** Pages réservées aux utilisateurs connectés (préfixes). */
+export const protectedRoutePrefixes = [
+  routes.sell,
+  routes.messages,
+  routes.profile,
+  routes.settings,
+  routes.favorites,
+  routes.notifications,
+  routes.resetPassword,
+] as const;
+
+/** Pages d'authentification inutiles une fois connecté. */
+export const guestOnlyRoutes = [routes.signIn, routes.signUp, routes.forgotPassword] as const;
+
+function matchesPrefix(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+export function isProtectedPath(pathname: string): boolean {
+  return protectedRoutePrefixes.some((prefix) => matchesPrefix(pathname, prefix));
+}
+
+export function isGuestOnlyPath(pathname: string): boolean {
+  return guestOnlyRoutes.some((route) => pathname === route);
+}
+
 /** Lien vers la page Explorer avec des paramètres de recherche. */
 export function exploreHref(params?: URLSearchParams): Route {
   const query = params?.toString();
   return (query ? `${routes.explore}?${query}` : routes.explore) as Route;
+}
+
+/** Profil public d'un utilisateur. */
+export function publicProfileHref(username: string): Route {
+  return `/u/${encodeURIComponent(username)}` as Route;
 }

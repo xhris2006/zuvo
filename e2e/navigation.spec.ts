@@ -15,11 +15,16 @@ const publicPages = [
   "/securite",
   "/aide",
   "/signalements",
+  "/mot-de-passe-oublie",
+  "/inscription/verification",
+  "/auth/confirm",
 ];
 
 test.describe("pages publiques", () => {
   for (const path of publicPages) {
     test(`${path} s'affiche sans débordement horizontal`, async ({ page }) => {
+      const pageErrors: string[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error.message));
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
       await expect(page.locator("h1").first()).toBeVisible();
@@ -28,6 +33,7 @@ test.describe("pages publiques", () => {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow).toBeLessThanOrEqual(0);
+      expect(pageErrors).toEqual([]);
     });
   }
 });

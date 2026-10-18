@@ -1,20 +1,15 @@
 import { LockKeyhole } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { getDictionary } from "@/i18n";
+import { signInHref } from "../links";
 
 type AuthRequiredProps = {
   /** Chemin vers lequel revenir après la connexion. */
   returnTo: string;
   description?: string;
 };
-
-export function signInHref(returnTo?: string): Route {
-  if (!returnTo || returnTo === routes.home) return routes.signIn;
-  return `${routes.signIn}?next=${encodeURIComponent(returnTo)}` as Route;
-}
 
 /** Invitation à se connecter affichée sur les pages réservées aux membres. */
 export function AuthRequired({ returnTo, description }: AuthRequiredProps) {

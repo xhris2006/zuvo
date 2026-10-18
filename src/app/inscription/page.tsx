@@ -1,34 +1,52 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LogoMark } from "@/components/layout/logo";
+import { Alert } from "@/components/ui/alert";
 import { routes } from "@/config/routes";
+import { AuthCard } from "@/features/auth/components/auth-card";
 import { AuthUnavailable } from "@/features/auth/components/auth-unavailable";
-import { getDictionary } from "@/i18n";
+import { GoogleSignIn } from "@/features/auth/components/google-sign-in";
+import { SignUpForm } from "@/features/auth/components/sign-up-form";
+import { getAuthSettings } from "@/features/auth/settings";
+import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Créer un compte",
-  robots: { index: false },
+  description: "Créez gratuitement votre compte pour vendre et acheter entre particuliers.",
 };
 
-export default function SignUpPage() {
-  const t = getDictionary();
-  return (
-    <div className="container-page flex justify-center pt-8 sm:pt-16">
-      <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <LogoMark className="size-10" />
-          <h1 className="text-2xl font-bold tracking-tight">{t.auth.signUpTitle}</h1>
-        </div>
+export default async function SignUpPage() {
+  if (!isSupabaseConfigured()) {
+    return (
+      <AuthCard title="Créer un compte">
         <AuthUnavailable />
-        <p className="text-center text-sm text-muted-foreground">
-          <Link
-            href={routes.signIn}
-            className="font-semibold text-primary hover:text-primary-hover"
-          >
-            {t.common.signIn}
-          </Link>
-        </p>
-      </div>
-    </div>
+      </AuthCard>
+    );
+  }
+
+  const settings = await getAuthSettings();
+  const signInLink = (
+    <>
+      Déjà inscrit ?{" "}
+      <Link href={routes.signIn} className="font-semibold text-primary hover:text-primary-hover">
+        Se connecter
+      </Link>
+    </>
+  );
+
+  return (
+    <AuthCard
+      title="Créer un compte"
+      description="Gratuit, sans commission, en moins d'une minute."
+      footer={signInLink}
+    >
+      {settings && !settings.signupEnabled ? (
+        <Alert variant="warning">Les inscriptions sont momentanément fermées.</Alert>
+      ) : (
+        <>
+          <GoogleSignIn settings={settings} />
+          <SignUpForm />
+        </>
+      )}
+    </AuthCard>
   );
 }

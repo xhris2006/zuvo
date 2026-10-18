@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { signInHref } from "./auth-required";
+import { signInHref } from "./links";
 
 describe("signInHref", () => {
   it("encodes the return path", () => {

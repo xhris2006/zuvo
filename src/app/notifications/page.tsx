@@ -1,7 +1,9 @@
+import { Bell } from "lucide-react";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
-import { AuthRequired } from "@/features/auth/components/auth-required";
+import { MemberGate } from "@/features/auth/components/member-gate";
 import { getDictionary } from "@/i18n";
 
 export const metadata: Metadata = {
@@ -14,7 +16,13 @@ export default function NotificationsPage() {
   return (
     <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
       <PageHeader title={t.pages.notificationsTitle} />
-      <AuthRequired returnTo={routes.notifications} />
+      <MemberGate returnTo={routes.notifications}>
+        <EmptyState
+          icon={Bell}
+          title="Aucune notification"
+          description="Vous serez prévenu ici des nouveaux messages, abonnés et activités sur vos annonces."
+        />
+      </MemberGate>
     </div>
   );
 }

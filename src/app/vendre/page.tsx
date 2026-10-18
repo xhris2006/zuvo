@@ -1,7 +1,9 @@
+import { PackagePlus } from "lucide-react";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
-import { AuthRequired } from "@/features/auth/components/auth-required";
+import { MemberGate } from "@/features/auth/components/member-gate";
 import { getDictionary } from "@/i18n";
 
 export const metadata: Metadata = {
@@ -14,7 +16,13 @@ export default function SellPage() {
   return (
     <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
       <PageHeader title={t.pages.sellTitle} />
-      <AuthRequired returnTo={routes.sell} description={t.auth.sellRequiredBody} />
+      <MemberGate returnTo={routes.sell} description={t.auth.sellRequiredBody}>
+        <EmptyState
+          icon={PackagePlus}
+          title="La publication d'annonces arrive bientôt"
+          description="Le formulaire de mise en vente sera disponible dans la prochaine version."
+        />
+      </MemberGate>
     </div>
   );
 }

@@ -1,17 +1,14 @@
-export const listingConditions = [
-  "new_with_tags",
-  "new_without_tags",
-  "very_good",
-  "good",
-  "fair",
-  "for_parts",
-] as const;
+import { Constants, type Database } from "@/lib/supabase/database.types";
 
-export type ListingCondition = (typeof listingConditions)[number];
+type Enums = Database["public"]["Enums"];
 
-export const listingStatuses = ["draft", "active", "reserved", "sold", "withdrawn"] as const;
+/** États possibles d'un article (source de vérité : type SQL listing_condition). */
+export const listingConditions = Constants.public.Enums.listing_condition;
+export type ListingCondition = Enums["listing_condition"];
 
-export type ListingStatus = (typeof listingStatuses)[number];
+/** Statuts d'une annonce (source de vérité : type SQL listing_status). */
+export const listingStatuses = Constants.public.Enums.listing_status;
+export type ListingStatus = Enums["listing_status"];
 
 /** Statuts visibles publiquement (les brouillons et annonces retirées restent privés). */
 export const publicListingStatuses = [

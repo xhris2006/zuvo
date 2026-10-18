@@ -46,3 +46,24 @@ export function formatRelativeTime(date: Date | string, now: Date = new Date()):
   }
   return "à l'instant";
 }
+
+const monthYearFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
+  month: "long",
+  year: "numeric",
+  timeZone: siteConfig.timeZone,
+});
+
+/** « octobre 2026 ». */
+export function formatMonthYear(date: Date | string): string {
+  return monthYearFormatter.format(typeof date === "string" ? new Date(date) : date);
+}
+
+const compactFormatter = new Intl.NumberFormat(siteConfig.intlLocale, {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+/** Nombre court : 1 200 → « 1,2 k ». */
+export function formatCount(value: number): string {
+  return value < 1000 ? String(value) : compactFormatter.format(value);
+}

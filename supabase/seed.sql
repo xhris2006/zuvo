@@ -1,0 +1,5 @@
+-- Données de développement local (exécutées par `supabase db reset`).
+--
+-- Volontairement vide : aucun compte ni aucune annonce fictifs. Les catégories
+-- de référence sont créées par la migration *_catalog.sql afin d'exister aussi
+-- en production.

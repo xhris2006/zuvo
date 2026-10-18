@@ -23,10 +23,28 @@ const securityHeaders = [
   },
 ];
 
+/** Images servies par Supabase Storage (buckets publics uniquement). */
+function storageRemotePatterns(): NonNullable<NextConfig["images"]>["remotePatterns"] {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return [];
+  const url = new URL(supabaseUrl);
+  return [
+    {
+      protocol: url.protocol === "http:" ? "http" : "https",
+      hostname: url.hostname,
+      port: url.port,
+      pathname: "/storage/v1/object/public/**",
+    },
+  ];
+}
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  images: {
+    remotePatterns: storageRemotePatterns(),
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

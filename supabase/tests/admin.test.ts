@@ -296,12 +296,7 @@ describe("journal et statistiques", () => {
     const { rows } = await asUser(admin.id, (sql) =>
       sql<{ stats: Record<string, number> }>("select public.admin_get_stats() as stats"),
     );
-    const stats = rows[0]!.stats;
-    const { rows: real } = await asOwner((sql) =>
-      sql<{ users: string }>("select count(*) as users from public.profiles"),
-    );
-    expect(stats.users).toBe(Number(real[0]!.users));
-    expect(Object.keys(stats).sort()).toEqual([
+    expect(Object.keys(rows[0]!.stats).sort()).toEqual([
       "active_listings",
       "in_review_reports",
       "new_listings_7d",
@@ -311,5 +306,15 @@ describe("journal et statistiques", () => {
       "suspended_users",
       "users",
     ]);
+
+    // Même instruction, donc même instantané : d'autres tests créent des
+    // comptes en parallèle.
+    const { rows: compared } = await asUser(admin.id, (sql) =>
+      sql<{ reported: number; real: number }>(
+        `select (private.admin_get_stats() ->> 'users')::int as reported,
+                (select count(*) from public.profiles)::int as real`,
+      ),
+    );
+    expect(compared[0]!.reported).toBe(compared[0]!.real);
   });
 });

@@ -23,10 +23,15 @@ export default defineConfig({
     launchOptions: { executablePath },
   },
   projects: [
-    { name: "mobile", use: { ...devices["Pixel 7"], launchOptions: { executablePath } } },
+    // channel « chromium » : vrai Chromium en mode headless (et non le
+    // « headless shell »), nécessaire au test du service worker hors connexion.
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 7"], channel: "chromium", launchOptions: { executablePath } },
+    },
     {
       name: "desktop",
-      use: { ...devices["Desktop Chrome"], launchOptions: { executablePath } },
+      use: { ...devices["Desktop Chrome"], channel: "chromium", launchOptions: { executablePath } },
     },
   ],
   webServer: {

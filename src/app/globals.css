@@ -3,47 +3,47 @@
 
 /*
  * Design tokens Zuvo.
- * Vert sauge (primaire), blanc cassé (fond), texte foncé, gris chauds neutres.
- * Contrastes vérifiés (WCAG AA) : texte principal 15:1, texte secondaire 5.5:1,
- * texte blanc sur primaire 6:1, bordures de champs 3.4:1.
+ * Bleu (primaire), blanc cassé froid (fond), texte bleu nuit, gris bleutés.
+ * Contrastes vérifiés (WCAG AA) : texte principal 16:1, texte secondaire 5.8:1,
+ * texte blanc sur primaire 5.6:1, bordures de champs 3.1:1.
  */
 :root {
   color-scheme: light;
 
-  --background: #faf8f3;
-  --foreground: #1d231c;
+  --background: #f7f9fc;
+  --foreground: #0f1b2d;
 
   --card: #ffffff;
-  --card-foreground: #1d231c;
+  --card-foreground: #0f1b2d;
   --popover: #ffffff;
-  --popover-foreground: #1d231c;
+  --popover-foreground: #0f1b2d;
 
-  --primary: #53684b;
-  --primary-hover: #435540;
+  --primary: #1f5fe0;
+  --primary-hover: #1a4dbb;
   --primary-foreground: #ffffff;
 
-  --secondary: #e3eadf;
-  --secondary-hover: #c8d5c1;
-  --secondary-foreground: #2d392c;
+  --secondary: #dbe8fe;
+  --secondary-hover: #bfd5fd;
+  --secondary-foreground: #1b4195;
 
-  --muted: #f1efe8;
-  --muted-foreground: #5f665c;
+  --muted: #eef2f7;
+  --muted-foreground: #55627a;
 
-  --accent: #f3f6f1;
-  --accent-foreground: #2d392c;
+  --accent: #eff5ff;
+  --accent-foreground: #1b4195;
 
-  --border: #e2dfd6;
-  --input: #8f8b7e;
-  --ring: #6a8160;
+  --border: #dfe5ee;
+  --input: #8792a6;
+  --ring: #3b76ee;
 
-  --success: #2f6f44;
-  --success-soft: #e4f1e7;
+  --success: #18794e;
+  --success-soft: #e3f4ea;
   --warning: #8a5300;
   --warning-soft: #fbf0dc;
   --danger: #b3261e;
   --danger-soft: #fbe9e7;
-  --info: #2b5a9e;
-  --info-soft: #e6eef9;
+  --info: #0e6e8c;
+  --info-soft: #e0f2f7;
 
   --radius: 0.75rem;
 
@@ -80,16 +80,17 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
 
-  --color-sage-50: #f3f6f1;
-  --color-sage-100: #e3eadf;
-  --color-sage-200: #c8d5c1;
-  --color-sage-300: #a6b99c;
-  --color-sage-400: #84997a;
-  --color-sage-500: #6a8160;
-  --color-sage-600: #53684b;
-  --color-sage-700: #435540;
-  --color-sage-800: #374535;
-  --color-sage-900: #2d392c;
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8fe;
+  --color-brand-200: #bfd5fd;
+  --color-brand-300: #93b8fa;
+  --color-brand-400: #5f95f5;
+  --color-brand-500: #3b76ee;
+  --color-brand-600: #1f5fe0;
+  --color-brand-700: #1a4dbb;
+  --color-brand-800: #1b4195;
+  --color-brand-900: #1c3a75;
+  --color-brand-950: #14254a;
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
@@ -99,8 +100,8 @@
   --radius-xl: calc(var(--radius) + 0.25rem);
   --radius-2xl: calc(var(--radius) + 0.5rem);
 
-  --shadow-card: 0 1px 2px 0 rgb(29 35 28 / 0.04), 0 1px 3px 0 rgb(29 35 28 / 0.06);
-  --shadow-raised: 0 4px 16px -4px rgb(29 35 28 / 0.12);
+  --shadow-card: 0 1px 2px 0 rgb(15 27 45 / 0.04), 0 1px 3px 0 rgb(15 27 45 / 0.06);
+  --shadow-raised: 0 4px 16px -4px rgb(15 27 45 / 0.12);
 }
 
 @layer base {
@@ -123,7 +124,7 @@
   }
 
   ::selection {
-    @apply bg-sage-200 text-sage-900;
+    @apply bg-brand-200 text-brand-900;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -171,7 +172,7 @@
     @apply list-decimal;
   }
   .prose-content li::marker {
-    @apply text-sage-500;
+    @apply text-brand-500;
   }
   .prose-content a {
     @apply font-medium text-primary underline underline-offset-4 hover:text-primary-hover;
@@ -179,4 +180,9 @@
   .prose-content strong {
     @apply font-semibold text-foreground;
   }
+}
+
+/* Écrans immersifs (conversation) : pas de pied de page sous la zone de saisie. */
+body:has([data-immersive]) [data-site-footer] {
+  display: none;
 }

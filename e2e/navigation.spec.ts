@@ -18,6 +18,7 @@ const publicPages = [
   "/mot-de-passe-oublie",
   "/inscription/verification",
   "/auth/confirm",
+  "/fil",
 ];
 
 test.describe("pages publiques", () => {
@@ -124,5 +125,17 @@ test("les documents juridiques sont marqués comme brouillons", async ({ page })
   for (const path of ["/conditions", "/confidentialite", "/signalements"]) {
     await page.goto(path);
     await expect(page.getByText("Document provisoire")).toBeVisible();
+  }
+});
+
+test("une annonce inexistante renvoie une 404", async ({ page }) => {
+  const paths = ["/annonces/pas-un-uuid"];
+  // Sans base de données joignable, seul l'identifiant invalide est vérifiable.
+  if (process.env.E2E_SUPABASE !== "unreachable") {
+    paths.push("/annonces/00000000-0000-4000-8000-000000000000");
+  }
+  for (const path of paths) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(404);
   }
 });

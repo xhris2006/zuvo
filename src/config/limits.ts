@@ -5,7 +5,11 @@ export const listingLimits = {
   acceptedImageTypes: ["image/jpeg", "image/png", "image/webp"],
   titleMin: 3,
   titleMax: 80,
+  /** Longueur minimale de la description pour publier (contrainte SQL). */
+  descriptionMin: 10,
   descriptionMax: 2000,
+  /** Taille maximale (côté le plus long) des photos après traitement. */
+  imageMaxDimension: 1600,
   /** Prix maximal accepté en XAF (100 millions FCFA). */
   priceMax: 100_000_000,
 } as const;

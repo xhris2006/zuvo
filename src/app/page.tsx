@@ -13,6 +13,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
 import { CategoryList } from "@/features/categories/components/category-list";
 import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
+import { getCurrentUser } from "@/features/auth/session";
+import { ListingResults } from "@/features/listings/components/listing-results";
+import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
+import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
 
 const heroTiles = ["mode-femme", "telephones-tablettes", "chaussures", "maison"] as const;
@@ -23,7 +27,7 @@ function HeroIllustration() {
   );
   return (
     <div aria-hidden="true" className="relative hidden pb-8 lg:block">
-      <div className="absolute -inset-6 rounded-[2rem] bg-sage-100/70" />
+      <div className="absolute -inset-6 rounded-[2rem] bg-brand-100/70" />
       <div className="relative grid grid-cols-2 gap-4">
         {categories.map((category, index) => {
           const Icon = getCategoryIcon(category.slug);
@@ -48,8 +52,26 @@ function HeroIllustration() {
   );
 }
 
-export default function HomePage() {
+/** Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage. */
+async function loadHomeListings(): Promise<{
+  recent: ListingCardData[];
+  followed: ListingCardData[];
+}> {
+  try {
+    const user = await getCurrentUser();
+    const [recent, feed] = await Promise.all([
+      getRecentListings(12),
+      user ? getFollowedFeed(user.id, 1) : Promise.resolve(null),
+    ]);
+    return { recent, followed: feed?.items.slice(0, 4) ?? [] };
+  } catch {
+    return { recent: [], followed: [] };
+  }
+}
+
+export default async function HomePage() {
   const t = getDictionary();
+  const { recent, followed } = await loadHomeListings();
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
     { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
@@ -58,7 +80,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-14 sm:gap-20">
-      <section className="border-b border-border bg-gradient-to-b from-sage-50 to-background">
+      <section className="border-b border-border bg-gradient-to-b from-brand-50 to-background">
         <div className="container-page grid items-center gap-10 py-10 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:py-20">
           <div className="flex flex-col gap-5">
             <h1 className="max-w-xl text-3xl leading-tight font-bold tracking-tight text-balance sm:text-5xl sm:leading-[1.1]">
@@ -101,24 +123,55 @@ export default function HomePage() {
         <CategoryList categories={defaultCategories} />
       </section>
 
+      {followed.length > 0 ? (
+        <section aria-labelledby="feed-title" className="container-page">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <h2 id="feed-title" className="text-xl font-bold tracking-tight sm:text-2xl">
+              De vos abonnements
+            </h2>
+            <Link
+              href={routes.feed}
+              className="text-sm font-semibold text-primary hover:text-primary-hover"
+            >
+              {t.common.seeAll}
+            </Link>
+          </div>
+          <ListingResults listings={followed} />
+        </section>
+      ) : null}
+
       <section aria-labelledby="recent-title" className="container-page">
-        <h2 id="recent-title" className="mb-5 text-xl font-bold tracking-tight sm:text-2xl">
-          {t.home.recentTitle}
-        </h2>
-        <EmptyState
-          icon={PackageOpen}
-          headingLevel="h3"
-          title={t.home.recentEmptyTitle}
-          description={t.home.recentEmptyBody}
-          action={
-            <Button asChild>
-              <Link href={routes.sell}>
-                <Plus aria-hidden="true" />
-                {t.nav.sellCta}
-              </Link>
-            </Button>
-          }
-        />
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <h2 id="recent-title" className="text-xl font-bold tracking-tight sm:text-2xl">
+            {t.home.recentTitle}
+          </h2>
+          {recent.length > 0 ? (
+            <Link
+              href={routes.explore}
+              className="text-sm font-semibold text-primary hover:text-primary-hover"
+            >
+              {t.common.seeAll}
+            </Link>
+          ) : null}
+        </div>
+        {recent.length > 0 ? (
+          <ListingResults listings={recent} priorityCount={4} />
+        ) : (
+          <EmptyState
+            icon={PackageOpen}
+            headingLevel="h3"
+            title={t.home.recentEmptyTitle}
+            description={t.home.recentEmptyBody}
+            action={
+              <Button asChild>
+                <Link href={routes.sell}>
+                  <Plus aria-hidden="true" />
+                  {t.nav.sellCta}
+                </Link>
+              </Button>
+            }
+          />
+        )}
       </section>
 
       <section aria-labelledby="values-title" className="container-page">
@@ -139,12 +192,12 @@ export default function HomePage() {
       </section>
 
       <section className="container-page">
-        <div className="flex flex-col gap-4 rounded-2xl bg-sage-800 p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="flex flex-col gap-4 rounded-2xl bg-brand-800 p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex gap-4">
-            <ShieldCheck className="mt-0.5 size-6 shrink-0 text-sage-200" aria-hidden="true" />
+            <ShieldCheck className="mt-0.5 size-6 shrink-0 text-brand-200" aria-hidden="true" />
             <div>
               <h2 className="text-lg font-semibold">{t.home.safetyTitle}</h2>
-              <p className="mt-1 max-w-xl text-sm text-sage-100">{t.home.safetyBody}</p>
+              <p className="mt-1 max-w-xl text-sm text-brand-100">{t.home.safetyBody}</p>
             </div>
           </div>
           <Button asChild variant="secondary" className="shrink-0">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
+import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
 import { getDictionary } from "@/i18n";
@@ -16,18 +17,27 @@ import { UserMenu } from "./user-menu";
 function IconLink({
   href,
   label,
+  unread,
   className,
   children,
 }: {
   href: Route;
   label: string;
+  unread?: "messages" | "notifications";
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <Button asChild variant="ghost" size="icon" className={cn("rounded-full", className)}>
-      <Link href={href} aria-label={label} title={label}>
+    <Button asChild variant="ghost" size="icon" className={cn("relative rounded-full", className)}>
+      <Link href={href} title={label}>
         {children}
+        <span className="sr-only">{label}</span>
+        {unread ? (
+          <>
+            <UnreadLabel kind={unread} />
+            <UnreadBadge kind={unread} className="top-0.5 right-0.5" />
+          </>
+        ) : null}
       </Link>
     </Button>
   );
@@ -46,13 +56,18 @@ export async function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-1 lg:gap-2">
           <DesktopNav />
-          <IconLink href={routes.messages} label={t.nav.messages} className="hidden md:inline-flex">
+          <IconLink
+            href={routes.messages}
+            label={t.nav.messages}
+            unread="messages"
+            className="hidden md:inline-flex"
+          >
             <MessageCircle className="size-5" aria-hidden="true" />
           </IconLink>
           <IconLink href={routes.favorites} label={t.nav.favorites}>
             <Heart className="size-5" aria-hidden="true" />
           </IconLink>
-          <IconLink href={routes.notifications} label={t.nav.notifications}>
+          <IconLink href={routes.notifications} label={t.nav.notifications} unread="notifications">
             <Bell className="size-5" aria-hidden="true" />
           </IconLink>
           <Button asChild className="ml-1 hidden md:inline-flex">

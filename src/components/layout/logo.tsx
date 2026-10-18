@@ -16,7 +16,7 @@ export function LogoMark({ className }: { className?: string }) {
         strokeLinejoin="round"
         className="text-primary-foreground"
       />
-      <circle cx="23.5" cy="8.5" r="2" className="fill-sage-200" />
+      <circle cx="23.5" cy="8.5" r="2" className="fill-brand-200" />
     </svg>
   );
 }

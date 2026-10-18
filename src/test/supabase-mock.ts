@@ -5,7 +5,24 @@ type Result = { data?: unknown; error?: unknown; count?: number | null };
 /** Constructeur de requête factice : chaque méthode est chaînable et attendable. */
 export function queryBuilder(result: Result = { data: null, error: null }) {
   const builder: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "update", "insert", "delete", "single", "maybeSingle"]) {
+  for (const method of [
+    "select",
+    "eq",
+    "neq",
+    "in",
+    "lt",
+    "gt",
+    "is",
+    "order",
+    "limit",
+    "range",
+    "update",
+    "insert",
+    "upsert",
+    "delete",
+    "single",
+    "maybeSingle",
+  ]) {
     builder[method] = vi.fn(() => builder);
   }
   builder.then = (resolve: (value: Result) => unknown, reject: (reason: unknown) => unknown) =>
@@ -30,7 +47,10 @@ export function createSupabaseMock() {
       })),
       verifyOtp: vi.fn(async () => ({ data: {}, error: null })),
     },
-    rpc: vi.fn(async () => ({ data: true, error: null })),
+    rpc: vi.fn<(...args: unknown[]) => Promise<{ data: unknown; error: unknown }>>(async () => ({
+      data: true,
+      error: null,
+    })),
     from: vi.fn(() => queryBuilder()),
     storage: { from: vi.fn(() => storageBucket), bucket: storageBucket },
   };

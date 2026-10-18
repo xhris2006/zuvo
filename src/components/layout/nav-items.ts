@@ -10,6 +10,8 @@ export type NavItem = {
   /** Correspondance exacte du chemin (sinon préfixe). */
   exact?: boolean;
   emphasis?: boolean;
+  /** Compteur de non-lus affiché sur l'icône. */
+  badge?: "messages" | "notifications";
 };
 
 export function getPrimaryNavItems(t: Dictionary): NavItem[] {
@@ -17,7 +19,7 @@ export function getPrimaryNavItems(t: Dictionary): NavItem[] {
     { href: routes.home, label: t.nav.home, icon: House, exact: true },
     { href: routes.explore, label: t.nav.explore, icon: Compass },
     { href: routes.sell, label: t.nav.sell, icon: Plus, emphasis: true },
-    { href: routes.messages, label: t.nav.messages, icon: MessageCircle },
+    { href: routes.messages, label: t.nav.messages, icon: MessageCircle, badge: "messages" },
     { href: routes.profile, label: t.nav.profile, icon: UserRound },
   ];
 }

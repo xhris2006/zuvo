@@ -13,7 +13,7 @@ export function CategoryList({ categories }: { categories: readonly CategorySumm
           <li key={category.slug} className="shrink-0 snap-start">
             <Link
               href={exploreHref(toSearchParams({ category: category.slug }))}
-              className="flex h-full w-28 flex-col items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center text-xs font-medium shadow-card transition-colors hover:border-sage-300 hover:bg-accent sm:w-auto sm:flex-row sm:p-3 sm:text-left sm:text-sm"
+              className="flex h-full w-28 flex-col items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center text-xs font-medium shadow-card transition-colors hover:border-brand-300 hover:bg-accent sm:w-auto sm:flex-row sm:p-3 sm:text-left sm:text-sm"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
                 <Icon className="size-5" aria-hidden="true" />

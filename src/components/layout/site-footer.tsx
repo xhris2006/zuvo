@@ -25,7 +25,7 @@ export function SiteFooter() {
   ];
 
   return (
-    <footer className="border-t border-border bg-card/50">
+    <footer data-site-footer className="border-t border-border bg-card/50">
       <div className="container-page grid gap-8 py-10 sm:grid-cols-[1.5fr_1fr_1fr]">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">

@@ -4,11 +4,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import { searchLimits } from "@/config/limits";
 import { publicProfileHref, routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { signInHref } from "@/features/auth/links";
 import { getCurrentUser } from "@/features/auth/session";
 import { avatarUrl } from "@/features/profiles/avatar-url";
+import { ListingResults } from "@/features/listings/components/listing-results";
+import { getSellerListings } from "@/features/listings/queries";
 import { FollowButton } from "@/features/profiles/components/follow-button";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { getProfileByUsername, getProfileStats, isFollowing } from "@/features/profiles/queries";
@@ -42,13 +46,19 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   const profile = await loadProfile(username);
   if (!profile) notFound();
 
+  const searchParams = await props.searchParams;
+  const requestedPage = Number(searchParams.page);
+  const page = Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
+
   const viewer = await getCurrentUser();
   const isOwnProfile = viewer?.id === profile.id;
-  const [stats, following] = await Promise.all([
+  const [stats, following, listings] = await Promise.all([
     getProfileStats(profile.id),
     viewer && !isOwnProfile ? isFollowing(viewer.id, profile.id) : Promise.resolve(false),
+    getSellerListings(profile.id, page, searchLimits.pageSize),
   ]);
   const profilePath = publicProfileHref(profile.username);
+  const pageCount = Math.ceil(listings.total / searchLimits.pageSize);
 
   let actions;
   if (isOwnProfile) {
@@ -80,12 +90,25 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
         <h2 id="profile-listings" className="text-xl font-bold tracking-tight">
           Articles en vente
         </h2>
-        <EmptyState
-          icon={PackageOpen}
-          headingLevel="h3"
-          title="Aucun article en vente pour le moment"
-          description={`${profile.display_name} n'a pas encore d'annonce en ligne.`}
-        />
+        {listings.items.length > 0 ? (
+          <>
+            <ListingResults listings={listings.items} />
+            <Pagination
+              page={page}
+              pageCount={pageCount}
+              hrefFor={(value) =>
+                (value === 1 ? profilePath : `${profilePath}?page=${value}`) as typeof profilePath
+              }
+            />
+          </>
+        ) : (
+          <EmptyState
+            icon={PackageOpen}
+            headingLevel="h3"
+            title="Aucun article en vente pour le moment"
+            description={`${profile.display_name} n'a pas encore d'annonce en ligne.`}
+          />
+        )}
       </section>
     </div>
   );

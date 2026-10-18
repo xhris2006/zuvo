@@ -4,6 +4,9 @@ import { BottomNav } from "@/components/layout/bottom-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { siteConfig } from "@/config/site";
+import { getCurrentUser } from "@/features/auth/session";
+import { UnreadCountsProvider } from "@/features/notifications/components/unread-counts";
+import { getUnreadCounts } from "@/features/notifications/queries";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
 import "./globals.css";
@@ -40,8 +43,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
   const t = getDictionary();
+  const user = await getCurrentUser();
+  const unread = user ? await getUnreadCounts() : { messages: 0, notifications: 0 };
   return (
     <html lang={siteConfig.defaultLocale} className={jakarta.variable}>
       <body className="flex min-h-dvh flex-col">
@@ -51,12 +56,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {t.common.skipToContent}
         </a>
-        <SiteHeader />
-        <main id="contenu" tabIndex={-1} className="flex-1 pb-safe-nav outline-none md:pb-16">
-          {children}
-        </main>
-        <SiteFooter />
-        <BottomNav />
+        <UnreadCountsProvider userId={user?.id ?? null} initial={unread}>
+          <SiteHeader />
+          <main id="contenu" tabIndex={-1} className="flex-1 pb-safe-nav outline-none md:pb-16">
+            {children}
+          </main>
+          <SiteFooter />
+          <BottomNav />
+        </UnreadCountsProvider>
       </body>
     </html>
   );

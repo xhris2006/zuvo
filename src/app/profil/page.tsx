@@ -4,11 +4,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { publicProfileHref, routes } from "@/config/routes";
 import { AuthRequired } from "@/features/auth/components/auth-required";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { requireUser } from "@/features/auth/session";
+import { ListingCard } from "@/features/listings/components/listing-card";
+import { ListingGrid } from "@/features/listings/components/listing-grid";
+import { getOwnListings } from "@/features/listings/queries";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -18,7 +22,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function ProfilePage() {
+export default async function ProfilePage(props: PageProps<"/profil">) {
+  const searchParams = await props.searchParams;
   if (!isSupabaseConfigured()) {
     return (
       <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
@@ -32,7 +37,7 @@ export default async function ProfilePage() {
   const profile = await getProfileById(user.id);
   // Profil absent : compte supprimé entre-temps ou incohérence ; on repart de zéro.
   if (!profile) redirect(routes.signIn);
-  const stats = await getProfileStats(user.id);
+  const [stats, listings] = await Promise.all([getProfileStats(user.id), getOwnListings(user.id)]);
 
   return (
     <div className="container-page flex max-w-4xl flex-col gap-8 pt-6 sm:pt-10">
@@ -55,23 +60,44 @@ export default async function ProfilePage() {
       />
 
       <section aria-labelledby="my-listings" className="flex flex-col gap-4">
-        <h2 id="my-listings" className="text-xl font-bold tracking-tight">
-          Mes annonces
-        </h2>
-        <EmptyState
-          icon={PackageOpen}
-          headingLevel="h3"
-          title="Vous n'avez encore publié aucune annonce"
-          description="Mettez en vente un article que vous n'utilisez plus : c'est gratuit."
-          action={
-            <Button asChild>
+        <div className="flex items-center justify-between gap-4">
+          <h2 id="my-listings" className="text-xl font-bold tracking-tight">
+            Mes annonces
+          </h2>
+          {listings.length > 0 ? (
+            <Button asChild size="sm">
               <Link href={routes.sell}>
                 <Plus aria-hidden="true" />
-                Vendre un article
+                Vendre
               </Link>
             </Button>
-          }
-        />
+          ) : null}
+        </div>
+        {searchParams.annonce === "supprimee" ? (
+          <Alert variant="success">L&apos;annonce a été supprimée.</Alert>
+        ) : null}
+        {listings.length > 0 ? (
+          <ListingGrid>
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </ListingGrid>
+        ) : (
+          <EmptyState
+            icon={PackageOpen}
+            headingLevel="h3"
+            title="Vous n'avez encore publié aucune annonce"
+            description="Mettez en vente un article que vous n'utilisez plus : c'est gratuit."
+            action={
+              <Button asChild>
+                <Link href={routes.sell}>
+                  <Plus aria-hidden="true" />
+                  Vendre un article
+                </Link>
+              </Button>
+            }
+          />
+        )}
       </section>
 
       <section className="flex flex-wrap items-center gap-2 border-t border-border pt-6">

@@ -5,6 +5,10 @@ import { formatPrice, formatRelativeTime } from "./format";
 const normalize = (value: string) => value.replace(/[  ]/g, " ");
 
 describe("formatPrice", () => {
+  it("utilise des espaces insécables visibles (pas d'espace fine)", () => {
+    expect(formatPrice(15000)).toBe("15\u00a0000\u00a0FCFA");
+  });
+
   it("formats XAF amounts without decimals", () => {
     expect(normalize(formatPrice(15000))).toBe("15 000 FCFA");
     expect(normalize(formatPrice(0))).toBe("0 FCFA");

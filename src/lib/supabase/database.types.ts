@@ -661,6 +661,7 @@ export type Database = {
         Args: { p_image_ids: string[]; p_listing_id: string };
         Returns: undefined;
       };
+      sync_listing_images: { Args: { p_images: Json; p_listing_id: string }; Returns: string[] };
     };
     Enums: {
       app_role: "admin";

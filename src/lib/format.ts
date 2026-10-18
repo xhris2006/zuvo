@@ -8,7 +8,15 @@ const priceFormatter = new Intl.NumberFormat(siteConfig.intlLocale, {
 
 /** Formate un montant entier en XAF, par exemple « 15 000 FCFA ». */
 export function formatPrice(amount: number): string {
-  return priceFormatter.format(amount);
+  return withVisibleSpaces(priceFormatter.format(amount));
+}
+
+/**
+ * Intl sépare les milliers par une espace fine insécable (U+202F), absente de
+ * certaines polices : on utilise une espace insécable classique (U+00A0).
+ */
+function withVisibleSpaces(value: string): string {
+  return value.replace(/ /g, " ");
 }
 
 const dateFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
@@ -65,5 +73,5 @@ const compactFormatter = new Intl.NumberFormat(siteConfig.intlLocale, {
 
 /** Nombre court : 1 200 → « 1,2 k ». */
 export function formatCount(value: number): string {
-  return value < 1000 ? String(value) : compactFormatter.format(value);
+  return value < 1000 ? String(value) : withVisibleSpaces(compactFormatter.format(value));
 }

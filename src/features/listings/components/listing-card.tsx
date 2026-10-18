@@ -1,11 +1,11 @@
 import { ImageOff, MapPin } from "lucide-react";
-import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getCity } from "@/config/locations";
 import { getDictionary } from "@/i18n";
 import { formatPrice } from "@/lib/format";
+import { listingHref } from "../links";
 import type { ListingCardData } from "../types";
 import { ListingStatusBadge } from "./listing-status-badge";
 
@@ -17,13 +17,9 @@ type ListingCardProps = {
   priority?: boolean;
 };
 
-export function listingHref(id: string): Route {
-  return `/annonces/${id}` as Route;
-}
-
 export function ListingCard({ listing, action, priority = false }: ListingCardProps) {
   const t = getDictionary();
-  const city = getCity(listing.citySlug)?.name ?? listing.citySlug;
+  const city = listing.citySlug ? (getCity(listing.citySlug)?.name ?? listing.citySlug) : null;
   const showStatus = listing.status !== "active";
 
   return (
@@ -51,7 +47,9 @@ export function ListingCard({ listing, action, priority = false }: ListingCardPr
       </div>
 
       <div className="flex flex-col gap-0.5 px-0.5">
-        <p className="text-base font-bold tracking-tight">{formatPrice(listing.price)}</p>
+        <p className="text-base font-bold tracking-tight">
+          {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+        </p>
         <h3 className="line-clamp-1 text-sm text-foreground">
           <Link
             href={listingHref(listing.id)}
@@ -60,11 +58,17 @@ export function ListingCard({ listing, action, priority = false }: ListingCardPr
             {listing.title}
           </Link>
         </h3>
-        <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span>{t.listing.conditions[listing.condition]}</span>
-          <span aria-hidden="true">·</span>
-          <MapPin className="size-3" aria-hidden="true" />
-          <span>{city}</span>
+        <p className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+          {listing.condition ? (
+            <span className="truncate">{t.listing.conditions[listing.condition]}</span>
+          ) : null}
+          {listing.condition && city ? <span aria-hidden="true">·</span> : null}
+          {city ? (
+            <>
+              <MapPin className="size-3 shrink-0" aria-hidden="true" />
+              <span className="truncate">{city}</span>
+            </>
+          ) : null}
         </p>
       </div>
     </article>

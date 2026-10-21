@@ -170,7 +170,7 @@ describe("abonnements push", () => {
   it("n'envoie pas de test tant que le push n'est pas configuré", async () => {
     expect(await sendTestPushAction()).toMatchObject({
       status: "error",
-      message: "Les notifications push ne sont pas encore configurées.",
+      message: expect.stringMatching(/pas encore configuré/),
     });
   });
 });

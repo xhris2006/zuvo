@@ -29,6 +29,7 @@ export const routes = {
   adminReports: "/admin/signalements",
   adminUsers: "/admin/utilisateurs",
   adminLog: "/admin/journal",
+  adminConfig: "/admin/configuration",
 } as const satisfies Record<string, Route>;
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { formText } from "@/lib/forms/form-state";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,5 +40,8 @@ export async function toggleFavoriteAction(
   }
 
   revalidatePath(routes.favorites);
+  if (!currentlyFavorited) {
+    schedulePushDispatch({ type: "listing_favorited", actorId: user.id, listingId });
+  }
   return { favorited: !currentlyFavorited };
 }

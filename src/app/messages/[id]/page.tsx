@@ -1,4 +1,4 @@
-import { ArrowLeft, ImageOff } from "lucide-react";
+import { ArrowLeft, ChevronRight, ImageOff } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,8 +13,7 @@ import { ChatView } from "@/features/messaging/components/chat-view";
 import { conversationHref } from "@/features/messaging/links";
 import { getConversation, getMessages } from "@/features/messaging/queries";
 import { MESSAGES_PAGE_SIZE } from "@/features/messaging/schemas";
-import { BlockButton } from "@/features/moderation/components/block-button";
-import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { UserActionsMenu } from "@/features/moderation/components/user-actions-menu";
 import { hasBlocked } from "@/features/moderation/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { formatPrice } from "@/lib/format";
@@ -50,19 +49,22 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
   const name = other?.display_name ?? "Utilisateur supprimé";
 
   return (
-    <div data-immersive className="container-page flex max-w-3xl flex-col pt-3 sm:pt-6">
-      <header className="flex flex-col gap-3 border-b border-border pb-3">
-        <div className="flex items-center gap-3">
+    <div
+      data-immersive
+      className="container-page flex min-h-dvh max-w-3xl flex-col md:min-h-[calc(100dvh-4rem)]"
+    >
+      <header className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 border-b border-border bg-background/95 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0 md:top-16 md:pt-4">
+        <div className="flex items-center gap-2">
           <Link
             href={routes.messages}
-            className="inline-flex size-9 items-center justify-center rounded-full hover:bg-muted"
+            className="-ml-2 inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-muted"
             aria-label="Retour aux messages"
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
           </Link>
-          <Avatar name={name} src={avatarUrl(other?.avatar_path)} />
-          <div className="flex min-w-0 flex-col">
-            <h1 className="truncate font-semibold">
+          <Avatar name={name} src={avatarUrl(other?.avatar_path)} size="sm" />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <h1 className="truncate text-[0.95rem] leading-tight font-semibold">
               {other ? (
                 <Link href={publicProfileHref(other.username)} className="hover:underline">
                   {name}
@@ -71,46 +73,36 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
                 name
               )}
             </h1>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate text-xs text-muted-foreground">
               {isBuyer ? "Vendeur" : "Acheteur intéressé"}
             </p>
           </div>
           {other ? (
-            <div className="ml-auto flex shrink-0 items-center">
-              <ReportDialog
-                targetType="user"
-                targetId={other.id}
-                signedIn
-                returnTo={conversationHref(conversation.id)}
-                className="px-2"
-              />
-              <BlockButton
-                userId={other.id}
-                username={other.username}
-                displayName={name}
-                initialBlocked={blockedByMe}
-                className="px-2"
-              />
-            </div>
+            <UserActionsMenu
+              user={{ id: other.id, username: other.username, displayName: name }}
+              initialBlocked={blockedByMe}
+              returnTo={conversationHref(conversation.id)}
+              showProfileLink
+            />
           ) : null}
         </div>
         {listing ? (
           <Link
             href={listingHref(listing.id)}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 transition-colors hover:bg-accent"
+            className="flex items-center gap-3 rounded-xl bg-muted/70 p-2 transition-colors hover:bg-muted"
           >
-            <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+            <span className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-card">
               {mainImage ? (
                 <Image
                   src={listingImageUrl(mainImage.storage_path) ?? ""}
                   alt=""
                   fill
-                  sizes="48px"
+                  sizes="40px"
                   className="object-cover"
                 />
               ) : (
                 <ImageOff
-                  className="m-auto mt-3.5 size-5 text-muted-foreground"
+                  className="absolute inset-0 m-auto size-4 text-muted-foreground"
                   aria-hidden="true"
                 />
               )}
@@ -122,6 +114,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
               </span>
             </span>
             {listing.status !== "active" ? <ListingStatusBadge status={listing.status} /> : null}
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           </Link>
         ) : (
           <p className="rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">

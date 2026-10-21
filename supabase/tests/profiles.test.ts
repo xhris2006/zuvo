@@ -26,7 +26,8 @@ describe("création du profil à l'inscription", () => {
       username: "awa_237",
       display_name: "Awa",
       has_private: true,
-      followed: false,
+      // Nouvelles annonces des profils suivis : activées par défaut (migration 20261021100000).
+      followed: true,
     });
   });
 

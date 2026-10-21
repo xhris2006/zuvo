@@ -184,7 +184,7 @@ describe("notification d'annonce mise en favori", () => {
 });
 
 describe("notification de nouvelle annonce d'un profil suivi", () => {
-  it("n'est envoyée qu'aux abonnés qui l'ont activée, à la première publication", async () => {
+  it("n'est envoyée qu'aux abonnés qui ne l'ont pas désactivée, à la première publication", async () => {
     const seller = await createUser();
     const optedIn = await createUser();
     const optedOut = await createUser();
@@ -193,7 +193,8 @@ describe("notification de nouvelle annonce d'un profil suivi", () => {
         sql("insert into public.follows (following_id) values ($1)", [seller.id]),
       );
     }
-    await setPreference(optedIn.id, "followed_user_listing", true);
+    // Activée par défaut pour les nouveaux comptes ; l'un des abonnés la désactive.
+    await setPreference(optedOut.id, "followed_user_listing", false);
 
     const listingId = await createActiveListing(seller.id);
     expect(await notificationsOf(optedIn.id, "followed_user_listing")).toEqual([

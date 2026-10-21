@@ -1,11 +1,12 @@
 # Notifications internes et Web Push
 
 > **État : les notifications internes fonctionnent dès que Supabase est
-> configuré. Les notifications push ne sont PAS opérationnelles tant que les
-> étapes de la section 2 n'ont pas été réalisées et vérifiées sur de vrais
-> appareils (section 3).** Le code d'envoi est testé automatiquement avec des
-> doubles (web-push et Supabase simulés), mais aucun envoi réel n'a été
-> effectué à ce jour.
+> configuré. Les notifications push fonctionnent dès que les variables de la
+> section 2 sont renseignées et que l'utilisateur les a activées sur son
+> appareil.** La page **Administration → Configuration** indique ce qui manque.
+> La chaîne d'envoi est testée automatiquement sur une vraie base et un vrai
+> PostgREST (seul le service push des navigateurs est simulé) ; l'envoi réel
+> doit être vérifié sur appareils (section 3).
 
 ## 1. Fonctionnement
 
@@ -36,14 +37,20 @@ serveur puis mis à jour en temps réel (Supabase Realtime, filtré par RLS).
 ### Web Push
 
 ```
-insertion dans notifications
-   └─► webhook de base de données Supabase (POST, en-tête Authorization)
-         └─► /api/push/dispatch (Vercel)
-               ├─ vérifie le secret partagé (comparaison à temps constant)
-               ├─ relit la notification avec la clé service_role (seul l'id du webhook est utilisé)
-               ├─ vérifie push_enabled et récupère les appareils du destinataire
-               └─ envoie via web-push (VAPID) ; supprime les abonnements expirés (404/410)
+action de l'utilisateur (message, abonnement, favori, publication) ou de la modération
+   └─► déclencheur en base : crée la notification (préférences, blocages)
+   └─► après la réponse (after() de Next.js), sur le serveur de l'application :
+         ├─ réserve les notifications créées par cette action (colonne pushed_at :
+         │  jamais d'envoi en double)
+         ├─ relit le contenu avec la clé service_role, ignore les comptes suspendus
+         ├─ vérifie push_enabled et récupère les appareils du destinataire
+         └─ envoie via web-push (VAPID, priorité haute pour les messages) ;
+            supprime les abonnements expirés (404/410)
 ```
+
+Aucun webhook Supabase n'est nécessaire (les versions précédentes en
+utilisaient un ; s'il a été créé, il peut être supprimé : la route
+`/api/push/dispatch` n'existe plus).
 
 - La permission du navigateur n'est demandée **qu'au clic** sur « Activer »
   (Paramètres → Notifications push), jamais au chargement d'une page.
@@ -61,55 +68,52 @@ insertion dans notifications
 - Un navigateur partagé est retiré du compte à la déconnexion ; un même
   navigateur ne peut appartenir qu'à un compte à la fois ; 10 appareils au
   plus par compte.
-- Limites connues : une seule notification push par conversation tant que la
-  précédente n'est pas lue ; pas de gestion de `pushsubscriptionchange`
-  (l'abonnement expiré est supprimé au premier échec et l'utilisateur le
-  réactive) ; une annonce publiée par un vendeur très suivi déclenche un appel
-  du webhook par abonné ayant activé l'option.
+- Chaque nouveau message déclenche une notification push ; elles se
+  remplacent pour une même conversation (une seule visible à la fois).
+- Si les clés VAPID changent, les appareils déjà abonnés doivent réactiver
+  les notifications (l'application le détecte et les réabonne au clic).
+- Limites connues : pas de gestion de `pushsubscriptionchange` (l'abonnement
+  expiré est supprimé au premier échec et l'utilisateur le réactive).
 
 ## 2. Configuration (à faire par le propriétaire du projet)
 
+Le plus simple : connectez-vous avec un compte administrateur et ouvrez
+**Administration → Configuration**. La page vérifie chaque point (base à jour,
+clé service_role acceptée, clés VAPID présentes et cohérentes) et permet de
+**générer les clés VAPID dans votre navigateur** (elles ne sont ni envoyées
+ni enregistrées).
+
 ### 2.1 Clés VAPID
 
-Générez une paire de clés **sur votre machine** (ne la partagez dans aucune
-conversation ni aucun commit) :
-
-```bash
-npx web-push generate-vapid-keys
-```
+Depuis la page Configuration (bouton « Générer une paire de clés VAPID »), ou
+sur votre machine avec `npx web-push generate-vapid-keys`. Ne partagez jamais
+la clé privée (ni dans le dépôt, ni dans une conversation).
 
 ### 2.2 Variables d'environnement (Vercel → Settings → Environment Variables)
 
-| Variable                       | Exposée au navigateur | Valeur                                                                |
-| ------------------------------ | --------------------- | --------------------------------------------------------------------- |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | oui (publique)        | clé publique VAPID                                                    |
-| `VAPID_PRIVATE_KEY`            | **non**               | clé privée VAPID                                                      |
-| `VAPID_SUBJECT`                | non                   | `mailto:adresse-de-contact@…` ou `https://votre-domaine`              |
-| `SUPABASE_SERVICE_ROLE_KEY`    | **non**               | clé secrète Supabase (`sb_secret_…` ou `service_role`)                |
-| `PUSH_WEBHOOK_SECRET`          | **non**               | chaîne aléatoire d'au moins 32 caractères (`openssl rand -base64 48`) |
+| Variable                       | Exposée au navigateur | Valeur                                                   |
+| ------------------------------ | --------------------- | -------------------------------------------------------- |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | oui (publique)        | clé publique VAPID                                       |
+| `VAPID_PRIVATE_KEY`            | **non**               | clé privée VAPID                                         |
+| `VAPID_SUBJECT`                | non                   | `mailto:adresse-de-contact@…` ou `https://votre-domaine` |
+| `SUPABASE_SERVICE_ROLE_KEY`    | **non**               | clé secrète Supabase (`sb_secret_…` ou `service_role`)   |
 
 Les variables sans préfixe `NEXT_PUBLIC_` ne sont lues que côté serveur
 (`src/lib/server-env.ts`, protégé par `server-only`) et ne sont jamais
-journalisées. Redéployez après les avoir renseignées.
+journalisées. **Redéployez** après les avoir renseignées (les variables
+`NEXT_PUBLIC_*` sont figées au moment du build).
 
-Tant qu'une de ces variables manque, `/api/push/dispatch` répond `503
-push_not_configured` et la page Paramètres indique que le push n'est pas encore
-disponible.
+### 2.3 Base de données à jour
 
-### 2.3 Webhook de base de données (Supabase)
+La migration `20261021100000_push_direct_dispatch.sql` (colonne `pushed_at`)
+est nécessaire. La page Configuration signale une base en retard.
 
-**Database → Webhooks → Create a new hook** :
+### 2.4 Activation sur chaque appareil
 
-- Table : `public.notifications`, événement : **Insert** ;
-- Type : **HTTP Request**, méthode **POST** ;
-- URL : `https://<votre-domaine>/api/push/dispatch` (domaine de production, pas
-  une prévisualisation protégée par mot de passe) ;
-- En-têtes : `Content-Type: application/json` et
-  `Authorization: Bearer <PUSH_WEBHOOK_SECRET>` ;
-- Délai : 5000 ms.
-
-Le secret est saisi dans le tableau de bord Supabase, jamais dans une
-migration ou un fichier du dépôt.
+Chaque utilisateur active les notifications **sur chacun de ses appareils** :
+bandeau « Activer les notifications » dans Messages ou Notifications, ou
+**Paramètres → Notifications push → Activer**, puis « Envoyer un test ».
+Sur iPhone, le site doit d'abord être ajouté à l'écran d'accueil (iOS 16.4+).
 
 ## 3. Vérification sur appareils (obligatoire avant d'annoncer le push)
 

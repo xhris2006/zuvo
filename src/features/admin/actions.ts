@@ -5,6 +5,7 @@ import { z } from "zod";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, formText } from "@/lib/forms/form-state";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isCurrentUserAdmin } from "./queries";
 
@@ -78,6 +79,7 @@ export async function removeListingAction(
     p_report_id: parsed.data.reportId ?? undefined,
   });
   if (error) return { status: "error", message: errorMessage(error) };
+  schedulePushDispatch({ type: "listing_removed", listingId: parsed.data.listingId });
   revalidateAdmin();
   revalidatePath(`/annonces/${parsed.data.listingId}`);
   return { status: "success", message: "Annonce retirée. Le vendeur a été prévenu." };

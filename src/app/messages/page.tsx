@@ -8,6 +8,7 @@ import { routes } from "@/config/routes";
 import { MemberGate } from "@/features/auth/components/member-gate";
 import { ConversationList } from "@/features/messaging/components/conversation-list";
 import { getConversations } from "@/features/messaging/queries";
+import { PushPrompt } from "@/features/notifications/components/push-prompt";
 import { getDictionary } from "@/i18n";
 
 export const metadata: Metadata = {
@@ -37,9 +38,10 @@ async function Inbox() {
 export default function MessagesPage() {
   const t = getDictionary();
   return (
-    <div className="container-page flex max-w-3xl flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader title={t.pages.messagesTitle} />
       <MemberGate returnTo={routes.messages}>
+        <PushPrompt context="messages" />
         <Inbox />
       </MemberGate>
     </div>

@@ -186,3 +186,20 @@
 body:has([data-immersive]) [data-site-footer] {
   display: none;
 }
+
+/*
+ * Mobile : les écrans immersifs (conversation) masquent l'en-tête et la barre
+ * de navigation ; les écrans avec leur propre barre d'action (annonce)
+ * masquent seulement la barre de navigation.
+ */
+@media (width < 48rem) {
+  body:has([data-immersive]) [data-site-header],
+  body:has([data-immersive]) [data-bottom-nav],
+  body:has([data-hide-bottom-nav]) [data-bottom-nav] {
+    display: none;
+  }
+  body:has([data-immersive]) main,
+  body:has([data-hide-bottom-nav]) main {
+    padding-bottom: 0;
+  }
+}

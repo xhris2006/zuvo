@@ -17,7 +17,7 @@ const icons = {
 
 export function NotificationList({ items }: { items: NotificationItem[] }) {
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <ul className="-mx-4 divide-y divide-border border-y border-border bg-card sm:mx-0 sm:overflow-hidden sm:rounded-2xl sm:border sm:shadow-card">
       {items.map((item) => {
         const Icon = icons[item.type];
         return (

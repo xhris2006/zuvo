@@ -11,6 +11,7 @@ import { AuthRequired } from "@/features/auth/components/auth-required";
 import { requireUser } from "@/features/auth/session";
 import { markAllNotificationsReadAction } from "@/features/notifications/actions";
 import { NotificationList } from "@/features/notifications/components/notification-list";
+import { PushPrompt } from "@/features/notifications/components/push-prompt";
 import { getNotifications } from "@/features/notifications/queries";
 import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -25,7 +26,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
   const t = getDictionary();
   if (!isSupabaseConfigured()) {
     return (
-      <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
+      <div className="container-page flex flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
         <PageHeader title={t.pages.notificationsTitle} />
         <AuthRequired returnTo={routes.notifications} />
       </div>
@@ -38,28 +39,30 @@ export default async function NotificationsPage(props: PageProps<"/notifications
   const hasUnread = notifications.items.some((item) => !item.isRead);
 
   return (
-    <div className="container-page flex max-w-2xl flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-2xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
         title={t.pages.notificationsTitle}
+        inlineActions
         actions={
           <>
             {hasUnread ? (
               <form action={markAllNotificationsReadAction}>
-                <SubmitButton variant="outline" size="sm">
+                <SubmitButton variant="outline" size="sm" title="Tout marquer comme lu">
                   <CheckCheck aria-hidden="true" />
-                  Tout marquer comme lu
+                  <span className="sr-only sm:not-sr-only">Tout marquer comme lu</span>
                 </SubmitButton>
               </form>
             ) : null}
             <Button asChild variant="ghost" size="sm">
-              <Link href={routes.settings}>
+              <Link href={routes.settings} title="Préférences">
                 <Settings aria-hidden="true" />
-                Préférences
+                <span className="sr-only sm:not-sr-only">Préférences</span>
               </Link>
             </Button>
           </>
         }
       />
+      <PushPrompt context="notifications" />
       {notifications.items.length > 0 ? (
         <>
           <NotificationList items={notifications.items} />

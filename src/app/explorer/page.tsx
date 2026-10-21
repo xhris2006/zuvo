@@ -15,9 +15,16 @@ import {
   searchListings,
 } from "@/features/listings/queries";
 import { ActiveFilters } from "@/features/search/components/active-filters";
+import { CategoryChips } from "@/features/search/components/category-chips";
 import { FiltersForm } from "@/features/search/components/filters-form";
 import { MobileFilters } from "@/features/search/components/mobile-filters";
-import { countActiveFilters, parseSearchParams, toSearchParams } from "@/features/search/schema";
+import { SortMenu } from "@/features/search/components/sort-menu";
+import {
+  countActiveFilters,
+  parseSearchParams,
+  sortOptions,
+  toSearchParams,
+} from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
 
@@ -63,21 +70,20 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
   }
   const pageCount = result ? Math.ceil(result.total / result.pageSize) : 0;
 
+  const sortChoices = sortOptions.map((option) => ({
+    label: t.explore.sortOptions[option],
+    href: exploreHref(toSearchParams({ ...filters, sort: option, page: 1 })),
+    active: filters.sort === option,
+  }));
+
   return (
-    <div className="container-page flex flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
         title={filters.q ? `Résultats pour « ${filters.q} »` : t.explore.title}
-        description={t.explore.description}
-        actions={
-          <MobileFilters
-            label={t.explore.filters}
-            description={t.explore.description}
-            activeCount={activeCount}
-          >
-            <FiltersForm filters={filters} categories={categories} idPrefix="mobile" />
-          </MobileFilters>
-        }
+        description={<span className="hidden sm:inline">{t.explore.description}</span>}
       />
+
+      <CategoryChips filters={filters} categories={categories} className="lg:hidden" />
 
       <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
         <aside aria-label={t.explore.filters} className="hidden lg:block">
@@ -87,6 +93,27 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
         </aside>
 
         <section aria-labelledby="results-count" className="flex flex-col gap-5">
+          <div className="flex min-h-9 items-center gap-2">
+            {result ? (
+              <p
+                id="results-count"
+                className="mr-auto text-sm font-medium text-muted-foreground"
+                aria-live="polite"
+              >
+                {resultLabel(result.total)}
+              </p>
+            ) : (
+              <span className="mr-auto" />
+            )}
+            <SortMenu label={t.explore.sort} options={sortChoices} className="lg:hidden" />
+            <MobileFilters
+              label={t.explore.filters}
+              description={t.explore.description}
+              activeCount={activeCount}
+            >
+              <FiltersForm filters={filters} categories={categories} idPrefix="mobile" />
+            </MobileFilters>
+          </div>
           <ActiveFilters filters={filters} categories={categories} />
           {unavailable ? (
             <EmptyState
@@ -102,9 +129,6 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
             />
           ) : (
             <>
-              <p id="results-count" className="text-sm text-muted-foreground" aria-live="polite">
-                {resultLabel(result.total)}
-              </p>
               {result.items.length > 0 ? (
                 <>
                   <ListingResults listings={result.items} priorityCount={4} />

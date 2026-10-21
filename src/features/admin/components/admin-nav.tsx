@@ -10,6 +10,7 @@ const items = [
   { href: routes.adminReports, label: "Signalements" },
   { href: routes.adminUsers, label: "Utilisateurs" },
   { href: routes.adminLog, label: "Journal" },
+  { href: routes.adminConfig, label: "Configuration" },
 ] as const;
 
 export function AdminNav() {

@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { SectionHeader } from "@/components/layout/section-header";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -57,26 +58,87 @@ function HeroIllustration() {
 }
 
 /** Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage. */
-async function loadHomeListings(): Promise<{
+async function loadHomeListings(userId: string | null): Promise<{
   recent: ListingCardData[];
   followed: ListingCardData[];
 }> {
   try {
-    const user = await getCurrentUser();
     const [recent, feed] = await Promise.all([
       getRecentListings(12),
-      user ? getFollowedFeed(user.id, 1) : Promise.resolve(null),
+      userId ? getFollowedFeed(userId, 1) : Promise.resolve(null),
     ]);
-    return { recent, followed: feed?.items.slice(0, 4) ?? [] };
+    return { recent, followed: feed?.items.slice(0, 8) ?? [] };
   } catch {
     return { recent: [], followed: [] };
   }
 }
 
+/** Présentation du site pour les visiteurs non connectés. */
+function GuestHero() {
+  const t = getDictionary();
+  return (
+    <section className="border-b border-border bg-gradient-to-b from-brand-50 to-background">
+      <div className="container-page grid items-center gap-10 py-7 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:py-20">
+        <div className="flex flex-col gap-3 sm:gap-5">
+          <h1 className="max-w-xl text-[1.75rem] leading-tight font-bold tracking-tight text-balance sm:text-5xl sm:leading-[1.1]">
+            {t.home.heroTitle}
+          </h1>
+          <p className="max-w-lg text-[0.9375rem] text-pretty text-muted-foreground sm:text-lg">
+            {t.home.heroSubtitle}
+          </p>
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+            <Button asChild size="lg">
+              <Link href={routes.sell}>
+                <Plus aria-hidden="true" />
+                {t.home.heroPrimary}
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="hidden sm:inline-flex">
+              <Link href={routes.explore}>
+                {t.home.heroSecondary}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+        <HeroIllustration />
+      </div>
+    </section>
+  );
+}
+
+/** Raccourci de mise en vente pour les membres connectés. */
+function SellCard() {
+  const t = getDictionary();
+  return (
+    <section aria-labelledby="sell-card-title" className="container-page">
+      <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 px-4 py-4 text-white shadow-raised sm:px-6 sm:py-5">
+        <div className="min-w-0 flex-1">
+          <h2 id="sell-card-title" className="font-semibold sm:text-lg">
+            {t.home.sellCardTitle}
+          </h2>
+          <p className="text-sm text-brand-100">{t.home.sellCardBody}</p>
+        </div>
+        <Button
+          asChild
+          variant="secondary"
+          className="bg-white text-brand-800 shadow-card hover:bg-brand-50"
+        >
+          <Link href={routes.sell}>
+            <Plus aria-hidden="true" />
+            {t.home.sellCardCta}
+          </Link>
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 export default async function HomePage(props: PageProps<"/">) {
   const t = getDictionary();
   const accountDeleted = (await props.searchParams).compte === "supprime";
-  const { recent, followed } = await loadHomeListings();
+  const user = await getCurrentUser().catch(() => null);
+  const { recent, followed } = await loadHomeListings(user?.id ?? null);
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
     { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
@@ -86,7 +148,11 @@ export default async function HomePage(props: PageProps<"/">) {
   const siteUrl = getSiteUrl();
 
   return (
-    <div className="flex flex-col gap-14 sm:gap-20">
+    <div
+      className={
+        user ? "flex flex-col gap-9 pt-4 sm:gap-14 sm:pt-8" : "flex flex-col gap-9 sm:gap-16"
+      }
+    >
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -106,87 +172,41 @@ export default async function HomePage(props: PageProps<"/">) {
         }}
       />
       {accountDeleted ? (
-        <div className="container-page -mb-8 pt-6 sm:-mb-14">
+        <div className="container-page pt-4">
           <Alert variant="success" title="Compte supprimé" role="status">
             Votre compte et vos annonces ont été supprimés. Merci d&apos;avoir utilisé{" "}
             {siteConfig.name}.
           </Alert>
         </div>
       ) : null}
-      <section className="border-b border-border bg-gradient-to-b from-brand-50 to-background">
-        <div className="container-page grid items-center gap-10 py-10 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:py-20">
-          <div className="flex flex-col gap-5">
-            <h1 className="max-w-xl text-3xl leading-tight font-bold tracking-tight text-balance sm:text-5xl sm:leading-[1.1]">
-              {t.home.heroTitle}
-            </h1>
-            <p className="max-w-lg text-base text-pretty text-muted-foreground sm:text-lg">
-              {t.home.heroSubtitle}
-            </p>
-            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-              <Button asChild size="lg">
-                <Link href={routes.sell}>
-                  <Plus aria-hidden="true" />
-                  {t.home.heroPrimary}
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href={routes.explore}>
-                  {t.home.heroSecondary}
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-          <HeroIllustration />
-        </div>
-      </section>
+
+      {user ? (
+        <>
+          <h1 className="sr-only">{t.nav.home}</h1>
+          <SellCard />
+        </>
+      ) : (
+        <GuestHero />
+      )}
 
       <section aria-labelledby="categories-title" className="container-page">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <h2 id="categories-title" className="text-xl font-bold tracking-tight sm:text-2xl">
-            {t.home.categoriesTitle}
-          </h2>
-          <Link
-            href={routes.explore}
-            className="text-sm font-semibold text-primary hover:text-primary-hover"
-          >
-            {t.common.seeAll}
-          </Link>
-        </div>
+        <SectionHeader id="categories-title" title={t.home.categoriesTitle} href={routes.explore} />
         <CategoryList categories={defaultCategories} />
       </section>
 
       {followed.length > 0 ? (
         <section aria-labelledby="feed-title" className="container-page">
-          <div className="mb-5 flex items-end justify-between gap-4">
-            <h2 id="feed-title" className="text-xl font-bold tracking-tight sm:text-2xl">
-              De vos abonnements
-            </h2>
-            <Link
-              href={routes.feed}
-              className="text-sm font-semibold text-primary hover:text-primary-hover"
-            >
-              {t.common.seeAll}
-            </Link>
-          </div>
-          <ListingResults listings={followed} />
+          <SectionHeader id="feed-title" title={t.home.followedTitle} href={routes.feed} />
+          <ListingResults listings={followed.slice(0, 8)} layout="carousel" />
         </section>
       ) : null}
 
       <section aria-labelledby="recent-title" className="container-page">
-        <div className="mb-5 flex items-end justify-between gap-4">
-          <h2 id="recent-title" className="text-xl font-bold tracking-tight sm:text-2xl">
-            {t.home.recentTitle}
-          </h2>
-          {recent.length > 0 ? (
-            <Link
-              href={routes.explore}
-              className="text-sm font-semibold text-primary hover:text-primary-hover"
-            >
-              {t.common.seeAll}
-            </Link>
-          ) : null}
-        </div>
+        <SectionHeader
+          id="recent-title"
+          title={t.home.recentTitle}
+          href={recent.length > 0 ? routes.explore : undefined}
+        />
         {recent.length > 0 ? (
           <ListingResults listings={recent} priorityCount={4} />
         ) : (
@@ -208,28 +228,30 @@ export default async function HomePage(props: PageProps<"/">) {
       </section>
 
       <section aria-labelledby="values-title" className="container-page">
-        <h2 id="values-title" className="mb-5 text-xl font-bold tracking-tight sm:text-2xl">
-          {t.home.valueTitle}
-        </h2>
-        <ul className="grid gap-4 sm:grid-cols-3">
+        <SectionHeader id="values-title" title={t.home.valueTitle} />
+        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {values.map(({ icon: Icon, title, body }) => (
-            <li key={title} className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+            <li key={title} className="flex gap-4 p-4 sm:flex-col sm:gap-0 sm:p-6">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground sm:mb-4">
                 <Icon className="size-5" aria-hidden="true" />
               </div>
-              <h3 className="font-semibold">{title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+              <div className="min-w-0">
+                <h3 className="font-semibold">{title}</h3>
+                <p className="mt-0.5 text-sm text-muted-foreground">{body}</p>
+              </div>
             </li>
           ))}
         </ul>
       </section>
 
       <section className="container-page">
-        <div className="flex flex-col gap-4 rounded-2xl bg-brand-800 p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div className="flex flex-col gap-4 rounded-2xl bg-brand-900 p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex gap-4">
-            <ShieldCheck className="mt-0.5 size-6 shrink-0 text-brand-200" aria-hidden="true" />
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <ShieldCheck className="size-5 text-brand-200" aria-hidden="true" />
+            </span>
             <div>
-              <h2 className="text-lg font-semibold">{t.home.safetyTitle}</h2>
+              <h2 className="font-semibold sm:text-lg">{t.home.safetyTitle}</h2>
               <p className="mt-1 max-w-xl text-sm text-brand-100">{t.home.safetyBody}</p>
             </div>
           </div>

@@ -13,8 +13,8 @@ import { getCurrentUser } from "@/features/auth/session";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { getSellerListings } from "@/features/listings/queries";
-import { BlockButton } from "@/features/moderation/components/block-button";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { UserActionsMenu } from "@/features/moderation/components/user-actions-menu";
 import { hasBlocked } from "@/features/moderation/queries";
 import { FollowButton } from "@/features/profiles/components/follow-button";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
@@ -67,33 +67,32 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   let actions;
   if (isOwnProfile) {
     actions = (
-      <Button asChild variant="outline" size="sm">
+      <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
         <Link href={routes.editProfile}>Modifier mon profil</Link>
       </Button>
     );
   } else if (viewer) {
     actions = (
-      <div className="flex flex-wrap items-center gap-2">
+      <>
         {blocked ? null : (
           <FollowButton
             profileId={profile.id}
             username={profile.username}
             initialFollowing={following}
+            className="flex-1 sm:flex-none"
           />
         )}
-        <ReportDialog targetType="user" targetId={profile.id} signedIn returnTo={profilePath} />
-        <BlockButton
-          userId={profile.id}
-          username={profile.username}
-          displayName={profile.display_name}
+        <UserActionsMenu
+          user={{ id: profile.id, username: profile.username, displayName: profile.display_name }}
           initialBlocked={blocked}
+          returnTo={profilePath}
         />
-      </div>
+      </>
     );
   } else {
     actions = (
-      <div className="flex flex-wrap items-center gap-2">
-        <Button asChild>
+      <>
+        <Button asChild className="flex-1 sm:flex-none">
           <Link href={signInHref(profilePath)}>Suivre</Link>
         </Button>
         <ReportDialog
@@ -102,15 +101,15 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
           signedIn={false}
           returnTo={profilePath}
         />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="container-page flex max-w-4xl flex-col gap-8 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-4xl flex-col gap-8 pt-5 sm:gap-10 sm:pt-10">
       <ProfileHeader profile={profile} stats={stats} actions={actions} />
       <section aria-labelledby="profile-listings" className="flex flex-col gap-4">
-        <h2 id="profile-listings" className="text-xl font-bold tracking-tight">
+        <h2 id="profile-listings" className="text-lg font-bold tracking-tight sm:text-xl">
           Articles en vente
         </h2>
         {listings.items.length > 0 ? (

@@ -48,6 +48,17 @@ jobs:
       - name: Tests de la base (schéma, RLS, Storage)
         run: npm run test:db
 
+      - name: PostgREST (même version que Supabase)
+        run: |
+          curl -fsSL -o /tmp/postgrest.tar.xz \
+            https://github.com/PostgREST/postgrest/releases/download/v12.2.3/postgrest-v12.2.3-linux-static-x64.tar.xz
+          mkdir -p /tmp/postgrest && tar -xJf /tmp/postgrest.tar.xz -C /tmp/postgrest
+
+      - name: Tests d'intégration de l'API (requêtes de l'application sur PostgREST)
+        env:
+          POSTGREST_BIN: /tmp/postgrest/postgrest
+        run: npm run test:api
+
       - name: Types Supabase à jour
         run: |
           npm run db:types

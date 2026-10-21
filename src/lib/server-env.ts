@@ -13,7 +13,6 @@ const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optional(z.string().min(20)),
   VAPID_PRIVATE_KEY: optional(z.string().regex(/^[A-Za-z0-9_-]{40,50}$/)),
   VAPID_SUBJECT: optional(z.string().regex(/^(mailto:|https:\/\/)\S+$/)),
-  PUSH_WEBHOOK_SECRET: optional(z.string().min(32)),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -35,7 +34,6 @@ export function getServerEnv(): ServerEnv {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
     VAPID_SUBJECT: process.env.VAPID_SUBJECT,
-    PUSH_WEBHOOK_SECRET: process.env.PUSH_WEBHOOK_SECRET,
   });
   return cached;
 }

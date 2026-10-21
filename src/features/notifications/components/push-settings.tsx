@@ -1,121 +1,48 @@
 "use client";
 
 import { BellOff, BellRing, Send } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
-import { publicEnv } from "@/lib/env";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import {
-  removePushSubscriptionAction,
-  savePushSubscriptionAction,
-  sendTestPushAction,
-} from "../actions";
-import {
-  getCurrentPushSubscription,
-  isIosOutsideHomeScreen,
-  isPushSupported,
-  subscribeToPush,
-} from "../push-client";
-
-type Status =
-  "checking" | "not_configured" | "unsupported" | "ios_install" | "denied" | "off" | "on";
+import { sendTestPushAction } from "../actions";
+import { usePushDevice } from "../use-push-device";
 
 type Feedback = { variant: "success" | "danger"; text: string } | null;
 
-/** Appareil abonné au push pour ce compte (l'abonnement du navigateur seul ne suffit pas). */
-async function isRegisteredForUser(subscription: PushSubscription): Promise<boolean> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return false;
-  const { data } = await supabase
-    .from("push_subscriptions")
-    .select("id")
-    .eq("endpoint", subscription.endpoint)
-    .maybeSingle();
-  return Boolean(data);
-}
-
-async function detectStatus(publicKey: string | undefined): Promise<Status> {
-  if (!publicKey) return "not_configured";
-  if (!isPushSupported()) return isIosOutsideHomeScreen() ? "ios_install" : "unsupported";
-  if (Notification.permission === "denied") return "denied";
-  const subscription = await getCurrentPushSubscription();
-  return subscription && (await isRegisteredForUser(subscription)) ? "on" : "off";
-}
-
-/**
- * Activation des notifications push sur cet appareil. L'autorisation du
- * navigateur n'est demandée qu'au clic, jamais au chargement de la page.
- */
+/** Activation des notifications push sur cet appareil (page Paramètres). */
 export function PushSettings() {
-  const publicKey = publicEnv.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const [status, setStatus] = useState<Status>("checking");
-  const [busy, setBusy] = useState(false);
+  const { status, busy, enable: enableDevice, disable: disableDevice } = usePushDevice();
+  const [testing, setTesting] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
 
-  useEffect(() => {
-    let active = true;
-    detectStatus(publicKey)
-      .then((next) => active && setStatus(next))
-      .catch(() => active && setStatus("off"));
-    return () => {
-      active = false;
-    };
-  }, [publicKey]);
-
   async function enable() {
-    if (!publicKey) return;
-    setBusy(true);
     setFeedback(null);
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setStatus(permission === "denied" ? "denied" : "off");
-        return;
-      }
-      const subscription = await subscribeToPush(publicKey);
-      const result = await savePushSubscriptionAction(subscription.toJSON());
-      if (result.status === "error") {
-        setFeedback({ variant: "danger", text: result.message });
-        return;
-      }
-      setStatus("on");
-      setFeedback({ variant: "success", text: "Notifications activées sur cet appareil." });
-    } catch {
-      setFeedback({
-        variant: "danger",
-        text: "Votre navigateur n'a pas pu activer les notifications. Réessayez plus tard.",
-      });
-    } finally {
-      setBusy(false);
-    }
+    const error = await enableDevice();
+    setFeedback(
+      error
+        ? { variant: "danger", text: error }
+        : { variant: "success", text: "Notifications activées sur cet appareil." },
+    );
   }
 
   async function disable() {
-    setBusy(true);
     setFeedback(null);
-    try {
-      const subscription = await getCurrentPushSubscription();
-      if (subscription) {
-        await removePushSubscriptionAction(subscription.endpoint);
-        await subscription.unsubscribe().catch(() => false);
-      }
-      setStatus("off");
-      setFeedback({ variant: "success", text: "Notifications désactivées sur cet appareil." });
-    } finally {
-      setBusy(false);
-    }
+    await disableDevice();
+    setFeedback({ variant: "success", text: "Notifications désactivées sur cet appareil." });
   }
 
   async function test() {
-    setBusy(true);
+    setTesting(true);
     setFeedback(null);
     const result = await sendTestPushAction();
-    setBusy(false);
+    setTesting(false);
     setFeedback(
       result.status === "ok"
-        ? { variant: "success", text: "Notification de test envoyée." }
+        ? {
+            variant: "success",
+            text: "Notification de test envoyée : elle doit apparaître dans quelques secondes.",
+          }
         : { variant: "danger", text: result.message },
     );
   }
@@ -170,7 +97,7 @@ export function PushSettings() {
             Notifications push activées sur cet appareil.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void test()} disabled={busy}>
+            <Button variant="outline" onClick={() => void test()} loading={testing} disabled={busy}>
               <Send aria-hidden="true" />
               Envoyer un test
             </Button>

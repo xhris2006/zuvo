@@ -1,4 +1,14 @@
-import { PackageOpen, Pencil, Plus, Rss, Settings } from "lucide-react";
+import {
+  ChevronRight,
+  Eye,
+  Heart,
+  LifeBuoy,
+  PackageOpen,
+  Pencil,
+  Plus,
+  Rss,
+  Settings,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -25,7 +35,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
   const searchParams = await props.searchParams;
   if (!isSupabaseConfigured()) {
     return (
-      <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
+      <div className="container-page flex flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
         <PageHeader title="Profil" />
         <AuthRequired returnTo={routes.profile} />
       </div>
@@ -38,21 +48,36 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
   if (!profile) redirect(routes.signIn);
   const [stats, listings] = await Promise.all([getProfileStats(user.id), getOwnListings(user.id)]);
 
+  const menu = [
+    { href: routes.feed, icon: Rss, label: "Mon fil", description: "Annonces des profils suivis" },
+    { href: routes.favorites, icon: Heart, label: "Favoris", description: "Articles sauvegardés" },
+    {
+      href: routes.settings,
+      icon: Settings,
+      label: "Paramètres",
+      description: "Compte, notifications, confidentialité",
+    },
+    { href: routes.help, icon: LifeBuoy, label: "Aide et contact", description: null },
+  ] as const;
+
   return (
-    <div className="container-page flex max-w-4xl flex-col gap-8 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-4xl flex-col gap-8 pt-5 sm:gap-10 sm:pt-10">
       <ProfileHeader
         profile={profile}
         stats={stats}
         actions={
           <>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
               <Link href={routes.editProfile}>
                 <Pencil aria-hidden="true" />
                 Modifier
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link href={publicProfileHref(profile.username)}>Voir mon profil public</Link>
+            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
+              <Link href={publicProfileHref(profile.username)}>
+                <Eye aria-hidden="true" />
+                Profil public
+              </Link>
             </Button>
           </>
         }
@@ -60,7 +85,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
 
       <section aria-labelledby="my-listings" className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
-          <h2 id="my-listings" className="text-xl font-bold tracking-tight">
+          <h2 id="my-listings" className="text-lg font-bold tracking-tight sm:text-xl">
             Mes annonces
           </h2>
           {listings.length > 0 ? (
@@ -95,20 +120,32 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
         )}
       </section>
 
-      <section className="flex flex-wrap items-center gap-2 border-t border-border pt-6">
-        <Button asChild variant="ghost">
-          <Link href={routes.feed}>
-            <Rss aria-hidden="true" />
-            Mon fil
-          </Link>
-        </Button>
-        <Button asChild variant="ghost">
-          <Link href={routes.settings}>
-            <Settings aria-hidden="true" />
-            Paramètres du compte
-          </Link>
-        </Button>
-        <SignOutButton />
+      <section aria-labelledby="account-menu" className="flex flex-col gap-3">
+        <h2 id="account-menu" className="text-lg font-bold tracking-tight sm:text-xl">
+          Mon compte
+        </h2>
+        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          {menu.map(({ href, icon: Icon, label, description }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-accent"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+                  <Icon className="size-[1.125rem]" aria-hidden="true" />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-sm font-medium">{label}</span>
+                  {description ? (
+                    <span className="truncate text-xs text-muted-foreground">{description}</span>
+                  ) : null}
+                </span>
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <SignOutButton className="self-start text-danger hover:bg-danger-soft hover:text-danger" />
       </section>
     </div>
   );

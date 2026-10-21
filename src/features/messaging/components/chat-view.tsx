@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, SendHorizontal } from "lucide-react";
-import { Fragment, type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, type KeyboardEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
@@ -44,8 +44,6 @@ export function ChatView({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   const markRead = useCallback(() => {
     void markConversationReadAction(conversationId);
@@ -83,10 +81,11 @@ export function ChatView({
     };
   }, [conversationId, currentUserId, markRead]);
 
-  // Défile vers le dernier message quand la conversation s'allonge.
+  // Défile vers le dernier message quand la conversation s'allonge (la page
+  // entière défile ; la zone de saisie reste collée en bas de l'écran).
   const lastId = messages.at(-1)?.id;
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    if (lastId) window.scrollTo({ top: document.documentElement.scrollHeight });
   }, [lastId]);
 
   async function send() {
@@ -108,15 +107,14 @@ export function ChatView({
     const oldest = messages[0];
     if (!oldest) return;
     setLoadingOlder(true);
-    const list = listRef.current;
-    const previousHeight = list?.scrollHeight ?? 0;
+    const previousHeight = document.documentElement.scrollHeight;
     const older = await loadOlderMessagesAction(conversationId, oldest.created_at);
     setLoadingOlder(false);
     setHasMore(older.length >= MESSAGES_PAGE_SIZE);
     setMessages((current) => older.reduce(upsert, current));
     // Conserve la position de lecture après l'ajout des anciens messages.
     requestAnimationFrame(() => {
-      if (list) list.scrollTop += list.scrollHeight - previousHeight;
+      window.scrollBy(0, document.documentElement.scrollHeight - previousHeight);
     });
   }
 
@@ -135,11 +133,10 @@ export function ChatView({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
-        ref={listRef}
         role="log"
         aria-live="polite"
         aria-label="Messages"
-        className="flex min-h-[50vh] flex-1 flex-col gap-1 overflow-y-auto py-4"
+        className="flex flex-1 flex-col gap-1 py-4"
       >
         {hasMore ? (
           <div className="flex justify-center pb-2">
@@ -207,10 +204,9 @@ export function ChatView({
             </Fragment>
           );
         })}
-        <div ref={endRef} />
       </div>
 
-      <div className="sticky bottom-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] border-t border-border bg-background py-3 md:bottom-0">
+      <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0 md:pb-4">
         {disabledReason ? (
           <p className="rounded-lg bg-muted px-3 py-2.5 text-center text-sm text-muted-foreground">
             {disabledReason}

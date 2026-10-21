@@ -17,7 +17,7 @@ export function ListingGallery({ images, title }: { images: GalleryImage[]; titl
 
   if (visible.length === 0) {
     return (
-      <div className="flex aspect-[4/5] flex-col items-center justify-center gap-2 rounded-2xl bg-muted text-muted-foreground sm:aspect-[4/3]">
+      <div className="flex aspect-square flex-col items-center justify-center gap-2 bg-muted text-muted-foreground sm:aspect-[4/3] sm:rounded-2xl">
         <ImageOff className="size-8" aria-hidden="true" />
         <span className="text-sm">Pas de photo</span>
       </div>
@@ -36,7 +36,7 @@ export function ListingGallery({ images, title }: { images: GalleryImage[]; titl
       <div className="relative">
         <div
           ref={trackRef}
-          className="flex aspect-[4/5] snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto rounded-2xl bg-muted sm:aspect-[4/3] [&::-webkit-scrollbar]:hidden"
+          className="flex aspect-square snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto bg-muted sm:aspect-[4/3] sm:rounded-2xl [&::-webkit-scrollbar]:hidden"
           onScroll={(event) => {
             const track = event.currentTarget;
             setActive(Math.round(track.scrollLeft / Math.max(track.clientWidth, 1)));
@@ -63,13 +63,29 @@ export function ListingGallery({ images, title }: { images: GalleryImage[]; titl
           ))}
         </div>
         {visible.length > 1 ? (
-          <span className="absolute right-3 bottom-3 rounded-full bg-foreground/70 px-2.5 py-1 text-xs font-medium text-background">
-            {active + 1} / {visible.length}
-          </span>
+          <>
+            <span className="absolute right-3 bottom-3 hidden rounded-full bg-foreground/70 px-2.5 py-1 text-xs font-medium text-background sm:block">
+              {active + 1} / {visible.length}
+            </span>
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5 sm:hidden"
+            >
+              {visible.map((image, index) => (
+                <span
+                  key={image.id}
+                  className={cn(
+                    "h-1.5 rounded-full bg-white shadow-[0_0_2px_rgb(0_0_0/0.4)] transition-all",
+                    index === active ? "w-4" : "w-1.5 opacity-60",
+                  )}
+                />
+              ))}
+            </div>
+          </>
         ) : null}
       </div>
       {visible.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="hidden gap-2 overflow-x-auto pb-1 sm:flex">
           {visible.map((image, index) => (
             <button
               key={image.id}

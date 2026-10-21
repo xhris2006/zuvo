@@ -448,6 +448,7 @@ export type Database = {
           id: string;
           is_read: boolean;
           listing_id: string | null;
+          pushed_at: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
         };
@@ -459,6 +460,7 @@ export type Database = {
           id?: string;
           is_read?: boolean;
           listing_id?: string | null;
+          pushed_at?: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
         };
@@ -469,6 +471,7 @@ export type Database = {
           id?: string;
           is_read?: boolean;
           listing_id?: string | null;
+          pushed_at?: string | null;
           type?: Database["public"]["Enums"]["notification_type"];
           user_id?: string;
         };
@@ -755,6 +758,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      app_schema_version: { Args: Record<PropertyKey, never>; Returns: string };
       get_my_conversations: {
         Args: { p_limit?: number; p_offset?: number };
         Returns: {

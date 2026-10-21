@@ -347,6 +347,25 @@ de l'environnement Supabase (rôles, `auth.uid()`, schémas `auth` et `storage`)
 Ces tests tournent aussi dans l'intégration continue GitHub Actions
 ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
 
+### Tests d'intégration de l'API
+
+`npm run test:api` exécute les **vraies requêtes et actions de
+l'application** (annonces, recherche, messagerie, notifications, push,
+modération, administration) contre un vrai PostgREST, la couche API de
+Supabase, branché sur une base construite à partir des migrations. Ils
+détectent ce que les tests SQL ne voient pas : jointures ambiguës
+(`PGRST201`), droits par colonne, noms de relations.
+
+```bash
+# PostgREST 12.2.3 (version utilisée par Supabase)
+curl -fsSL -o /tmp/postgrest.tar.xz \
+  https://github.com/PostgREST/postgrest/releases/download/v12.2.3/postgrest-v12.2.3-linux-static-x64.tar.xz
+mkdir -p /tmp/postgrest && tar -xJf /tmp/postgrest.tar.xz -C /tmp/postgrest
+
+TEST_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/postgres \
+POSTGREST_BIN=/tmp/postgrest/postgrest npm run test:api
+```
+
 ## 6. Types TypeScript
 
 [`src/lib/supabase/database.types.ts`](../src/lib/supabase/database.types.ts)

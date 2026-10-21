@@ -3,12 +3,12 @@ import { parseServerEnv } from "./server-env";
 
 describe("parseServerEnv", () => {
   it("traite les chaînes vides comme absentes", () => {
-    expect(parseServerEnv({ SUPABASE_SERVICE_ROLE_KEY: "", PUSH_WEBHOOK_SECRET: "" })).toEqual({});
+    expect(parseServerEnv({ SUPABASE_SERVICE_ROLE_KEY: "", VAPID_PRIVATE_KEY: "" })).toEqual({});
   });
 
   it("refuse les valeurs invalides sans les divulguer", () => {
-    const parse = () => parseServerEnv({ PUSH_WEBHOOK_SECRET: "trop-court", VAPID_SUBJECT: "x" });
-    expect(parse).toThrow(/PUSH_WEBHOOK_SECRET/);
+    const parse = () => parseServerEnv({ VAPID_PRIVATE_KEY: "trop-court", VAPID_SUBJECT: "x" });
+    expect(parse).toThrow(/VAPID_PRIVATE_KEY/);
     expect(parse).toThrow(/VAPID_SUBJECT/);
     expect(parse).not.toThrow(/trop-court/);
   });

@@ -44,7 +44,7 @@ test("la page d'accueil présente l'offre et les catégories", async ({ page }) 
   await expect(
     page.getByRole("heading", { level: 1, name: "Donnez une seconde vie à vos affaires" }),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Parcourir par catégorie" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Catégories" })).toBeVisible();
   await expect(page).toHaveTitle(/Zuvo/);
 });
 

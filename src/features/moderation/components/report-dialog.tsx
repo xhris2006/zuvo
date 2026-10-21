@@ -2,7 +2,7 @@
 
 import { Flag } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useId, useRef, useState } from "react";
+import { type RefObject, useActionState, useId, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -44,9 +44,13 @@ type ReportDialogProps = {
   targetId: string;
   signedIn: boolean;
   returnTo: string;
-  /** « icon » : bouton compact (messages). */
-  variant?: "button" | "icon";
+  /** « icon » : bouton compact (messages) ; « none » : ouverture pilotée par le parent (menu). */
+  variant?: "button" | "icon" | "none";
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Élément qui reprend le focus à la fermeture (ouverture depuis un menu). */
+  returnFocusRef?: RefObject<HTMLElement | null>;
 };
 
 const idle: FormState<ReportField> = { status: "idle" };
@@ -156,8 +160,13 @@ export function ReportDialog({
   returnTo,
   variant = "button",
   className,
+  open: controlledOpen,
+  onOpenChange,
+  returnFocusRef,
 }: ReportDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   // Nouveau formulaire à chaque ouverture (après un envoi réussi notamment).
   const [formKey, setFormKey] = useState(0);
   const label = titles[targetType];
@@ -183,7 +192,7 @@ export function ReportDialog({
     );
 
   if (!signedIn) {
-    return variant === "icon" ? null : (
+    return variant !== "button" ? null : (
       <Link
         href={signInHref(returnTo)}
         className={cn(
@@ -206,8 +215,14 @@ export function ReportDialog({
         if (next) setFormKey((key) => key + 1);
       }}
     >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent>
+      {variant === "none" ? null : <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusRef?.current) return;
+          event.preventDefault();
+          returnFocusRef.current.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>

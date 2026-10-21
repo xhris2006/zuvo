@@ -51,7 +51,7 @@ async function Feed({ page }: { page: number }) {
 export default async function FeedPage(props: PageProps<"/fil">) {
   const page = parsePageParam((await props.searchParams).page);
   return (
-    <div className="container-page flex flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
         title="Mon fil"
         description="Les dernières annonces des vendeurs que vous suivez."

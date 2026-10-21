@@ -41,7 +41,7 @@ export function PhotoManager({
 
   return (
     <fieldset className="flex flex-col gap-3" aria-describedby={`${inputId}-help`}>
-      <legend className="text-sm font-medium">
+      <legend className="text-base font-semibold tracking-tight">
         Photos{" "}
         <span className="font-normal text-muted-foreground">
           ({images.length}/{listingLimits.maxImages})

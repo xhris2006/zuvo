@@ -38,7 +38,7 @@ async function Inbox() {
 export default function MessagesPage() {
   const t = getDictionary();
   return (
-    <div className="container-page flex max-w-3xl flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader title={t.pages.messagesTitle} />
       <MemberGate returnTo={routes.messages}>
         <PushPrompt context="messages" />

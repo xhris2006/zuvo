@@ -32,7 +32,7 @@ export function MobileFilters({ label, description, activeCount, children }: Mob
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="lg:hidden">
+        <Button variant="outline" size="sm" className="lg:hidden">
           <SlidersHorizontal aria-hidden="true" />
           {label}
           {activeCount > 0 ? (

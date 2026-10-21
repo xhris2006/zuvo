@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { connection } from "next/server";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { FooterGate } from "@/components/layout/footer-gate";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
@@ -72,7 +73,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           >
             {children}
           </main>
-          <SiteFooter />
+          <FooterGate>
+            <SiteFooter />
+          </FooterGate>
           <BottomNav />
         </UnreadCountsProvider>
         <ServiceWorkerRegistrar />

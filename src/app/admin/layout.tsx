@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   await requireAdmin(routes.admin);
   return (
-    <div className="container-page flex max-w-5xl flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-5xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <p className="flex items-center gap-2 text-sm font-medium text-primary">
         <ShieldCheck className="size-4" aria-hidden="true" />
         Espace administration

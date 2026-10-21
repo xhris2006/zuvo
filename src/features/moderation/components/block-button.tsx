@@ -1,7 +1,7 @@
 "use client";
 
 import { Ban, CircleCheck } from "lucide-react";
-import { useActionState, useState } from "react";
+import { type RefObject, useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +23,12 @@ type BlockButtonProps = {
   displayName: string;
   initialBlocked: boolean;
   className?: string;
+  /** Ouverture de la confirmation pilotée par le parent (menu) : pas de bouton « Bloquer ». */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onBlockedChange?: (blocked: boolean) => void;
+  /** Élément qui reprend le focus à la fermeture (ouverture depuis un menu). */
+  returnFocusRef?: RefObject<HTMLElement | null>;
 };
 
 /** Bloquer (avec confirmation) ou débloquer un utilisateur. */
@@ -32,12 +38,21 @@ export function BlockButton({
   displayName,
   initialBlocked,
   className,
+  open: controlledOpen,
+  onOpenChange,
+  onBlockedChange,
+  returnFocusRef,
 }: BlockButtonProps) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [state, formAction, pending] = useActionState<BlockState, FormData>(
     async (previous, formData) => {
       const next = await toggleBlockAction(previous, formData);
-      if (!next.message) setOpen(false);
+      if (!next.message) {
+        setOpen(false);
+        onBlockedChange?.(next.blocked);
+      }
       return next;
     },
     { blocked: initialBlocked },
@@ -69,13 +84,21 @@ export function BlockButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={cn("text-muted-foreground", className)}>
-          <Ban aria-hidden="true" />
-          Bloquer
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
+      {controlledOpen === undefined ? (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="sm" className={cn("text-muted-foreground", className)}>
+            <Ban aria-hidden="true" />
+            Bloquer
+          </Button>
+        </DialogTrigger>
+      ) : null}
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusRef?.current) return;
+          event.preventDefault();
+          returnFocusRef.current.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Bloquer {displayName} ?</DialogTitle>
           <DialogDescription>

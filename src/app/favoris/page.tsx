@@ -23,7 +23,7 @@ export default async function FavoritesPage(props: PageProps<"/favoris">) {
   const t = getDictionary();
   if (!isSupabaseConfigured()) {
     return (
-      <div className="container-page flex flex-col gap-8 pt-6 sm:pt-10">
+      <div className="container-page flex flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
         <PageHeader title={t.pages.favoritesTitle} />
         <AuthRequired returnTo={routes.favorites} />
       </div>
@@ -35,7 +35,7 @@ export default async function FavoritesPage(props: PageProps<"/favoris">) {
   const favorites = await getFavoriteListings(user.id, page);
 
   return (
-    <div className="container-page flex flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader title={t.pages.favoritesTitle} />
       {favorites.items.length > 0 ? (
         <>

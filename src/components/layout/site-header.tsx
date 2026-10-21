@@ -1,7 +1,7 @@
 import { Bell, Heart, MessageCircle, Plus } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { isCurrentUserAdmin } from "@/features/admin/queries";
@@ -12,6 +12,7 @@ import { getDictionary } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { DesktopNav } from "./desktop-nav";
 import { Logo } from "./logo";
+import { MobileSearchRow } from "./mobile-search-row";
 import { SearchForm } from "./search-form";
 import { UserMenu } from "./user-menu";
 
@@ -50,8 +51,11 @@ export async function SiteHeader() {
   const isAdmin = profile ? await isCurrentUserAdmin() : false;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="container-page flex h-16 items-center gap-3 lg:gap-6">
+    <header
+      data-site-header
+      className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+    >
+      <div className="container-page flex h-14 items-center gap-3 md:h-16 lg:gap-6">
         <Logo className="shrink-0" />
 
         <SearchForm id="header-search" className="hidden max-w-xl md:block" />
@@ -95,9 +99,9 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      <div className="container-page pb-3 md:hidden">
-        <SearchForm id="header-search-mobile" />
-      </div>
+      <Suspense>
+        <MobileSearchRow />
+      </Suspense>
     </header>
   );
 }

@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { getCity } from "@/config/locations";
 import { followersHref, followingHref } from "@/config/routes";
 import { formatCount, formatMonthYear } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { avatarUrl } from "../avatar-url";
 import type { ProfileStats, PublicProfile } from "../queries";
 
@@ -32,38 +33,39 @@ export function ProfileHeader({ profile, stats, actions }: ProfileHeaderProps) {
   ];
 
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-7">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-        <Avatar
-          name={profile.display_name}
-          src={avatarUrl(profile.avatar_path)}
-          size="xl"
-          className="self-start"
-        />
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-0.5">
-            <h1 className="truncate text-2xl font-bold tracking-tight">{profile.display_name}</h1>
-            <p className="text-sm text-muted-foreground">@{profile.username}</p>
-          </div>
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            {city ? (
-              <li className="flex items-center gap-1.5">
-                <MapPin className="size-4" aria-hidden="true" />
-                {city}
-              </li>
-            ) : null}
-            <li className="flex items-center gap-1.5">
-              <CalendarDays className="size-4" aria-hidden="true" />
-              Membre depuis {formatMonthYear(profile.created_at)}
-            </li>
-          </ul>
-          {profile.bio ? (
-            <p className="text-sm whitespace-pre-line text-foreground/90">{profile.bio}</p>
-          ) : null}
+    <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-6 sm:rounded-2xl sm:border sm:border-border sm:bg-card sm:p-7 sm:shadow-card">
+      <Avatar
+        name={profile.display_name}
+        src={avatarUrl(profile.avatar_path)}
+        size="xl"
+        className={cn("size-20 text-xl sm:size-24 sm:text-2xl", profile.bio && "sm:row-span-2")}
+      />
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <div className="flex flex-col">
+          <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
+            {profile.display_name}
+          </h1>
+          <p className="truncate text-sm text-muted-foreground">@{profile.username}</p>
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+        <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
+          {city ? (
+            <li className="flex items-center gap-1">
+              <MapPin className="size-3.5 sm:size-4" aria-hidden="true" />
+              {city}
+            </li>
+          ) : null}
+          <li className="flex items-center gap-1">
+            <CalendarDays className="size-3.5 sm:size-4" aria-hidden="true" />
+            Membre depuis {formatMonthYear(profile.created_at)}
+          </li>
+        </ul>
       </div>
-      <dl className="grid grid-cols-3 divide-x divide-border rounded-xl bg-muted/60 py-3 text-center">
+      {profile.bio ? (
+        <p className="col-span-2 text-sm whitespace-pre-line text-foreground/90 sm:col-span-1 sm:col-start-2 sm:row-start-2 sm:-mt-2">
+          {profile.bio}
+        </p>
+      ) : null}
+      <dl className="col-span-2 grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-card py-2.5 text-center sm:col-span-3 sm:border-0 sm:bg-muted/60 sm:py-3">
         {items.map((item) => (
           <div key={item.label} className="relative flex flex-col-reverse px-2">
             <dt className="text-xs text-muted-foreground">
@@ -75,10 +77,15 @@ export function ProfileHeader({ profile, stats, actions }: ProfileHeaderProps) {
                 item.label
               )}
             </dt>
-            <dd className="text-lg font-bold">{formatCount(item.value)}</dd>
+            <dd className="text-lg leading-tight font-bold">{formatCount(item.value)}</dd>
           </div>
         ))}
       </dl>
+      {actions ? (
+        <div className="col-span-2 flex items-center gap-2 sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:justify-end">
+          {actions}
+        </div>
+      ) : null}
     </section>
   );
 }

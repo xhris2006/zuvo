@@ -14,6 +14,7 @@ type FavoriteButtonProps = {
   /** Page à retrouver après connexion. */
   returnTo: string;
   variant?: "icon" | "button";
+  className?: string;
 };
 
 export function FavoriteButton({
@@ -22,16 +23,21 @@ export function FavoriteButton({
   signedIn,
   returnTo,
   variant = "icon",
+  className,
 }: FavoriteButtonProps) {
   const [state, formAction, pending] = useActionState(toggleFavoriteAction, {
     favorited: initialFavorited,
   });
   const label = state.favorited ? "Retirer des favoris" : "Ajouter aux favoris";
   const iconClass = cn("size-5", state.favorited && "fill-danger text-danger");
-  const iconButtonClass =
-    "inline-flex size-9 items-center justify-center rounded-full bg-card/95 text-foreground shadow-card transition-transform hover:scale-105 active:scale-95";
-  const fullButtonClass =
-    "inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-card px-3 text-sm font-semibold transition-colors hover:bg-muted";
+  const iconButtonClass = cn(
+    "inline-flex size-9 items-center justify-center rounded-full bg-card/95 text-foreground shadow-card transition-transform hover:scale-105 active:scale-95",
+    className,
+  );
+  const fullButtonClass = cn(
+    "inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-card px-3 text-sm font-semibold transition-colors hover:bg-muted",
+    className,
+  );
 
   if (!signedIn) {
     return (

@@ -36,7 +36,7 @@ export default async function Page(props: Props) {
   const base = followersHref(profile.username);
 
   return (
-    <div className="container-page flex max-w-2xl flex-col gap-6 pt-6 sm:pt-10">
+    <div className="container-page flex max-w-2xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
         title="Abonnés"
         description={

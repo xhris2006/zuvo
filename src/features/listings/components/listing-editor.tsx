@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useRef, useState, useTransition } from "react";
+import { type FormEvent, type ReactNode, useId, useRef, useState, useTransition } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -169,108 +169,124 @@ export function ListingEditor({ userId, categories, defaultCity, listing }: List
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6" noValidate>
       {message ? <Alert variant="danger">{message}</Alert> : null}
 
-      <PhotoManager
-        images={images}
-        processing={processing}
-        error={fieldErrors.images}
-        onAddFiles={(files) => void addFiles(files)}
-        onChange={setImages}
-      />
+      <FormSection>
+        <PhotoManager
+          images={images}
+          processing={processing}
+          error={fieldErrors.images}
+          onAddFiles={(files) => void addFiles(files)}
+          onChange={setImages}
+        />
+      </FormSection>
 
-      <Field id="title" label="Titre" error={fieldErrors.title} required>
-        {(control) => (
-          <Input
-            {...control}
-            name="title"
-            maxLength={listingLimits.titleMax}
-            defaultValue={listing?.title}
-            placeholder="Ex. : Robe en wax taille M"
-            required
-          />
-        )}
-      </Field>
-
-      <Field
-        id="description"
-        label="Description"
-        hint="État, taille, marque, défauts éventuels…"
-        error={fieldErrors.description}
-        required
-      >
-        {(control) => (
-          <Textarea
-            {...control}
-            name="description"
-            rows={6}
-            maxLength={listingLimits.descriptionMax}
-            defaultValue={listing?.description}
-          />
-        )}
-      </Field>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="category" label="Catégorie" error={fieldErrors.category} required>
+      <FormSection title="Description de l'article">
+        <Field id="title" label="Titre" error={fieldErrors.title} required>
           {(control) => (
-            <Select {...control} name="category" defaultValue={listing?.categorySlug ?? ""}>
-              <option value="">Choisir…</option>
-              {categories.map((category) => (
-                <option key={category.slug} value={category.slug}>
-                  {category.name}
-                </option>
-              ))}
-            </Select>
+            <Input
+              {...control}
+              name="title"
+              maxLength={listingLimits.titleMax}
+              defaultValue={listing?.title}
+              placeholder="Ex. : Robe en wax taille M"
+              required
+            />
           )}
         </Field>
-        <Field id="condition" label="État" error={fieldErrors.condition} required>
-          {(control) => (
-            <Select {...control} name="condition" defaultValue={listing?.condition ?? ""}>
-              <option value="">Choisir…</option>
-              {listingConditions.map((condition) => (
-                <option key={condition} value={condition}>
-                  {t.listing.conditions[condition]}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field id="price" label="Prix (FCFA)" error={fieldErrors.price} required>
-          {(control) => (
-            <div className="relative">
-              <Input
-                {...control}
-                name="price"
-                inputMode="numeric"
-                autoComplete="off"
-                defaultValue={listing?.price ?? ""}
-                placeholder="Ex. : 15000"
-                className="pr-16"
-              />
-              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
-                FCFA
-              </span>
-            </div>
-          )}
-        </Field>
-        <Field id="city" label="Ville" error={fieldErrors.city} required>
-          {(control) => (
-            <Select {...control} name="city" defaultValue={listing?.city ?? defaultCity ?? ""}>
-              <option value="">Choisir…</option>
-              {cities.map((city) => (
-                <option key={city.slug} value={city.slug}>
-                  {city.name}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </div>
 
-      <div className="flex flex-col-reverse gap-2 border-t border-border pt-5 sm:flex-row sm:justify-end">
+        <Field
+          id="description"
+          label="Description"
+          hint="État, taille, marque, défauts éventuels…"
+          error={fieldErrors.description}
+          required
+        >
+          {(control) => (
+            <Textarea
+              {...control}
+              name="description"
+              rows={6}
+              maxLength={listingLimits.descriptionMax}
+              defaultValue={listing?.description}
+            />
+          )}
+        </Field>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field id="category" label="Catégorie" error={fieldErrors.category} required>
+            {(control) => (
+              <Select {...control} name="category" defaultValue={listing?.categorySlug ?? ""}>
+                <option value="">Choisir…</option>
+                {categories.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+          <Field id="condition" label="État" error={fieldErrors.condition} required>
+            {(control) => (
+              <Select {...control} name="condition" defaultValue={listing?.condition ?? ""}>
+                <option value="">Choisir…</option>
+                {listingConditions.map((condition) => (
+                  <option key={condition} value={condition}>
+                    {t.listing.conditions[condition]}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        </div>
+      </FormSection>
+
+      <FormSection title="Prix et lieu">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field id="price" label="Prix (FCFA)" error={fieldErrors.price} required>
+            {(control) => (
+              <div className="relative">
+                <Input
+                  {...control}
+                  name="price"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  defaultValue={listing?.price ?? ""}
+                  placeholder="Ex. : 15000"
+                  className="pr-16"
+                />
+                <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
+                  FCFA
+                </span>
+              </div>
+            )}
+          </Field>
+          <Field id="city" label="Ville" error={fieldErrors.city} required>
+            {(control) => (
+              <Select {...control} name="city" defaultValue={listing?.city ?? defaultCity ?? ""}>
+                <option value="">Choisir…</option>
+                {cities.map((city) => (
+                  <option key={city.slug} value={city.slug}>
+                    {city.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        </div>
+      </FormSection>
+
+      <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
         {isPublished ? null : (
-          <Button type="submit" name="intent" value="draft" variant="outline" disabled={pending}>
+          <Button
+            type="submit"
+            name="intent"
+            value="draft"
+            variant="outline"
+            size="lg"
+            disabled={pending}
+          >
             Enregistrer le brouillon
           </Button>
         )}
@@ -278,6 +294,7 @@ export function ListingEditor({ userId, categories, defaultCity, listing }: List
           type="submit"
           name="intent"
           value="publish"
+          size="lg"
           loading={pending}
           disabled={processing > 0}
         >
@@ -285,5 +302,22 @@ export function ListingEditor({ userId, categories, defaultCity, listing }: List
         </Button>
       </div>
     </form>
+  );
+}
+
+function FormSection({ title, children }: { title?: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <section
+      aria-labelledby={title ? id : undefined}
+      className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6"
+    >
+      {title ? (
+        <h2 id={id} className="text-base font-semibold tracking-tight">
+          {title}
+        </h2>
+      ) : null}
+      {children}
+    </section>
   );
 }

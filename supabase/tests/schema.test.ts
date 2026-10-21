@@ -1,3 +1,4 @@
+import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { defaultCategories } from "@/features/categories/data";
 import { asAnon, asOwner } from "./support/db";
@@ -52,6 +53,22 @@ describe("garde-fous globaux du schéma", () => {
     expect(rows.map((row) => row.proname)).toEqual(["is_username_available"]);
   });
 
+  it("déclare la version de la dernière migration (diagnostic de l'application)", async () => {
+    const migrations = (await readdir(new URL("../migrations/", import.meta.url)))
+      .filter((file) => file.endsWith(".sql"))
+      .sort();
+    const latest = migrations.at(-1)!.split("_")[0];
+    const { rows } = await asOwner((sql) =>
+      sql<{ version: string }>("select public.app_schema_version() as version"),
+    );
+    expect(rows[0]!.version).toBe(latest);
+    const diagnostics = await readFile(
+      new URL("../../src/features/notifications/push/diagnostics.ts", import.meta.url),
+      "utf8",
+    );
+    expect(diagnostics).toContain(`EXPECTED_SCHEMA_VERSION = "${latest}"`);
+  });
+
   it("n'accorde l'exécution d'aucune fonction interne à PUBLIC", async () => {
     const { rows } = await asOwner((sql) =>
       sql<{ proname: string }>(
@@ -90,7 +107,8 @@ describe("garde-fous globaux du schéma", () => {
          order by p.proname`,
       ),
     );
-    expect(rows.map((row) => row.proname)).toEqual(["is_username_available"]);
+    // app_schema_version renvoie une constante (diagnostic de configuration).
+    expect(rows.map((row) => row.proname)).toEqual(["app_schema_version", "is_username_available"]);
   });
 });
 

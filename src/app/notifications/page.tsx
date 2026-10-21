@@ -11,6 +11,7 @@ import { AuthRequired } from "@/features/auth/components/auth-required";
 import { requireUser } from "@/features/auth/session";
 import { markAllNotificationsReadAction } from "@/features/notifications/actions";
 import { NotificationList } from "@/features/notifications/components/notification-list";
+import { PushPrompt } from "@/features/notifications/components/push-prompt";
 import { getNotifications } from "@/features/notifications/queries";
 import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -60,6 +61,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
           </>
         }
       />
+      <PushPrompt context="notifications" />
       {notifications.items.length > 0 ? (
         <>
           <NotificationList items={notifications.items} />

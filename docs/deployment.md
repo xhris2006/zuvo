@@ -54,7 +54,6 @@ ne doivent jamais être partagés (ni dans le dépôt, ni dans une conversation)
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | publique             | voir [`notifications.md`](notifications.md)                  |
 | `VAPID_PRIVATE_KEY`                    | **serveur, secrète** | voir [`notifications.md`](notifications.md)                  |
 | `VAPID_SUBJECT`                        | serveur              | `mailto:…` ou `https://…`                                    |
-| `PUSH_WEBHOOK_SECRET`                  | **serveur, secrète** | 32 caractères aléatoires minimum                             |
 
 Règles :
 

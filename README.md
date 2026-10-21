@@ -104,7 +104,6 @@ Voir [`.env.example`](.env.example). Aucune valeur secrète ne doit être commit
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | Clé publique Web Push                          | `.env.local`, Vercel |
 | `VAPID_PRIVATE_KEY`                    | **Secrète**, serveur : envoi Web Push          | Vercel uniquement    |
 | `VAPID_SUBJECT`                        | Contact du service push (`mailto:`…)           | Vercel               |
-| `PUSH_WEBHOOK_SECRET`                  | **Secret** partagé avec le webhook Supabase    | Vercel uniquement    |
 
 Sur Vercel, si `NEXT_PUBLIC_SITE_URL` est absente, l'URL de production du
 projet (`VERCEL_PROJECT_PRODUCTION_URL`) est utilisée.
@@ -123,6 +122,7 @@ projet (`VERCEL_PROJECT_PRODUCTION_URL`) est utilisée.
 | `npm run check`     | Lint + typecheck + tests unitaires                                                |
 | `npm run format`    | Formatage Prettier                                                                |
 | `npm run test:db`   | Tests du schéma, des politiques RLS et du Storage (nécessite `TEST_DATABASE_URL`) |
+| `npm run test:api`  | Requêtes et actions réelles sur PostgREST (`TEST_DATABASE_URL`, `POSTGREST_BIN`)  |
 | `npm run db:types`  | Régénère les types TypeScript de la base (nécessite `TEST_DATABASE_URL`)          |
 
 ### Tests de bout en bout
@@ -203,7 +203,8 @@ faite depuis le code) :
 3. Désigner au moins un administrateur (SQL).
 4. Faire relire et compléter les **pages juridiques** (brouillons) par un
    professionnel du droit.
-5. Facultatif : connexion Google ; notifications push (clés VAPID, webhook,
+5. Facultatif : connexion Google ; notifications push (clés VAPID et clé
+   service_role, à vérifier dans Administration → Configuration,
    **essais sur appareils** — tant qu'ils ne sont pas faits, le push ne doit
    pas être annoncé comme disponible).
 6. Dérouler la liste de vérifications de `docs/deployment.md` sur la

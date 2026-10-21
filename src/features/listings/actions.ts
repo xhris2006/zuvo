@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LISTING_IMAGE_BUCKET } from "./image-url";
 import { listingHref } from "./links";
@@ -193,6 +194,7 @@ export async function finalizeListingAction(input: {
       .update({ status: "active" })
       .eq("id", listingId);
     if (publishError) return { status: "error", message: listingErrorMessage(publishError) };
+    schedulePushDispatch({ type: "followed_user_listing", actorId: user.id, listingId });
   }
 
   revalidateListing(listingId);

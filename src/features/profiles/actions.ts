@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { publicProfileHref, routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isOwnAvatarPath, privateContactSchema, profileSchema } from "./schemas";
 
@@ -159,5 +160,6 @@ export async function toggleFollowAction(
 
   if (username) revalidatePath(publicProfileHref(username));
   revalidatePath(routes.profile);
+  if (!currentlyFollowing) schedulePushDispatch({ type: "new_follower", actorId: user.id });
   return { following: !currentlyFollowing };
 }

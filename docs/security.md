@@ -35,12 +35,12 @@ celui des notifications push dans [`notifications.md`](notifications.md).
 
 ## Secrets
 
-| Secret                                     | Où il vit                     | Utilisé par                                               |
-| ------------------------------------------ | ----------------------------- | --------------------------------------------------------- |
-| Mot de passe de la base Supabase           | gestionnaire de mots de passe | CLI Supabase (migrations)                                 |
-| `SUPABASE_SERVICE_ROLE_KEY`                | variables Vercel (serveur)    | `src/lib/supabase/admin.ts` : push, suppression de compte |
-| `VAPID_PRIVATE_KEY`, `PUSH_WEBHOOK_SECRET` | variables Vercel (serveur)    | `/api/push/dispatch`, notification de test                |
-| Secret OAuth Google, identifiants SMTP     | tableau de bord Supabase      | Supabase Auth                                             |
+| Secret                                 | Où il vit                     | Utilisé par                                               |
+| -------------------------------------- | ----------------------------- | --------------------------------------------------------- |
+| Mot de passe de la base Supabase       | gestionnaire de mots de passe | CLI Supabase (migrations)                                 |
+| `SUPABASE_SERVICE_ROLE_KEY`            | variables Vercel (serveur)    | `src/lib/supabase/admin.ts` : push, suppression de compte |
+| `VAPID_PRIVATE_KEY`                    | variables Vercel (serveur)    | envoi des notifications push                              |
+| Secret OAuth Google, identifiants SMTP | tableau de bord Supabase      | Supabase Auth                                             |
 
 - Les secrets sont lus par `src/lib/server-env.ts`, protégé par `server-only`
   (toute importation depuis un composant client fait échouer le build) ; les
@@ -51,7 +51,7 @@ celui des notifications push dans [`notifications.md`](notifications.md).
 - `.env*` est ignoré par Git (sauf `.env.example`, qui ne contient aucune
   valeur secrète).
 - En cas de fuite : régénérez immédiatement la clé concernée (Supabase →
-  API Keys, nouvelle paire VAPID, nouveau secret de webhook), mettez à jour
+  API Keys, nouvelle paire VAPID depuis Administration → Configuration), mettez à jour
   Vercel, redéployez.
 
 ## En-têtes HTTP
@@ -66,8 +66,8 @@ celui des notifications push dans [`notifications.md`](notifications.md).
 - `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
   `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (caméra,
   micro, géolocalisation, paiement désactivés).
-- Pages et réponses authentifiées : `Cache-Control: private, no-store` ; la
-  route du webhook push répond `no-store`. Le service worker ne met en cache
+- Pages et réponses authentifiées : `Cache-Control: private, no-store`. Le
+  service worker ne met en cache
   que la page « hors connexion », rendue sans cookies.
 
 ## Autres protections
@@ -79,8 +79,9 @@ celui des notifications push dans [`notifications.md`](notifications.md).
   l'administration retire les caractères spéciaux de PostgREST.
 - **XSS** : aucun HTML fourni par les utilisateurs n'est interprété ; les
   données structurées JSON-LD échappent `<`.
-- **CSRF** : les actions serveur Next.js vérifient l'origine ; le webhook push
-  exige un secret partagé (comparaison à temps constant).
+- **CSRF** : les actions serveur Next.js vérifient l'origine. Les
+  notifications push sont envoyées par le serveur juste après l'action, sans
+  point d'entrée public.
 - **Fichiers** : types (JPEG, PNG, WebP) et tailles imposés par les buckets,
   dossiers cloisonnés par utilisateur, aucun écrasement possible ; pièces
   jointes de messages privées.
@@ -112,8 +113,10 @@ couverts par des tests :
   fonctions d'administration (refus aux non-administrateurs et aux visiteurs),
   le Storage, les déclencheurs de notifications et la suppression de compte.
 - `npm test` : actions serveur (session exigée, validation, identifiants
-  falsifiés, rôle administrateur), route du webhook (secret, charge utile,
-  configuration absente), CSP, variables d'environnement.
+  falsifiés, rôle administrateur), CSP, variables d'environnement.
+- `npm run test:api` : les requêtes et actions réelles de l'application
+  exécutées contre un vrai PostgREST (version de Supabase) et la base issue
+  des migrations : jointures, droits par colonne, RLS, envoi push.
 - `npm run test:e2e` : redirections des pages protégées, en-têtes de
   sécurité, nonce différent à chaque requête, absence de violation CSP,
   accessibilité (axe).

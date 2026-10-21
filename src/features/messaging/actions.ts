@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/features/auth/session";
 import { listingHref } from "@/features/listings/links";
 import { formText } from "@/lib/forms/form-state";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { conversationHref } from "./links";
 import { type ChatMessage, MESSAGES_PAGE_SIZE, messageBodySchema } from "./schemas";
 
@@ -81,6 +82,7 @@ export async function sendMessageAction(
     };
   }
   revalidatePath(routes.messages);
+  schedulePushDispatch({ type: "new_message", actorId: user.id, conversationId });
   return { status: "sent", message: data };
 }
 

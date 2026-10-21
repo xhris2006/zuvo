@@ -8,6 +8,7 @@ import { routes } from "@/config/routes";
 import { signInHref } from "@/features/auth/links";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, formText } from "@/lib/forms/form-state";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notificationHref } from "./content";
 import { getPushConfig, sendPush } from "./push/send";
@@ -166,13 +167,19 @@ const TEST_INTERVAL_MS = 30_000;
 
 /** Envoie une notification de test à tous les appareils de l'utilisateur. */
 export async function sendTestPushAction(): Promise<PushResult & { sent?: number }> {
-  const config = getPushConfig();
-  if (!config) {
-    return { status: "error", message: "Les notifications push ne sont pas encore configurées." };
-  }
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
   if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+
+  // Même chemin que les vraies notifications : clés VAPID et clé service_role.
+  const config = getPushConfig();
+  if (!config || !createSupabaseAdminClient()) {
+    return {
+      status: "error",
+      message:
+        "Le serveur n'est pas encore configuré pour envoyer des notifications push. L'administrateur peut vérifier la configuration dans Administration → Configuration.",
+    };
+  }
 
   const now = Date.now();
   if (now - (lastTestByUser.get(user.id) ?? 0) < TEST_INTERVAL_MS) {
@@ -202,7 +209,13 @@ export async function sendTestPushAction(): Promise<PushResult & { sent?: number
     await supabase.from("push_subscriptions").delete().in("id", result.expired);
   }
   if (result.sent.length === 0) {
-    return { status: "error", message: "L'envoi a échoué. Réactivez les notifications." };
+    return {
+      status: "error",
+      message:
+        result.expired.length > 0
+          ? "Cet appareil n'est plus abonné. Désactivez puis réactivez les notifications."
+          : "Le service de notifications a refusé l'envoi. L'administrateur doit vérifier les clés VAPID (Administration → Configuration).",
+    };
   }
   return { status: "ok", sent: result.sent.length };
 }

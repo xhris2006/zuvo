@@ -1,87 +1,131 @@
 import "server-only";
 import type { TypedSupabaseClient } from "@/lib/supabase/server";
-import { describeNotification, type NotificationSubject, notificationHref } from "../content";
-import { type PushConfig, sendPush } from "./send";
+import {
+  describeNotification,
+  type NotificationSubject,
+  type NotificationType,
+  notificationHref,
+} from "../content";
+import { type PushConfig, type StoredSubscription, sendPush } from "./send";
 
-export type DispatchOutcome =
-  | {
-      status: "skipped";
-      reason: "not_found" | "already_read" | "actor_suspended" | "push_disabled" | "no_device";
-    }
-  | { status: "done"; sent: number; expired: number; failed: number };
+/** Notifications à envoyer : créées par une action précise, il y a peu. */
+export type PushFilter = {
+  type: NotificationType;
+  /** Auteur de l'action (absent pour la modération). */
+  actorId?: string;
+  listingId?: string;
+  conversationId?: string;
+};
+
+export type DispatchSummary = {
+  notifications: number;
+  sent: number;
+  expired: number;
+  failed: number;
+  skipped: number;
+};
+
+/** Au-delà, une notification n'est plus envoyée en push (évite les rattrapages tardifs). */
+const MAX_AGE_MS = 10 * 60 * 1000;
+
+const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id,
+  actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at),
+  listing:listings(title)`;
 
 /**
- * Envoie une notification interne sous forme de notification push à tous les
- * appareils de son destinataire. Le contenu est relu en base (client
- * service_role) : seul l'identifiant fourni par le webhook est utilisé.
+ * Réserve puis envoie les notifications push correspondant au filtre. La
+ * réservation (pushed_at) est atomique : une notification n'est jamais
+ * envoyée deux fois, même si deux envois se chevauchent. Toutes les données
+ * sont relues en base avec le client service_role.
  */
-export async function dispatchNotification(
+export async function dispatchPendingPush(
   admin: TypedSupabaseClient,
-  notificationId: string,
+  filter: PushFilter,
   config: PushConfig,
-): Promise<DispatchOutcome> {
-  const { data: notification, error } = await admin
-    .from("notifications")
-    .select(
-      `id, user_id, type, is_read, listing_id, conversation_id,
-       actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at),
-       listing:listings(title)`,
-    )
-    .eq("id", notificationId)
-    .maybeSingle();
-  if (error) throw new Error("push_dispatch_query_failed");
-  if (!notification) return { status: "skipped", reason: "not_found" };
-  if (notification.is_read) return { status: "skipped", reason: "already_read" };
-  // Lecture en service_role : RLS ne masque pas les comptes suspendus.
-  if (notification.actor?.suspended_at) return { status: "skipped", reason: "actor_suspended" };
+): Promise<DispatchSummary> {
+  const summary: DispatchSummary = { notifications: 0, sent: 0, expired: 0, failed: 0, skipped: 0 };
 
+  let claim = admin
+    .from("notifications")
+    .update({ pushed_at: new Date().toISOString() })
+    .is("pushed_at", null)
+    .eq("type", filter.type)
+    .gte("created_at", new Date(Date.now() - MAX_AGE_MS).toISOString());
+  if (filter.actorId) claim = claim.eq("actor_id", filter.actorId);
+  if (filter.listingId) claim = claim.eq("listing_id", filter.listingId);
+  if (filter.conversationId) claim = claim.eq("conversation_id", filter.conversationId);
+
+  const { data: notifications, error } = await claim.select(CLAIM_COLUMNS);
+  if (error) throw new Error("push_claim_failed");
+  // Lecture en service_role : RLS ne masque pas les comptes suspendus.
+  const deliverable = (notifications ?? []).filter(
+    (notification) => !notification.is_read && !notification.actor?.suspended_at,
+  );
+  summary.notifications = notifications?.length ?? 0;
+  summary.skipped = summary.notifications - deliverable.length;
+  if (deliverable.length === 0) return summary;
+
+  const userIds = [...new Set(deliverable.map((notification) => notification.user_id))];
   const [{ data: preferences }, { data: subscriptions }] = await Promise.all([
-    admin
-      .from("notification_preferences")
-      .select("push_enabled")
-      .eq("user_id", notification.user_id)
-      .maybeSingle(),
+    admin.from("notification_preferences").select("user_id, push_enabled").in("user_id", userIds),
     admin
       .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth")
-      .eq("user_id", notification.user_id),
+      .select("id, user_id, endpoint, p256dh, auth")
+      .in("user_id", userIds),
   ]);
-  if (!preferences?.push_enabled) return { status: "skipped", reason: "push_disabled" };
-  if (!subscriptions?.length) return { status: "skipped", reason: "no_device" };
-
-  const subject: NotificationSubject = {
-    type: notification.type,
-    actorName: notification.actor?.display_name ?? null,
-    actorUsername: notification.actor?.username ?? null,
-    listingId: notification.listing_id,
-    listingTitle: notification.listing?.title ?? null,
-    conversationId: notification.conversation_id,
-  };
-  const result = await sendPush(
-    subscriptions,
-    {
-      ...describeNotification(subject),
-      url: notificationHref(subject),
-      tag: notification.conversation_id
-        ? `conversation:${notification.conversation_id}`
-        : `notification:${notification.id}`,
-    },
-    config,
+  const pushEnabled = new Set(
+    (preferences ?? []).filter((row) => row.push_enabled).map((row) => row.user_id),
   );
-
-  if (result.expired.length > 0) {
-    await admin.from("push_subscriptions").delete().in("id", result.expired);
+  const devicesByUser = new Map<string, StoredSubscription[]>();
+  for (const subscription of subscriptions ?? []) {
+    const devices = devicesByUser.get(subscription.user_id) ?? [];
+    devices.push(subscription);
+    devicesByUser.set(subscription.user_id, devices);
   }
-  if (result.sent.length > 0) {
+
+  const sentIds: string[] = [];
+  const expiredIds: string[] = [];
+  for (const notification of deliverable) {
+    const devices = devicesByUser.get(notification.user_id) ?? [];
+    if (!pushEnabled.has(notification.user_id) || devices.length === 0) {
+      summary.skipped += 1;
+      continue;
+    }
+    const subject: NotificationSubject = {
+      type: notification.type,
+      actorName: notification.actor?.display_name ?? null,
+      actorUsername: notification.actor?.username ?? null,
+      listingId: notification.listing_id,
+      listingTitle: notification.listing?.title ?? null,
+      conversationId: notification.conversation_id,
+    };
+    const result = await sendPush(
+      devices,
+      {
+        ...describeNotification(subject),
+        url: notificationHref(subject),
+        tag: notification.conversation_id
+          ? `conversation:${notification.conversation_id}`
+          : `notification:${notification.id}`,
+      },
+      config,
+      { urgent: notification.type === "new_message" },
+    );
+    sentIds.push(...result.sent);
+    expiredIds.push(...result.expired);
+    summary.sent += result.sent.length;
+    summary.expired += result.expired.length;
+    summary.failed += result.failed;
+  }
+
+  if (expiredIds.length > 0) {
+    await admin.from("push_subscriptions").delete().in("id", expiredIds);
+  }
+  if (sentIds.length > 0) {
     await admin
       .from("push_subscriptions")
       .update({ last_used_at: new Date().toISOString() })
-      .in("id", result.sent);
+      .in("id", [...new Set(sentIds)]);
   }
-  return {
-    status: "done",
-    sent: result.sent.length,
-    expired: result.expired.length,
-    failed: result.failed,
-  };
+  return summary;
 }

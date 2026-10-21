@@ -36,6 +36,7 @@ export async function sendPush(
   subscriptions: StoredSubscription[],
   payload: PushPayload,
   config: PushConfig,
+  options: { urgent?: boolean } = {},
 ): Promise<SendResult> {
   const result: SendResult = { sent: [], expired: [], failed: 0 };
   const body = JSON.stringify(payload);
@@ -55,8 +56,9 @@ export async function sendPush(
           body,
           {
             vapidDetails: config,
-            TTL: 12 * 60 * 60,
-            urgency: "normal",
+            TTL: 24 * 60 * 60,
+            // « high » : remise immédiate même si le téléphone est en veille (messages).
+            urgency: options.urgent ? "high" : "normal",
             timeout: 10_000,
           },
         );

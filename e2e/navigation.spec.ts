@@ -148,14 +148,3 @@ test("le service worker est servi sans cache et avec une CSP stricte", async ({ 
   expect(headers["cache-control"]).toContain("no-cache");
   expect(headers["content-security-policy"]).toBe("default-src 'self'; script-src 'self'");
 });
-
-test("le webhook push refuse de fonctionner tant qu'il n'est pas configuré", async ({
-  request,
-}) => {
-  const response = await request.post("/api/push/dispatch", {
-    data: { type: "INSERT", schema: "public", table: "notifications", record: { id: "x" } },
-    headers: { authorization: "Bearer essai" },
-  });
-  expect(response.status()).toBe(503);
-  expect(await response.json()).toEqual({ error: "push_not_configured" });
-});

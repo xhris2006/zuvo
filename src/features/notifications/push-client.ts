@@ -47,10 +47,21 @@ export function decodeBase64Url(value: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+/** L'abonnement a-t-il été créé avec cette clé publique VAPID ? */
+export function usesServerKey(subscription: PushSubscription, publicKey: string): boolean {
+  const current = subscription.options.applicationServerKey;
+  if (!current) return true;
+  const expected = decodeBase64Url(publicKey);
+  const actual = new Uint8Array(current);
+  return actual.length === expected.length && actual.every((byte, i) => byte === expected[i]);
+}
+
 export async function subscribeToPush(publicKey: string): Promise<PushSubscription> {
   const registration = await getServiceWorkerRegistration();
   const existing = await registration.pushManager.getSubscription();
-  if (existing) return existing;
+  // Un abonnement créé avec d'anciennes clés serait refusé par le service push.
+  if (existing && usesServerKey(existing, publicKey)) return existing;
+  if (existing) await existing.unsubscribe().catch(() => false);
   return registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: decodeBase64Url(publicKey),

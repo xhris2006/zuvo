@@ -714,6 +714,7 @@ export type Database = {
       admin_get_reported_message: {
         Args: { p_report_id: string };
         Returns: {
+          attachment_path: string;
           body: string;
           conversation_id: string;
           created_at: string;
@@ -772,6 +773,7 @@ export type Database = {
           is_buyer: boolean;
           last_message_at: string;
           last_message_body: string;
+          last_message_has_photo: boolean;
           last_message_is_mine: boolean;
           listing_id: string;
           listing_image_path: string;

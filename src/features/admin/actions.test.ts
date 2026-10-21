@@ -113,7 +113,12 @@ describe("actions d'administration", () => {
     });
     expect(await viewReportedMessageAction(REPORT_ID)).toEqual({
       status: "ok",
-      message: { body: "Envoie l'argent", createdAt: "2026-10-18T10:00:00Z", senderUsername: "x" },
+      message: {
+        body: "Envoie l'argent",
+        photoUrl: null,
+        createdAt: "2026-10-18T10:00:00Z",
+        senderUsername: "x",
+      },
     });
   });
 });

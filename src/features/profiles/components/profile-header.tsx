@@ -14,9 +14,11 @@ type ProfileHeaderProps = {
   profile: PublicProfile;
   stats: ProfileStats;
   actions?: ReactNode;
+  /** Remplace la photo (ex. photo modifiable sur « Mon profil »). */
+  avatar?: ReactNode;
 };
 
-export function ProfileHeader({ profile, stats, actions }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, stats, actions, avatar }: ProfileHeaderProps) {
   const city = profile.city ? (getCity(profile.city)?.name ?? profile.city) : null;
   const items: { label: string; value: number; href?: Route }[] = [
     {
@@ -34,12 +36,16 @@ export function ProfileHeader({ profile, stats, actions }: ProfileHeaderProps) {
 
   return (
     <section className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-start sm:gap-x-6 sm:rounded-2xl sm:border sm:border-border sm:bg-card sm:p-7 sm:shadow-card">
-      <Avatar
-        name={profile.display_name}
-        src={avatarUrl(profile.avatar_path)}
-        size="xl"
-        className={cn("size-20 text-xl sm:size-24 sm:text-2xl", profile.bio && "sm:row-span-2")}
-      />
+      <div className={cn(profile.bio && "sm:row-span-2")}>
+        {avatar ?? (
+          <Avatar
+            name={profile.display_name}
+            src={avatarUrl(profile.avatar_path)}
+            size="xl"
+            className="size-20 text-xl sm:size-24 sm:text-2xl"
+          />
+        )}
+      </div>
       <div className="flex min-w-0 flex-col gap-1.5">
         <div className="flex flex-col">
           <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">

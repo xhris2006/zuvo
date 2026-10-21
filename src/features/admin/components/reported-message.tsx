@@ -16,7 +16,19 @@ export function ReportedMessage({ reportId }: { reportId: string }) {
   if (state.kind === "loaded") {
     return state.message ? (
       <blockquote className="rounded-lg border-l-4 border-danger bg-muted px-3 py-2 text-sm">
-        <p className="break-words whitespace-pre-wrap">{state.message.body ?? "(pièce jointe)"}</p>
+        {state.message.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- photo privée (lien signé de 5 minutes)
+          <img
+            src={state.message.photoUrl}
+            alt="Photo du message signalé"
+            className="mb-2 max-h-64 rounded-md object-contain"
+          />
+        ) : null}
+        {state.message.body ? (
+          <p className="break-words whitespace-pre-wrap">{state.message.body}</p>
+        ) : state.message.photoUrl ? null : (
+          <p className="text-muted-foreground">(photo indisponible)</p>
+        )}
         <footer className="mt-1 text-xs text-muted-foreground">
           @{state.message.senderUsername ?? "compte supprimé"} ·{" "}
           {formatDate(state.message.createdAt)}

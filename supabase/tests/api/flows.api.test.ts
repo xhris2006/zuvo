@@ -35,6 +35,7 @@ import {
 import {
   toggleFollowAction,
   updatePrivateContactAction,
+  updateAvatarAction,
   updateProfileAction,
 } from "@/features/profiles/actions";
 import {
@@ -44,7 +45,7 @@ import {
   getProfileStats,
   isFollowing,
 } from "@/features/profiles/queries";
-import { createActiveListing, createUser } from "../support/db";
+import { asOwner, asUser, createActiveListing, createUser } from "../support/db";
 import { actAs } from "./support/context";
 import { RedirectError } from "./support/setup";
 
@@ -138,15 +139,54 @@ describe("messagerie (actions réelles)", () => {
       buyer: { id: buyer.id },
       seller: { id: seller.id },
     });
-    expect(await getMessages(conversationId)).toHaveLength(1);
+    expect((await getMessages(conversationId)).messages).toHaveLength(1);
 
     await markConversationReadAction(conversationId);
     expect(await getUnreadMessagesCount()).toBe(0);
-    expect(await loadOlderMessagesAction(conversationId, new Date().toISOString())).toHaveLength(1);
+    expect(
+      (await loadOlderMessagesAction(conversationId, new Date().toISOString())).messages,
+    ).toHaveLength(1);
 
     // La notification de message n'apparaît pas dans la liste, mais existe pour le push.
     const notifications = await getNotifications();
     expect(notifications.items.map((item) => item.type)).not.toContain("new_message");
+  });
+
+  it("envoie une photo déposée par son auteur, seule ou avec un texte", async () => {
+    const seller = await createUser();
+    const buyer = await createUser();
+    const listingId = await createActiveListing(seller.id);
+    actAs(buyer);
+    const conversationId = (await redirectOf(startConversationAction({}, form({ listingId }))))
+      .split("/")
+      .pop()!;
+
+    // Dépôt dans le stockage privé (fait par le navigateur dans l'application).
+    const photo = `${conversationId}/${randomUUID()}.webp`;
+    await asUser(buyer.id, (sql) =>
+      sql(
+        "insert into storage.objects (bucket_id, name, owner_id) values ('message-attachments', $1, $2)",
+        [photo, buyer.id],
+      ),
+    );
+    expect(await sendMessageAction(conversationId, "", photo)).toMatchObject({
+      status: "sent",
+      message: { body: null, attachment_path: photo },
+    });
+
+    // Une photo que l'expéditeur n'a pas déposée est refusée.
+    actAs(seller);
+    const foreign = await sendMessageAction(conversationId, "Et ça ?", photo);
+    expect(foreign).toMatchObject({ status: "error" });
+
+    const inbox = await getConversations();
+    expect(inbox.find((item) => item.conversation_id === conversationId)).toMatchObject({
+      last_message_body: null,
+      last_message_has_photo: true,
+      unread_count: 1,
+    });
+    const { messages } = await getMessages(conversationId);
+    expect(messages.map((message) => message.attachment_path)).toEqual([photo]);
   });
 });
 
@@ -239,6 +279,25 @@ describe("profils (actions réelles)", () => {
     );
     expect(contact.status).toBe("success");
     expect(await getOwnPrivateContact(owner.id)).toEqual({ phone: "+237690000000" });
+
+    // Photo de profil enregistrée directement depuis « Mon profil ».
+    const avatar = `${owner.id}/${randomUUID()}.webp`;
+    expect(await updateAvatarAction(avatar)).toEqual({ status: "ok" });
+    const avatarOf = async () =>
+      (
+        await asOwner((sql) =>
+          sql<{ avatar_path: string | null }>(
+            "select avatar_path from public.profiles where id = $1",
+            [owner.id],
+          ),
+        )
+      ).rows[0]!.avatar_path;
+    expect(await avatarOf()).toBe(avatar);
+    expect(await updateAvatarAction(`${follower.id}/${randomUUID()}.webp`)).toMatchObject({
+      status: "error",
+    });
+    expect(await updateAvatarAction(null)).toEqual({ status: "ok" });
+    expect(await avatarOf()).toBeNull();
 
     actAs(null);
     expect(await getProfileByUsername(username)).toMatchObject({ display_name: "Awa Ndiaye" });

@@ -22,6 +22,8 @@ import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { requireUser } from "@/features/auth/session";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { getOwnListings } from "@/features/listings/queries";
+import { avatarUrl } from "@/features/profiles/avatar-url";
+import { AvatarQuickEdit } from "@/features/profiles/components/avatar-quick-edit";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -65,6 +67,13 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
       <ProfileHeader
         profile={profile}
         stats={stats}
+        avatar={
+          <AvatarQuickEdit
+            userId={user.id}
+            name={profile.display_name}
+            currentUrl={avatarUrl(profile.avatar_path)}
+          />
+        }
         actions={
           <>
             <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">

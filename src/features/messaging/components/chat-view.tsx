@@ -1,20 +1,40 @@
 "use client";
 
-import { Loader2, SendHorizontal } from "lucide-react";
-import { Fragment, type KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { ImageIcon, ImagePlus, Loader2, SendHorizontal, X } from "lucide-react";
+import {
+  type ChangeEvent,
+  Fragment,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PhotoViewer } from "@/components/ui/photo-viewer";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { ImageProcessingError, resizeImage } from "@/lib/images/resize";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { loadOlderMessagesAction, markConversationReadAction, sendMessageAction } from "../actions";
 import { dayKey, formatDayLabel, formatMessageTime } from "../format";
 import { conversationHref } from "../links";
-import { type ChatMessage, MESSAGE_MAX_LENGTH, MESSAGES_PAGE_SIZE } from "../schemas";
+import {
+  type ChatMessage,
+  MESSAGE_MAX_LENGTH,
+  MESSAGE_PHOTO_BUCKET,
+  MESSAGE_PHOTO_MAX_SIZE,
+  MESSAGE_PHOTO_URL_TTL,
+  MESSAGES_PAGE_SIZE,
+  type PhotoUrls,
+} from "../schemas";
 
 type ChatViewProps = {
   conversationId: string;
   currentUserId: string;
   initialMessages: ChatMessage[];
+  /** Liens signés des photos des messages initiaux. */
+  initialPhotoUrls?: PhotoUrls;
   initialHasMore: boolean;
   /** Raison pour laquelle l'envoi est impossible (ex. utilisateur supprimé). */
   disabledReason?: string | null;
@@ -35,10 +55,16 @@ export function ChatView({
   conversationId,
   currentUserId,
   initialMessages,
+  initialPhotoUrls = {},
   initialHasMore,
   disabledReason,
 }: ChatViewProps) {
   const [messages, setMessages] = useState(initialMessages);
+  const [photoUrls, setPhotoUrls] = useState<PhotoUrls>(initialPhotoUrls);
+  const [photo, setPhoto] = useState<{ blob: Blob; previewUrl: string } | null>(null);
+  const [preparingPhoto, setPreparingPhoto] = useState(false);
+  const [viewer, setViewer] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [draft, setDraft] = useState("");
@@ -68,6 +94,20 @@ export function ChatView({
           const message = payload.new as ChatMessage;
           setMessages((current) => upsert(current, message));
           if (message.sender_id !== currentUserId) markRead();
+          const path = message.attachment_path;
+          if (path) {
+            // Lien signé pour une photo reçue en direct (RLS : participants seulement).
+            void supabase.storage
+              .from(MESSAGE_PHOTO_BUCKET)
+              .createSignedUrl(path, MESSAGE_PHOTO_URL_TTL)
+              .then(({ data }) => {
+                const url = data?.signedUrl;
+                if (url)
+                  setPhotoUrls((current) =>
+                    current[path] ? current : { ...current, [path]: url },
+                  );
+              });
+          }
         },
       )
       .on(
@@ -88,18 +128,69 @@ export function ChatView({
     if (lastId) window.scrollTo({ top: document.documentElement.scrollHeight });
   }, [lastId]);
 
+  /** Retire la photo choisie sans l'envoyer (et libère son aperçu local). */
+  function discardPhoto() {
+    if (photo) URL.revokeObjectURL(photo.previewUrl);
+    setPhoto(null);
+  }
+
+  async function pickPhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError(null);
+    setPreparingPhoto(true);
+    try {
+      // Redimensionnée et sans métadonnées (dont la position GPS) avant l'envoi.
+      const blob = await resizeImage(file, { maxSize: MESSAGE_PHOTO_MAX_SIZE, quality: 0.82 });
+      discardPhoto();
+      setPhoto({ blob, previewUrl: URL.createObjectURL(blob) });
+    } catch (caught) {
+      setError(
+        caught instanceof ImageProcessingError
+          ? caught.message
+          : "Cette photo n'a pas pu être lue.",
+      );
+    } finally {
+      setPreparingPhoto(false);
+    }
+  }
+
   async function send() {
     const body = draft.trim();
-    if (!body || sending) return;
+    if ((!body && !photo) || sending) return;
     setSending(true);
     setError(null);
-    const result = await sendMessageAction(conversationId, body);
+
+    let photoPath: string | null = null;
+    if (photo) {
+      const supabase = getSupabaseBrowserClient();
+      const extension = photo.blob.type === "image/webp" ? "webp" : "jpg";
+      photoPath = `${conversationId}/${crypto.randomUUID()}.${extension}`;
+      const upload = await supabase?.storage
+        .from(MESSAGE_PHOTO_BUCKET)
+        .upload(photoPath, photo.blob, { contentType: photo.blob.type, upsert: false });
+      if (!upload || upload.error) {
+        setSending(false);
+        setError("La photo n'a pas pu être envoyée. Vérifiez votre connexion et réessayez.");
+        return;
+      }
+    }
+
+    const result = await sendMessageAction(conversationId, body, photoPath);
     setSending(false);
     if (result.status === "error") {
       setError(result.message);
       return;
     }
+    if (photoPath && photo) {
+      // La photo envoyée s'affiche tout de suite depuis l'aperçu local.
+      const sentPath = photoPath;
+      const previewUrl = photo.previewUrl;
+      setPhotoUrls((current) => ({ ...current, [sentPath]: previewUrl }));
+    }
     setDraft("");
+    setPhoto(null);
     setMessages((current) => upsert(current, result.message));
   }
 
@@ -110,8 +201,9 @@ export function ChatView({
     const previousHeight = document.documentElement.scrollHeight;
     const older = await loadOlderMessagesAction(conversationId, oldest.created_at);
     setLoadingOlder(false);
-    setHasMore(older.length >= MESSAGES_PAGE_SIZE);
-    setMessages((current) => older.reduce(upsert, current));
+    setHasMore(older.messages.length >= MESSAGES_PAGE_SIZE);
+    setPhotoUrls((current) => ({ ...older.photoUrls, ...current }));
+    setMessages((current) => older.messages.reduce(upsert, current));
     // Conserve la position de lecture après l'ajout des anciens messages.
     requestAnimationFrame(() => {
       window.scrollBy(0, document.documentElement.scrollHeight - previousHeight);
@@ -172,20 +264,40 @@ export function ChatView({
               >
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-card",
+                    "max-w-[80%] rounded-2xl text-sm shadow-card",
+                    message.attachment_path ? "p-1" : "px-3.5 py-2",
                     mine
                       ? "rounded-br-md bg-primary text-primary-foreground"
                       : "rounded-bl-md border border-border bg-card text-card-foreground",
                   )}
                 >
-                  <p className="break-words whitespace-pre-wrap">{message.body}</p>
+                  {message.attachment_path ? (
+                    <MessagePhoto
+                      url={photoUrls[message.attachment_path] ?? null}
+                      onOpen={(url) => setViewer(url)}
+                    />
+                  ) : null}
+                  {message.body ? (
+                    <p
+                      className={cn(
+                        "break-words whitespace-pre-wrap",
+                        message.attachment_path && "px-2.5 pt-1.5",
+                      )}
+                    >
+                      {message.body}
+                    </p>
+                  ) : null}
                   <p
                     className={cn(
                       "mt-1 text-right text-[0.6875rem]",
+                      message.attachment_path && "px-2.5 pb-1",
                       mine ? "text-primary-foreground/80" : "text-muted-foreground",
                     )}
                   >
-                    <span className="sr-only">{mine ? "Vous, " : "Reçu, "}</span>
+                    <span className="sr-only">
+                      {mine ? "Vous, " : "Reçu, "}
+                      {message.attachment_path && !message.body ? "une photo, " : ""}
+                    </span>
                     {formatMessageTime(message.created_at)}
                     {mine && message.id === lastOwnRead?.id && message.read_at ? " · Vu" : ""}
                   </p>
@@ -213,38 +325,83 @@ export function ChatView({
           </p>
         ) : (
           <form
-            className="flex items-end gap-2"
+            className="flex flex-col gap-2"
             onSubmit={(event) => {
               event.preventDefault();
               void send();
             }}
           >
-            <label htmlFor="message-input" className="sr-only">
-              Votre message
-            </label>
-            <textarea
-              id="message-input"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              maxLength={MESSAGE_MAX_LENGTH}
-              placeholder="Écrire un message…"
-              className="field-sizing-content max-h-36 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-card px-4 py-2.5 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="rounded-full"
-              disabled={!draft.trim() || sending}
-              aria-label="Envoyer"
-            >
-              {sending ? (
-                <Loader2 className="animate-spin" aria-hidden="true" />
-              ) : (
-                <SendHorizontal aria-hidden="true" />
-              )}
-            </Button>
+            {photo ? (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob:) */}
+                <img
+                  src={photo.previewUrl}
+                  alt="Photo prête à être envoyée"
+                  className="size-14 rounded-lg object-cover"
+                />
+                <p className="flex-1 text-sm text-muted-foreground">
+                  Photo prête. Ajoutez un message si vous le souhaitez.
+                </p>
+                <button
+                  type="button"
+                  onClick={discardPhoto}
+                  disabled={sending}
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Retirer la photo"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+            ) : null}
+            <div className="flex items-end gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                tabIndex={-1}
+                aria-hidden="true"
+                onChange={(event) => void pickPhoto(event)}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full text-muted-foreground"
+                onClick={() => fileInputRef.current?.click()}
+                loading={preparingPhoto}
+                disabled={sending || preparingPhoto}
+                aria-label="Joindre une photo"
+              >
+                {preparingPhoto ? null : <ImagePlus aria-hidden="true" />}
+              </Button>
+              <label htmlFor="message-input" className="sr-only">
+                Votre message
+              </label>
+              <textarea
+                id="message-input"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                maxLength={MESSAGE_MAX_LENGTH}
+                placeholder={photo ? "Ajouter un message…" : "Écrire un message…"}
+                className="field-sizing-content max-h-36 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-card px-4 py-2.5 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
+              />
+              <Button
+                type="submit"
+                size="icon"
+                className="shrink-0 rounded-full"
+                disabled={(!draft.trim() && !photo) || sending}
+                aria-label="Envoyer"
+              >
+                {sending ? (
+                  <Loader2 className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <SendHorizontal aria-hidden="true" />
+                )}
+              </Button>
+            </div>
           </form>
         )}
         {error ? (
@@ -253,6 +410,39 @@ export function ChatView({
           </p>
         ) : null}
       </div>
+      <PhotoViewer src={viewer} alt="Photo de la conversation" onClose={() => setViewer(null)} />
     </div>
+  );
+}
+
+/** Photo d'un message : miniature cliquable, ou espace réservé (chargement, lien expiré). */
+function MessagePhoto({ url, onOpen }: { url: string | null; onOpen: (url: string) => void }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  if (!url || failedUrl === url) {
+    return (
+      <div className="flex h-48 w-56 max-w-full flex-col items-center justify-center gap-1 rounded-xl bg-muted text-muted-foreground">
+        <ImageIcon className="size-6" aria-hidden="true" />
+        <span className={cn("text-xs", !url && "sr-only")}>
+          {url ? "Photo indisponible : rechargez la page" : "Photo en cours de chargement"}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(url)}
+      className="block overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      aria-label="Agrandir la photo"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- photo privée (lien signé), jamais optimisée ni mise en cache par le serveur */}
+      <img
+        src={url}
+        alt="Photo envoyée dans la conversation"
+        loading="lazy"
+        onError={() => setFailedUrl(url)}
+        className="max-h-72 w-60 max-w-full bg-muted object-cover sm:w-72"
+      />
+    </button>
   );
 }

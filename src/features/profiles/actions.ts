@@ -85,6 +85,37 @@ export async function updateProfileAction(
   return { status: "success", message: "Votre profil a été mis à jour.", values };
 }
 
+export type AvatarResult = { status: "ok" } | { status: "error"; message: string };
+
+/**
+ * Enregistre directement une nouvelle photo de profil (déjà déposée dans le
+ * dossier de l'utilisateur) ou la retire (null), puis supprime l'ancienne.
+ */
+export async function updateAvatarAction(path: string | null): Promise<AvatarResult> {
+  const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser();
+  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (path !== null && (typeof path !== "string" || !isOwnAvatarPath(user.id, path))) {
+    return { status: "error", message: "Photo de profil invalide." };
+  }
+
+  const { data: current } = await supabase
+    .from("profiles")
+    .select("avatar_path")
+    .eq("id", user.id)
+    .single();
+  const { error } = await supabase.from("profiles").update({ avatar_path: path }).eq("id", user.id);
+  if (error) {
+    if (path) await supabase.storage.from("avatars").remove([path]);
+    return { status: "error", message: GENERIC_ERROR };
+  }
+  if (current?.avatar_path && current.avatar_path !== path) {
+    await supabase.storage.from("avatars").remove([current.avatar_path]);
+  }
+  revalidatePath("/", "layout");
+  return { status: "ok" };
+}
+
 // -----------------------------------------------------------------------------
 // Coordonnées privées
 // -----------------------------------------------------------------------------

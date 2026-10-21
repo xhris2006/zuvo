@@ -104,6 +104,7 @@ describe("sendMessageAction", () => {
       conversation_id: CONVERSATION_ID,
       sender_id: "u1",
       body: "Bonjour, toujours disponible ?",
+      attachment_path: null,
       created_at: "2026-10-18T10:00:00Z",
       read_at: null,
     };
@@ -114,7 +115,43 @@ describe("sendMessageAction", () => {
     expect(insert.insert).toHaveBeenCalledWith({
       conversation_id: CONVERSATION_ID,
       body: "Bonjour, toujours disponible ?",
+      attachment_path: null,
     });
+  });
+
+  it("envoie une photo avec ou sans texte, et refuse un chemin étranger", async () => {
+    const photo = `${CONVERSATION_ID}/4f1c2a3b-0000-4000-8000-0000000000cc.webp`;
+    const insert = queryBuilder({ data: { id: "m2" } });
+    supabase!.from.mockReturnValueOnce(insert);
+    expect(await sendMessageAction(CONVERSATION_ID, "  ", photo)).toMatchObject({
+      status: "sent",
+    });
+    expect(insert.insert).toHaveBeenCalledWith({
+      conversation_id: CONVERSATION_ID,
+      body: null,
+      attachment_path: photo,
+    });
+
+    for (const path of [
+      `${LISTING_ID}/4f1c2a3b-0000-4000-8000-0000000000cc.webp`,
+      `${CONVERSATION_ID}/../avatars/x.webp`,
+      `${CONVERSATION_ID}/photo.exe`,
+    ]) {
+      expect(await sendMessageAction(CONVERSATION_ID, "", path)).toEqual({
+        status: "error",
+        message: "Photo invalide.",
+      });
+    }
+    expect(supabase!.from).toHaveBeenCalledTimes(1);
+  });
+
+  it("supprime la photo déposée si le message est refusé", async () => {
+    const photo = `${CONVERSATION_ID}/4f1c2a3b-0000-4000-8000-0000000000cc.jpg`;
+    supabase!.from.mockReturnValueOnce(queryBuilder({ error: { code: "42501" } }));
+    expect(await sendMessageAction(CONVERSATION_ID, "Regardez", photo)).toMatchObject({
+      status: "error",
+    });
+    expect(supabase!.storage.bucket.remove).toHaveBeenCalledWith([photo]);
   });
 
   it("signale la limite d'envoi et les refus RLS", async () => {
@@ -132,8 +169,9 @@ describe("sendMessageAction", () => {
 describe("markConversationReadAction et loadOlderMessagesAction", () => {
   it("ignore les identifiants invalides", async () => {
     await markConversationReadAction("nope");
-    expect(await loadOlderMessagesAction("nope", "2026-10-18T10:00:00Z")).toEqual([]);
-    expect(await loadOlderMessagesAction(CONVERSATION_ID, "pas une date")).toEqual([]);
+    const empty = { messages: [], photoUrls: {} };
+    expect(await loadOlderMessagesAction("nope", "2026-10-18T10:00:00Z")).toEqual(empty);
+    expect(await loadOlderMessagesAction(CONVERSATION_ID, "pas une date")).toEqual(empty);
     expect(supabase!.rpc).not.toHaveBeenCalled();
     expect(supabase!.from).not.toHaveBeenCalled();
   });
@@ -155,7 +193,8 @@ describe("markConversationReadAction et loadOlderMessagesAction", () => {
     });
     supabase!.from.mockReturnValueOnce(select);
     const older = await loadOlderMessagesAction(CONVERSATION_ID, "2026-10-18T10:00:00Z");
-    expect(older.map((m) => m.id)).toEqual(["m1", "m2"]);
+    expect(older.messages.map((m) => m.id)).toEqual(["m1", "m2"]);
+    expect(older.photoUrls).toEqual({});
     expect(select.lt).toHaveBeenCalledWith("created_at", "2026-10-18T10:00:00Z");
   });
 });

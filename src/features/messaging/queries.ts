@@ -2,7 +2,8 @@ import "server-only";
 import { cache } from "react";
 import { getCurrentUser } from "@/features/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { type ChatMessage, MESSAGES_PAGE_SIZE } from "./schemas";
+import { signMessagePhotos } from "./photos";
+import { type ChatMessage, MESSAGE_COLUMNS, MESSAGES_PAGE_SIZE, type PhotoUrls } from "./schemas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -43,20 +44,24 @@ export const getConversation = cache(async (id: string) => {
   return data;
 });
 
-/** Derniers messages d'une conversation, du plus ancien au plus récent. */
-export async function getMessages(conversationId: string, before?: string): Promise<ChatMessage[]> {
+/** Derniers messages d'une conversation, du plus ancien au plus récent, avec leurs photos. */
+export async function getMessages(
+  conversationId: string,
+  before?: string,
+): Promise<{ messages: ChatMessage[]; photoUrls: PhotoUrls }> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return [];
+  if (!supabase) return { messages: [], photoUrls: {} };
   let query = supabase
     .from("messages")
-    .select("id, conversation_id, sender_id, body, created_at, read_at")
+    .select(MESSAGE_COLUMNS)
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false })
     .limit(MESSAGES_PAGE_SIZE);
   if (before) query = query.lt("created_at", before);
   const { data, error } = await query;
   if (error) throw new MessagingQueryError();
-  return data.reverse();
+  const messages = data.reverse();
+  return { messages, photoUrls: await signMessagePhotos(supabase, messages) };
 }
 
 /** Nombre de messages reçus non lus (badge de navigation). */

@@ -6,6 +6,8 @@ import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, formText } from "@/lib/forms/form-state";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
+import { MESSAGE_PHOTO_BUCKET } from "@/features/messaging/schemas";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isCurrentUserAdmin } from "./queries";
 
@@ -166,6 +168,8 @@ export async function updateReportStatusAction(
 
 export type ReportedMessage = {
   body: string | null;
+  /** Lien signé de courte durée vers la photo du message, s'il y en a une. */
+  photoUrl: string | null;
   createdAt: string;
   senderUsername: string | null;
 };
@@ -185,10 +189,24 @@ export async function viewReportedMessageAction(
   });
   if (error) return { status: "error", message: errorMessage(error) };
   const row = data?.[0];
+  if (!row) return { status: "ok", message: null };
+
+  // La base a vérifié le rôle et journalisé la consultation : la photo (bucket
+  // privé, hors conversation de l'administrateur) est lue en service_role.
+  let photoUrl: string | null = null;
+  if (row.attachment_path) {
+    const { data: signed } = (await createSupabaseAdminClient()
+      ?.storage.from(MESSAGE_PHOTO_BUCKET)
+      .createSignedUrl(row.attachment_path, 5 * 60)) ?? { data: null };
+    photoUrl = signed?.signedUrl ?? null;
+  }
   return {
     status: "ok",
-    message: row
-      ? { body: row.body, createdAt: row.created_at, senderUsername: row.sender_username }
-      : null,
+    message: {
+      body: row.body,
+      photoUrl,
+      createdAt: row.created_at,
+      senderUsername: row.sender_username,
+    },
   };
 }

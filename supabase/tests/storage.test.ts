@@ -134,6 +134,40 @@ describe("message-attachments", () => {
     expect(byBuyer.rowCount).toBe(1);
   });
 
+  const sendPhoto = (userId: string, conversationId: string, path: string) =>
+    asUser(userId, (sql) =>
+      sql("insert into public.messages (conversation_id, attachment_path) values ($1, $2)", [
+        conversationId,
+        path,
+      ]),
+    );
+
+  it("peuvent être envoyées en message par leur auteur, une seule fois", async () => {
+    const { seller, buyer, conversationId } = await setupConversation();
+    const name = `${conversationId}/${randomUUID()}.webp`;
+    await upload(buyer.id, "message-attachments", name);
+    await sendPhoto(buyer.id, conversationId, name);
+    const { rows } = await asUser(seller.id, (sql) =>
+      sql("select body, attachment_path from public.messages where conversation_id = $1", [
+        conversationId,
+      ]),
+    );
+    expect(rows).toEqual([{ body: null, attachment_path: name }]);
+    await expect(sendPhoto(buyer.id, conversationId, name)).rejects.toMatchObject({
+      code: "23505",
+    });
+  });
+
+  it("ne peuvent pas être réutilisées par un autre participant ni inventées", async () => {
+    const { seller, buyer, conversationId } = await setupConversation();
+    const name = `${conversationId}/${randomUUID()}.webp`;
+    await upload(buyer.id, "message-attachments", name);
+    await expectDenied(sendPhoto(seller.id, conversationId, name));
+    await expectDenied(
+      sendPhoto(buyer.id, conversationId, `${conversationId}/${randomUUID()}.webp`),
+    );
+  });
+
   it("sont refusées en cas de blocage", async () => {
     const { seller, buyer, conversationId } = await setupConversation();
     await asUser(seller.id, (sql) =>

@@ -1,4 +1,4 @@
-import { ImageOff } from "lucide-react";
+import { Camera, ImageOff } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
@@ -75,9 +75,24 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                       unread ? "font-semibold text-foreground" : "text-muted-foreground",
                     )}
                   >
-                    {conversation.last_message_body
-                      ? `${conversation.last_message_is_mine ? "Vous : " : ""}${conversation.last_message_body}`
-                      : "Aucun message pour le moment"}
+                    {conversation.last_message_body || conversation.last_message_has_photo ? (
+                      <>
+                        {conversation.last_message_is_mine ? "Vous : " : ""}
+                        {conversation.last_message_body ? (
+                          conversation.last_message_body
+                        ) : (
+                          <>
+                            <Camera
+                              className="mr-1 inline size-3.5 align-[-2px]"
+                              aria-hidden="true"
+                            />
+                            Photo
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      "Aucun message pour le moment"
+                    )}
                   </span>
                   {unread ? (
                     <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[0.6875rem] font-bold text-primary-foreground">

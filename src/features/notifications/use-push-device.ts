@@ -27,10 +27,29 @@ async function isRegisteredForUser(subscription: PushSubscription): Promise<bool
   return Boolean(data);
 }
 
+/**
+ * Appareil activé pour ce compte mais abonné avec d'anciennes clés VAPID
+ * (clés régénérées depuis) : le service push refuserait tout envoi. Un nouvel
+ * abonnement est créé sans redemander l'autorisation, déjà accordée.
+ */
+export async function repairStaleSubscription(publicKey: string): Promise<boolean> {
+  if (!isPushSupported() || Notification.permission !== "granted") return false;
+  const subscription = await getCurrentPushSubscription();
+  if (!subscription || usesServerKey(subscription, publicKey)) return false;
+  if (!(await isRegisteredForUser(subscription))) return false;
+  const staleEndpoint = subscription.endpoint;
+  const fresh = await subscribeToPush(publicKey);
+  const result = await savePushSubscriptionAction(fresh.toJSON());
+  if (result.status === "error") return false;
+  if (fresh.endpoint !== staleEndpoint) await removePushSubscriptionAction(staleEndpoint);
+  return true;
+}
+
 async function detectStatus(publicKey: string | undefined): Promise<PushDeviceStatus> {
   if (!publicKey) return "not_configured";
   if (!isPushSupported()) return isIosOutsideHomeScreen() ? "ios_install" : "unsupported";
   if (Notification.permission === "denied") return "denied";
+  if (await repairStaleSubscription(publicKey).catch(() => false)) return "on";
   const subscription = await getCurrentPushSubscription();
   if (!subscription || !usesServerKey(subscription, publicKey)) return "off";
   return (await isRegisteredForUser(subscription)) ? "on" : "off";

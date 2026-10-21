@@ -49,6 +49,37 @@ describe("notifications", () => {
     expect(all.rows[0]).toEqual({ count: 2 });
   });
 
+  it("gardent le résultat de l'envoi push, que le destinataire peut lire sans le modifier", async () => {
+    const owner = await createUser();
+    const notificationId = await notify(owner.id);
+    await asOwner((sql) =>
+      sql(
+        "update public.notifications set pushed_at = now(), push_status = 'failed', push_detail = 'HTTP 403' where id = $1",
+        [notificationId],
+      ),
+    );
+    const { rows } = await asUser(owner.id, (sql) =>
+      sql<{ push_status: string; push_detail: string }>(
+        "select push_status, push_detail from public.notifications where id = $1",
+        [notificationId],
+      ),
+    );
+    expect(rows[0]).toEqual({ push_status: "failed", push_detail: "HTTP 403" });
+    await expectDenied(
+      asUser(owner.id, (sql) =>
+        sql("update public.notifications set push_status = 'sent' where id = $1", [notificationId]),
+      ),
+    );
+    await expectError(
+      asOwner((sql) =>
+        sql("update public.notifications set push_status = 'inconnu' where id = $1", [
+          notificationId,
+        ]),
+      ),
+      "23514",
+    );
+  });
+
   it("ne peuvent être ni lues ni modifiées pour le compte d'un autre", async () => {
     const owner = await createUser();
     const attacker = await createUser();

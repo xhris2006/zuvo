@@ -1,17 +1,36 @@
 "use client";
 
 import { BellOff, BellRing, Send } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
+import { formatRelativeTime } from "@/lib/format";
 import { sendTestPushAction } from "../actions";
+import type { LastPushResult } from "../queries";
 import { usePushDevice } from "../use-push-device";
+
+const lastPushLabels: Record<string, string> = {
+  sent: "envoyée à vos appareils",
+  no_device: "aucun appareil n'était activé à ce moment-là",
+  disabled: "les notifications push étaient désactivées",
+  failed: "refusée par le service de notifications : désactivez puis réactivez ci-dessous",
+  skipped: "non envoyée (déjà lue)",
+};
 
 type Feedback = { variant: "success" | "danger"; text: string } | null;
 
+type PushSettingsProps = {
+  /** Dernière notification traitée par l'envoi push (diagnostic). */
+  lastPush?: LastPushResult | null;
+  /** L'administrateur voit où terminer la configuration. */
+  isAdmin?: boolean;
+};
+
 /** Activation des notifications push sur cet appareil (page Paramètres). */
-export function PushSettings() {
+export function PushSettings({ lastPush = null, isAdmin = false }: PushSettingsProps) {
   const { status, busy, enable: enableDevice, disable: disableDevice } = usePushDevice();
   const [testing, setTesting] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -53,10 +72,20 @@ export function PushSettings() {
         <p className="text-sm text-muted-foreground">Vérification de cet appareil…</p>
       ) : null}
       {status === "not_configured" ? (
-        <Alert variant="info" title="Bientôt disponible">
-          Les notifications push ne sont pas encore activées sur {siteConfig.name}. Vous retrouvez
-          toutes vos notifications sur la page Notifications.
-        </Alert>
+        isAdmin ? (
+          <Alert variant="warning" title="Configuration incomplète">
+            La clé publique VAPID n&apos;est pas présente dans ce déploiement. Suivez les étapes de{" "}
+            <Link href={routes.adminConfig} className="font-semibold underline">
+              Administration → Configuration
+            </Link>{" "}
+            puis redéployez le site.
+          </Alert>
+        ) : (
+          <Alert variant="info" title="Bientôt disponible">
+            Les notifications push ne sont pas encore activées sur {siteConfig.name}. Vous retrouvez
+            toutes vos notifications sur la page Notifications.
+          </Alert>
+        )
       ) : null}
       {status === "unsupported" ? (
         <Alert variant="warning" title="Navigateur non compatible">
@@ -96,6 +125,13 @@ export function PushSettings() {
           <p className="text-sm font-medium text-success">
             Notifications push activées sur cet appareil.
           </p>
+          {lastPush ? (
+            <p className="text-sm text-muted-foreground">
+              Dernière notification : {formatRelativeTime(lastPush.pushedAt)},{" "}
+              {(lastPush.status && lastPushLabels[lastPush.status]) ?? "résultat inconnu"}
+              {lastPush.status === "failed" && lastPush.detail ? ` (${lastPush.detail})` : ""}.
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void test()} loading={testing} disabled={busy}>
               <Send aria-hidden="true" />

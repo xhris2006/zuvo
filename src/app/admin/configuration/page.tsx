@@ -6,10 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { routes } from "@/config/routes";
 import { VapidKeyGenerator } from "@/features/admin/components/vapid-key-generator";
 import { requireAdmin } from "@/features/admin/queries";
+import type { NotificationType } from "@/features/notifications/content";
 import {
   EXPECTED_SCHEMA_VERSION,
+  getPushActivity,
   getPushServerStatus,
 } from "@/features/notifications/push/diagnostics";
+import { getDictionary } from "@/i18n";
+import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Configuration" };
@@ -50,16 +54,35 @@ function EnvName({ children }: { children: ReactNode }) {
   return <code className="rounded bg-muted px-1 py-0.5 text-xs text-foreground">{children}</code>;
 }
 
+const pushStatusLabels: Record<string, { label: string; state: CheckState }> = {
+  sent: { label: "Envoyée au téléphone", state: "ok" },
+  no_device: { label: "Aucun appareil activé", state: "warning" },
+  disabled: { label: "Push désactivé par le destinataire", state: "warning" },
+  failed: { label: "Refusée par le service push", state: "error" },
+  skipped: { label: "Ignorée (déjà lue ou auteur suspendu)", state: "warning" },
+};
+
+/** Explication des refus du service push les plus courants. */
+function failureHint(detail: string | null): string | null {
+  if (detail === "HTTP 401" || detail === "HTTP 403") {
+    return "Les clés VAPID ont changé depuis l'activation sur cet appareil : le destinataire doit désactiver puis réactiver les notifications.";
+  }
+  if (detail === "HTTP 400") return "Requête refusée : vérifiez VAPID_SUBJECT et les clés VAPID.";
+  return null;
+}
+
 export default async function AdminConfigurationPage() {
   await requireAdmin(routes.adminConfig);
-  const status = await getPushServerStatus();
+  const t = getDictionary();
+  const [status, activity] = await Promise.all([getPushServerStatus(), getPushActivity()]);
   const pushReady =
     status.vapidPublicKey &&
     status.vapidPrivateKey &&
     status.vapidSubject &&
     status.vapidKeysMatch === true &&
     status.serviceRoleWorks &&
-    status.schemaUpToDate;
+    status.schemaUpToDate &&
+    status.invalidVariables.length === 0;
 
   return (
     <>
@@ -67,6 +90,31 @@ export default async function AdminConfigurationPage() {
         title="Configuration"
         description="État des services nécessaires au site. Aucune clé n'est affichée ici."
       />
+
+      {status.invalidVariables.length > 0 ? (
+        <Card className="border-danger/40">
+          <CardHeader>
+            <CardTitle>Variables mal formées</CardTitle>
+            <CardDescription>
+              Ces variables sont définies dans Vercel mais leur valeur n&apos;a pas le format
+              attendu : elles sont ignorées tant qu&apos;elles ne sont pas corrigées.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y divide-border">
+              {status.invalidVariables.map((name) => (
+                <Check key={name} state="error" label={name}>
+                  {name === "VAPID_SUBJECT"
+                    ? "Format attendu : mailto:contact@votre-domaine.cm (ou une adresse https://)."
+                    : name === "VAPID_PRIVATE_KEY"
+                      ? "Collez la clé privée générée ci-dessous (43 caractères, sans espace)."
+                      : "Collez la clé secrète complète du projet Supabase."}
+                </Check>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -166,6 +214,56 @@ export default async function AdminConfigurationPage() {
           </div>
 
           <VapidKeyGenerator keysAlreadySet={status.vapidPublicKey && status.vapidPrivateKey} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Derniers envois push</CardTitle>
+          <CardDescription>
+            Résultat des dernières notifications traitées, sans destinataire ni contenu.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {activity === null ? (
+            <p className="text-sm text-muted-foreground">
+              Indisponible : la clé serveur Supabase ou la dernière migration manque.
+            </p>
+          ) : (
+            <>
+              {activity.pending > 0 ? (
+                <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning">
+                  {activity.pending === 1
+                    ? "1 notification des dernières 24 h n'a pas été traitée par l'envoi push"
+                    : `${activity.pending} notifications des dernières 24 h n'ont pas été traitées par l'envoi push`}
+                  {pushReady
+                    ? " (envoi en cours, ou notification antérieure à la configuration)."
+                    : " : la configuration ci-dessus est incomplète."}
+                </p>
+              ) : null}
+              {activity.recent.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucun envoi pour le moment.</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {activity.recent.map((item) => {
+                    const known = item.status ? pushStatusLabels[item.status] : undefined;
+                    const hint = item.status === "failed" ? failureHint(item.detail) : null;
+                    return (
+                      <Check
+                        key={item.id}
+                        state={known?.state ?? "warning"}
+                        label={`${t.notifications.titles[item.type as NotificationType] ?? item.type} — ${known?.label ?? "Résultat inconnu"}`}
+                      >
+                        {formatRelativeTime(item.pushedAt)}
+                        {item.detail ? ` · ${item.detail}` : ""}
+                        {hint ? <span className="block">{hint}</span> : null}
+                      </Check>
+                    );
+                  })}
+                </ul>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </>

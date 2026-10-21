@@ -129,3 +129,26 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     .maybeSingle();
   return data ?? defaults;
 }
+
+export type LastPushResult = {
+  pushedAt: string;
+  status: string | null;
+  detail: string | null;
+};
+
+/** Dernière notification de l'utilisateur traitée par l'envoi push (diagnostic). */
+export async function getLastPushResult(): Promise<LastPushResult | null> {
+  const user = await getCurrentUser();
+  const supabase = await createSupabaseServerClient();
+  if (!user || !supabase) return null;
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("pushed_at, push_status, push_detail")
+    .eq("user_id", user.id)
+    .not("pushed_at", "is", null)
+    .order("pushed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data?.pushed_at) return null;
+  return { pushedAt: data.pushed_at, status: data.push_status, detail: data.push_detail };
+}

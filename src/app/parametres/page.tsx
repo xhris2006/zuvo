@@ -11,7 +11,8 @@ import { BlockedList } from "@/features/moderation/components/blocked-list";
 import { getBlockedUsers } from "@/features/moderation/queries";
 import { PreferencesForm } from "@/features/notifications/components/preferences-form";
 import { PushSettings } from "@/features/notifications/components/push-settings";
-import { getNotificationPreferences } from "@/features/notifications/queries";
+import { getLastPushResult, getNotificationPreferences } from "@/features/notifications/queries";
+import { isCurrentUserAdmin } from "@/features/admin/queries";
 import { getCurrentProfile } from "@/features/profiles/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 
@@ -23,10 +24,12 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
-  const [preferences, blockedUsers, profile] = await Promise.all([
+  const [preferences, blockedUsers, profile, lastPush, isAdmin] = await Promise.all([
     getNotificationPreferences(),
     getBlockedUsers(user.id),
     getCurrentProfile(),
+    getLastPushResult().catch(() => null),
+    isCurrentUserAdmin(),
   ]);
 
   return (
@@ -62,7 +65,7 @@ export default async function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PushSettings />
+          <PushSettings lastPush={lastPush} isAdmin={isAdmin} />
         </CardContent>
       </Card>
       <Card id="blocages">

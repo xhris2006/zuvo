@@ -448,6 +448,8 @@ export type Database = {
           id: string;
           is_read: boolean;
           listing_id: string | null;
+          push_detail: string | null;
+          push_status: string | null;
           pushed_at: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
@@ -460,6 +462,8 @@ export type Database = {
           id?: string;
           is_read?: boolean;
           listing_id?: string | null;
+          push_detail?: string | null;
+          push_status?: string | null;
           pushed_at?: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
@@ -471,6 +475,8 @@ export type Database = {
           id?: string;
           is_read?: boolean;
           listing_id?: string | null;
+          push_detail?: string | null;
+          push_status?: string | null;
           pushed_at?: string | null;
           type?: Database["public"]["Enums"]["notification_type"];
           user_id?: string;

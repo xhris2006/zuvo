@@ -49,6 +49,13 @@ const adminCalls: Array<[string, (ids: { listing: string; user: string }) => unk
     () => ["4f1c2a3b-0000-4000-8000-000000000000"],
   ],
   ["select public.admin_get_stats()", () => []],
+  ["select public.admin_warn_user($1, $2)", (ids) => [ids.user, "Restez courtois"]],
+  [
+    "select public.admin_reset_profile($1, $2, true, true, true)",
+    (ids) => [ids.user, "Photo inappropriée"],
+  ],
+  ["select public.admin_remove_user_listings($1, $2)", (ids) => [ids.user, "Spam"]],
+  ["select public.admin_get_user_overview($1)", (ids) => [ids.user]],
 ];
 
 describe("fonctions d'administration", () => {
@@ -333,5 +340,158 @@ describe("journal et statistiques", () => {
       ),
     );
     expect(compared[0]!.reported).toBe(compared[0]!.real);
+  });
+});
+
+describe("outils d'administration des utilisateurs", () => {
+  it("avertit un utilisateur : notification avec le texte, toujours remise, et journal", async () => {
+    const admin = await createAdmin();
+    const user = await createUser();
+    await asOwner((sql) =>
+      sql(
+        "update public.notification_preferences set new_follower = false, listing_activity = false where user_id = $1",
+        [user.id],
+      ),
+    );
+    await asUser(admin.id, (sql) =>
+      sql("select public.admin_warn_user($1, $2)", [user.id, "  Merci de rester courtois.  "]),
+    );
+    const { rows } = await asUser(user.id, (sql) =>
+      sql<{ type: string; note: string; actor_id: string | null }>(
+        "select type, note, actor_id from public.notifications where user_id = $1",
+        [user.id],
+      ),
+    );
+    expect(rows).toEqual([
+      { type: "moderation_warning", note: "Merci de rester courtois.", actor_id: null },
+    ]);
+    expect(await journal(user.id)).toEqual([
+      { action: "user_warned", admin_id: admin.id, note: "Merci de rester courtois." },
+    ]);
+    // Un avertissement exige un texte.
+    await expectError(
+      asUser(admin.id, (sql) => sql("select public.admin_warn_user($1, ' ')", [user.id])),
+      "22023",
+    );
+  });
+
+  it("réinitialise photo, présentation et nom affiché, et renvoie l'ancienne photo", async () => {
+    const admin = await createAdmin();
+    const user = await createUser({ display_name: "Nom choquant" });
+    const avatar = `${user.id}/photo.webp`;
+    await asUser(user.id, (sql) =>
+      sql("update public.profiles set avatar_path = $2, bio = 'Texte' where id = $1", [
+        user.id,
+        avatar,
+      ]),
+    );
+    const { rows } = await asUser(admin.id, (sql) =>
+      sql<{ old: string | null }>(
+        "select public.admin_reset_profile($1, 'Contenu inapproprié', true, true, true) as old",
+        [user.id],
+      ),
+    );
+    expect(rows[0]!.old).toBe(avatar);
+    const profile = await asOwner((sql) =>
+      sql("select avatar_path, bio, display_name, username from public.profiles where id = $1", [
+        user.id,
+      ]),
+    );
+    expect(profile.rows[0]).toMatchObject({
+      avatar_path: null,
+      bio: null,
+      display_name: user.username,
+    });
+    expect((await journal(user.id))[0]).toMatchObject({
+      action: "profile_reset",
+      note: "Contenu inapproprié (photo, présentation, nom affiché)",
+    });
+    await expectError(
+      asUser(admin.id, (sql) =>
+        sql("select public.admin_reset_profile($1, 'Motif', false, false, false)", [user.id]),
+      ),
+      "22023",
+    );
+  });
+
+  it("retire toutes les annonces en ligne d'un utilisateur, avec journal par annonce", async () => {
+    const admin = await createAdmin();
+    const seller = await createUser();
+    const first = await createActiveListing(seller.id);
+    const second = await createActiveListing(seller.id);
+    const { rows } = await asUser(admin.id, (sql) =>
+      sql<{ count: number }>("select public.admin_remove_user_listings($1, 'Spam') as count", [
+        seller.id,
+      ]),
+    );
+    expect(rows[0]!.count).toBe(2);
+    const listings = await asOwner((sql) =>
+      sql<{ status: string; removed_reason: string }>(
+        "select status, removed_reason from public.listings where seller_id = $1",
+        [seller.id],
+      ),
+    );
+    expect(listings.rows).toEqual([
+      { status: "withdrawn", removed_reason: "Spam" },
+      { status: "withdrawn", removed_reason: "Spam" },
+    ]);
+    expect((await journal(first))[0]).toMatchObject({ action: "listing_removed" });
+    expect((await journal(second))[0]).toMatchObject({ action: "listing_removed" });
+    expect((await journal(seller.id))[0]).toMatchObject({
+      action: "user_listings_removed",
+      note: "Spam (2 annonces)",
+    });
+    // Le vendeur est prévenu pour chaque annonce retirée.
+    const notified = await asOwner((sql) =>
+      sql(
+        "select count(*)::int as count from public.notifications where user_id = $1 and type = 'listing_removed'",
+        [seller.id],
+      ),
+    );
+    expect(notified.rows[0]).toEqual({ count: 2 });
+  });
+
+  it("donne des chiffres sur un compte sans aucun contenu privé", async () => {
+    const admin = await createAdmin();
+    const seller = await createUser();
+    const reporter = await createUser();
+    const listing = await createActiveListing(seller.id);
+    await report(reporter.id, "listing", listing);
+    const { rows } = await asUser(admin.id, (sql) =>
+      sql<{ overview: Record<string, number> }>(
+        "select public.admin_get_user_overview($1) as overview",
+        [seller.id],
+      ),
+    );
+    expect(rows[0]!.overview).toMatchObject({
+      listings_active: 1,
+      listings_removed: 0,
+      reports_received: 1,
+      reports_made: 0,
+      warnings: 0,
+    });
+  });
+
+  it("refusent d'agir sur soi-même ou sur un administrateur", async () => {
+    const admin = await createAdmin();
+    const otherAdmin = await createAdmin();
+    for (const target of [admin.id, otherAdmin.id]) {
+      for (const query of [
+        "select public.admin_warn_user($1, 'Texte')",
+        "select public.admin_reset_profile($1, 'Motif', true, false, false)",
+        "select public.admin_remove_user_listings($1, 'Motif')",
+      ]) {
+        await expectDenied(asUser(admin.id, (sql) => sql(query, [target])));
+      }
+    }
+  });
+
+  it("n'autorisent pas un utilisateur à écrire le texte d'une notification", async () => {
+    const user = await createUser();
+    await expectDenied(
+      asUser(user.id, (sql) =>
+        sql("update public.notifications set note = 'x' where user_id = $1", [user.id]),
+      ),
+    );
   });
 });

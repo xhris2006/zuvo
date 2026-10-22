@@ -1,4 +1,4 @@
-import { Ban, Heart, MessageCircle, Package, UserPlus } from "lucide-react";
+import { Ban, Heart, MessageCircle, Package, ShieldAlert, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { formatRelativeTime } from "@/lib/format";
@@ -13,6 +13,7 @@ const icons = {
   followed_user_listing: Package,
   listing_favorited: Heart,
   listing_removed: Ban,
+  moderation_warning: ShieldAlert,
 } satisfies Record<NotificationType, unknown>;
 
 export function NotificationList({ items }: { items: NotificationItem[] }) {
@@ -32,7 +33,7 @@ export function NotificationList({ items }: { items: NotificationItem[] }) {
                 )}
               >
                 <span className="relative shrink-0">
-                  {item.type === "listing_removed" ? (
+                  {item.type === "listing_removed" || item.type === "moderation_warning" ? (
                     <span className="flex size-10 items-center justify-center rounded-full bg-danger-soft text-danger">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
@@ -46,7 +47,15 @@ export function NotificationList({ items }: { items: NotificationItem[] }) {
                   )}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className={cn("text-sm", !item.isRead && "font-semibold")}>
+                  {item.type === "moderation_warning" ? (
+                    <span className="text-sm font-semibold text-danger">{item.title}</span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      "text-sm break-words",
+                      !item.isRead && item.type !== "moderation_warning" && "font-semibold",
+                    )}
+                  >
                     {item.body}
                   </span>
                   <span className="text-xs text-muted-foreground">

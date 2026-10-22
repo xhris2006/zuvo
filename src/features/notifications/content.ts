@@ -14,6 +14,8 @@ export type NotificationSubject = {
   listingId: string | null;
   listingTitle: string | null;
   conversationId: string | null;
+  /** Texte d'un avertissement de la modération. */
+  note?: string | null;
 };
 
 const TITLE_MAX = 60;
@@ -24,7 +26,7 @@ function shorten(value: string, max = TITLE_MAX): string {
 
 /** Titre et texte d'une notification (page Notifications et notifications push). */
 export function describeNotification(
-  subject: Pick<NotificationSubject, "type" | "actorName" | "listingTitle">,
+  subject: Pick<NotificationSubject, "type" | "actorName" | "listingTitle" | "note">,
   t: Dictionary = getDictionary(),
 ): { title: string; body: string } {
   const copy = t.notifications;
@@ -48,6 +50,8 @@ export function describeNotification(
       };
     case "listing_removed":
       return { title, body: copy.bodies.listing_removed(listing ?? copy.unavailableListing) };
+    case "moderation_warning":
+      return { title, body: copy.bodies.moderation_warning(subject.note ?? null) };
   }
 }
 
@@ -64,5 +68,7 @@ export function notificationHref(
     case "listing_favorited":
     case "listing_removed":
       return subject.listingId ? listingHref(subject.listingId) : routes.notifications;
+    case "moderation_warning":
+      return routes.notifications;
   }
 }

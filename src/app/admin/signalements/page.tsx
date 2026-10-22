@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { publicProfileHref, routes } from "@/config/routes";
+import { adminUserHref, publicProfileHref, routes } from "@/config/routes";
 import {
   removeListingAction,
   restoreListingAction,
@@ -94,7 +94,7 @@ function Target({ report }: { report: AdminReport }) {
     return (
       <div className="flex flex-col gap-3">
         <p className="flex flex-wrap items-center gap-2">
-          <Link href={publicProfileHref(target.username)} className="font-medium hover:underline">
+          <Link href={adminUserHref(target.id)} className="font-medium hover:underline">
             {target.displayName} (@{target.username})
           </Link>
           {target.suspendedAt ? <Badge variant="danger">Suspendu</Badge> : null}

@@ -178,6 +178,7 @@ export const fr = {
       followed_user_listing: "Nouvelle annonce",
       listing_favorited: "Annonce ajoutée aux favoris",
       listing_removed: "Annonce retirée",
+      moderation_warning: "Avertissement de la modération",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -189,6 +190,8 @@ export const fr = {
         `${actor} a ajouté ${quote(listing)} à ses favoris.`,
       listing_removed: (listing: string) =>
         `Votre annonce ${quote(listing)} a été retirée par la modération.`,
+      moderation_warning: (note: string | null) =>
+        note ?? "Merci de respecter les règles de la communauté.",
     },
   },
   reports: {
@@ -224,6 +227,9 @@ export const fr = {
       report_resolved: "Signalement traité",
       report_dismissed: "Signalement classé sans suite",
       message_viewed: "Message signalé consulté",
+      user_warned: "Avertissement envoyé",
+      profile_reset: "Profil réinitialisé",
+      user_listings_removed: "Toutes les annonces retirées",
     },
   },
   footer: {

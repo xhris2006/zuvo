@@ -28,7 +28,7 @@ export type DispatchSummary = {
 /** Au-delà, une notification n'est plus envoyée en push (évite les rattrapages tardifs). */
 const MAX_AGE_MS = 10 * 60 * 1000;
 
-const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id,
+const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id, note,
   actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at),
   listing:listings(title)`;
 
@@ -104,6 +104,7 @@ export async function dispatchPendingPush(
         listingId: notification.listing_id,
         listingTitle: notification.listing?.title ?? null,
         conversationId: notification.conversation_id,
+        note: notification.note,
       };
       const result = await sendPush(
         devices,

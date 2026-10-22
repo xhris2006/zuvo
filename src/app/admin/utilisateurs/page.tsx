@@ -9,11 +9,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { getCity } from "@/config/locations";
-import { publicProfileHref, routes } from "@/config/routes";
+import { adminUserHref, routes } from "@/config/routes";
 import { setUserSuspensionAction } from "@/features/admin/actions";
 import { ModerationDialog } from "@/features/admin/components/moderation-dialog";
 import { UnsuspendButton } from "@/features/admin/components/unsuspend-button";
 import { requireAdmin, searchUsersForAdmin } from "@/features/admin/queries";
+import { avatarUrl } from "@/features/profiles/avatar-url";
 import { formatDate } from "@/lib/format";
 import { parsePageParam } from "@/lib/pagination";
 
@@ -23,21 +24,25 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
   const { user } = await requireAdmin(routes.adminUsers);
   const searchParams = await props.searchParams;
   const query = typeof searchParams.q === "string" ? searchParams.q.slice(0, 60) : "";
+  const onlySuspended = searchParams.filtre === "suspendus";
   const page = parsePageParam(searchParams.page);
-  const users = await searchUsersForAdmin(query, page);
+  const users = await searchUsersForAdmin(query, page, onlySuspended);
 
-  const pageHref = (value: number) => {
+  const listHref = (value: number, suspended = onlySuspended) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
+    if (suspended) params.set("filtre", "suspendus");
     if (value > 1) params.set("page", String(value));
     const search = params.toString();
     return (search ? `${routes.adminUsers}?${search}` : routes.adminUsers) as Route;
   };
+  const pageHref = (value: number) => listHref(value);
 
   return (
     <>
       <PageHeader title="Utilisateurs" />
-      <form role="search" className="flex gap-2" action={routes.adminUsers}>
+      <form role="search" className="flex flex-wrap gap-2" action={routes.adminUsers}>
+        {onlySuspended ? <input type="hidden" name="filtre" value="suspendus" /> : null}
         <label htmlFor="admin-user-search" className="sr-only">
           Rechercher un utilisateur
         </label>
@@ -54,6 +59,25 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
           Rechercher
         </Button>
       </form>
+      <nav aria-label="Filtrer les utilisateurs" className="flex gap-2">
+        {[
+          { label: "Tous", active: !onlySuspended, href: listHref(1, false) },
+          { label: "Suspendus", active: onlySuspended, href: listHref(1, true) },
+        ].map((tab) => (
+          <Link
+            key={tab.label}
+            href={tab.href}
+            aria-current={tab.active ? "page" : undefined}
+            className={
+              tab.active
+                ? "rounded-full bg-foreground px-3.5 py-1.5 text-sm font-medium text-background"
+                : "rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium hover:bg-muted"
+            }
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
 
       {users.items.length === 0 ? (
         <EmptyState icon={Users} title="Aucun utilisateur trouvé" />
@@ -61,11 +85,11 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
           {users.items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-              <Avatar name={item.displayName} />
+              <Avatar name={item.displayName} src={avatarUrl(item.avatarPath)} />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="flex flex-wrap items-center gap-2">
                   <Link
-                    href={publicProfileHref(item.username)}
+                    href={adminUserHref(item.id)}
                     className="truncate font-medium hover:underline"
                   >
                     {item.displayName}

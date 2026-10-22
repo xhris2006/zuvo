@@ -31,6 +31,10 @@ type ModerationDialogProps = {
   /** Champs cachés (identifiants). */
   fields: Record<string, string>;
   reasonLabel?: string;
+  /** Champs supplémentaires affichés avant le motif (ex. cases à cocher). */
+  children?: ReactNode;
+  /** Bouton de confirmation non destructif (ex. avertissement). */
+  confirmVariant?: "destructive" | "primary";
 };
 
 const idle: FormState<ModerationField> = { status: "idle" };
@@ -44,6 +48,8 @@ export function ModerationDialog({
   action,
   fields,
   reasonLabel = "Motif (communiqué à l'utilisateur concerné)",
+  children,
+  confirmVariant = "destructive",
 }: ModerationDialogProps) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, idle);
@@ -72,6 +78,7 @@ export function ModerationDialog({
               <input key={name} type="hidden" name={name} value={value} />
             ))}
             <FormMessage state={state} />
+            {children}
             <Field
               id={`${id}-reason`}
               label={reasonLabel}
@@ -94,7 +101,7 @@ export function ModerationDialog({
                   Annuler
                 </Button>
               </DialogClose>
-              <SubmitButton pending={pending} variant="destructive">
+              <SubmitButton pending={pending} variant={confirmVariant}>
                 {confirmLabel}
               </SubmitButton>
             </DialogFooter>

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getCurrentUser, requireUser } from "@/features/auth/session";
 import type { ReportStatus, ReportTargetType } from "@/features/moderation/schemas";
 import type { Database } from "@/lib/supabase/database.types";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const ADMIN_PAGE_SIZE = 20;
@@ -201,6 +202,7 @@ export type AdminUser = {
   id: string;
   username: string;
   displayName: string;
+  avatarPath: string | null;
   city: string | null;
   createdAt: string;
   suspendedAt: string | null;
@@ -210,6 +212,7 @@ export type AdminUser = {
 export async function searchUsersForAdmin(
   query: string,
   page: number,
+  onlySuspended = false,
 ): Promise<{ items: AdminUser[]; total: number; pageSize: number }> {
   const pageSize = ADMIN_PAGE_SIZE;
   const supabase = await createSupabaseServerClient();
@@ -217,7 +220,10 @@ export async function searchUsersForAdmin(
 
   let request = supabase
     .from("profiles")
-    .select("id, username, display_name, city, created_at, suspended_at", { count: "exact" });
+    .select("id, username, display_name, avatar_path, city, created_at, suspended_at", {
+      count: "exact",
+    });
+  if (onlySuspended) request = request.not("suspended_at", "is", null);
   // Caractères spéciaux de PostgREST et des motifs LIKE retirés de la saisie.
   const term = query.replace(/[%_,.()*\\:"']/g, " ").trim();
   if (term) request = request.or(`username.ilike.%${term}%,display_name.ilike.%${term}%`);
@@ -232,12 +238,173 @@ export async function searchUsersForAdmin(
       id: row.id,
       username: row.username,
       displayName: row.display_name,
+      avatarPath: row.avatar_path,
       city: row.city,
       createdAt: row.created_at,
       suspendedAt: row.suspended_at,
     })),
     total: count ?? 0,
     pageSize,
+  };
+}
+
+const overviewSchema = z.object({
+  listings_active: z.number(),
+  listings_sold: z.number(),
+  listings_draft: z.number(),
+  listings_removed: z.number(),
+  reports_received: z.number(),
+  reports_made: z.number(),
+  blocked_by: z.number(),
+  conversations: z.number(),
+  messages_sent_7d: z.number(),
+  warnings: z.number(),
+});
+
+export type AdminUserOverview = z.infer<typeof overviewSchema>;
+
+export type AdminUserDetail = {
+  profile: AdminUser & { bio: string | null };
+  isAdmin: boolean;
+  /** Compte de connexion (lu en service_role) ; null si la clé serveur manque. */
+  account: { email: string | null; lastSignInAt: string | null; confirmed: boolean } | null;
+  overview: AdminUserOverview;
+  listings: {
+    id: string;
+    title: string;
+    status: Database["public"]["Enums"]["listing_status"];
+    price: number | null;
+    createdAt: string;
+    removedAt: string | null;
+    removedReason: string | null;
+  }[];
+  reports: {
+    id: string;
+    targetType: ReportTargetType;
+    reason: Database["public"]["Enums"]["report_reason"];
+    status: ReportStatus;
+    createdAt: string;
+  }[];
+  history: {
+    id: string;
+    action: Database["public"]["Enums"]["moderation_action_type"];
+    targetType: ReportTargetType;
+    note: string | null;
+    createdAt: string;
+    adminUsername: string | null;
+  }[];
+};
+
+/**
+ * Fiche d'un compte pour l'administration : profil, chiffres, annonces,
+ * signalements le concernant et historique de modération. Aucun message
+ * privé n'est lu. À n'appeler qu'après requireAdmin().
+ */
+export async function getAdminUserDetail(userId: string): Promise<AdminUserDetail | null> {
+  if (!z.uuid().safeParse(userId).success) return null;
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) throw new AdminQueryError();
+
+  const [{ data: profile, error }, overview, { data: listings }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_path, bio, city, created_at, suspended_at")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase.rpc("admin_get_user_overview", { p_user_id: userId }),
+    supabase
+      .from("listings")
+      .select("id, title, status, price, created_at, removed_at, removed_reason")
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+  if (error) throw new AdminQueryError();
+  if (!profile) return null;
+  const parsedOverview = overviewSchema.safeParse(overview.data);
+  if (overview.error || !parsedOverview.success) throw new AdminQueryError();
+
+  const listingIds = (listings ?? []).map((listing) => listing.id);
+  const targets = [userId, ...listingIds];
+  const [{ data: reports }, { data: history }] = await Promise.all([
+    supabase
+      .from("reports")
+      .select("id, target_type, target_id, reason, status, created_at")
+      .in("target_id", targets)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("moderation_actions")
+      .select(
+        "id, action, target_type, note, created_at, admin:profiles!moderation_actions_admin_id_fkey(username)",
+      )
+      .in("target_id", targets)
+      .order("created_at", { ascending: false })
+      .limit(30),
+  ]);
+
+  // Rôle et adresse e-mail : tables non exposées à l'API, lues en service_role.
+  const admin = createSupabaseAdminClient();
+  let isAdmin = false;
+  let account: AdminUserDetail["account"] = null;
+  if (admin) {
+    const [{ data: role }, { data: authUser }] = await Promise.all([
+      admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle(),
+      admin.auth.admin.getUserById(userId),
+    ]);
+    isAdmin = Boolean(role);
+    if (authUser?.user) {
+      account = {
+        email: authUser.user.email ?? null,
+        lastSignInAt: authUser.user.last_sign_in_at ?? null,
+        confirmed: Boolean(authUser.user.email_confirmed_at),
+      };
+    }
+  }
+
+  return {
+    profile: {
+      id: profile.id,
+      username: profile.username,
+      displayName: profile.display_name,
+      avatarPath: profile.avatar_path,
+      bio: profile.bio,
+      city: profile.city,
+      createdAt: profile.created_at,
+      suspendedAt: profile.suspended_at,
+    },
+    isAdmin,
+    account,
+    overview: parsedOverview.data,
+    listings: (listings ?? []).map((listing) => ({
+      id: listing.id,
+      title: listing.title,
+      status: listing.status,
+      price: listing.price,
+      createdAt: listing.created_at,
+      removedAt: listing.removed_at,
+      removedReason: listing.removed_reason,
+    })),
+    reports: (reports ?? []).map((report) => ({
+      id: report.id,
+      targetType: report.target_type,
+      reason: report.reason,
+      status: report.status,
+      createdAt: report.created_at,
+    })),
+    history: (history ?? []).map((entry) => ({
+      id: entry.id,
+      action: entry.action,
+      targetType: entry.target_type,
+      note: entry.note,
+      createdAt: entry.created_at,
+      adminUsername: entry.admin?.username ?? null,
+    })),
   };
 }
 

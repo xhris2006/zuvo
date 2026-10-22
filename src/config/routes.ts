@@ -75,6 +75,11 @@ export function followersHref(username: string): Route {
   return `/u/${encodeURIComponent(username)}/abonnes` as Route;
 }
 
+/** Fiche d'un utilisateur dans l'administration. */
+export function adminUserHref(userId: string): Route {
+  return `/admin/utilisateurs/${encodeURIComponent(userId)}` as Route;
+}
+
 export function followingHref(username: string): Route {
   return `/u/${encodeURIComponent(username)}/abonnements` as Route;
 }

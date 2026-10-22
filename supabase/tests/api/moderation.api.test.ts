@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   removeListingAction,
+  removeUserListingsAction,
+  resetProfileAction,
   restoreListingAction,
   setUserSuspensionAction,
+  warnUserAction,
   updateReportStatusAction,
   viewReportedMessageAction,
 } from "@/features/admin/actions";
 import {
   getAdminReports,
+  getAdminUserDetail,
   getAdminStats,
   getModerationLog,
   isCurrentUserAdmin,
@@ -18,7 +22,8 @@ import { sendMessageAction, startConversationAction } from "@/features/messaging
 import { createReportAction, toggleBlockAction } from "@/features/moderation/actions";
 import { getBlockedUsers, hasBlocked } from "@/features/moderation/queries";
 import sitemap from "@/app/sitemap";
-import { createActiveListing, createUser, makeAdmin } from "../support/db";
+import { getNotifications } from "@/features/notifications/queries";
+import { asOwner, asUser, createActiveListing, createUser, makeAdmin } from "../support/db";
 import { actAs } from "./support/context";
 import { RedirectError } from "./support/setup";
 
@@ -150,5 +155,86 @@ describe("sitemap (client anonyme)", () => {
         expect.stringContaining(`/u/${seller.username}`),
       ]),
     );
+  });
+
+  it("outils sur un compte : fiche, avertissement, profil, retrait des annonces", async () => {
+    const admin = await createUser();
+    await makeAdmin(admin.id);
+    const user = await createUser({ display_name: "Pseudo choquant" });
+    await asUser(user.id, (sql) =>
+      sql("update public.profiles set bio = 'Texte inapproprié' where id = $1", [user.id]),
+    );
+    await createActiveListing(user.id, { title: "Annonce douteuse" });
+    await createActiveListing(user.id, { title: "Autre annonce" });
+
+    // Un utilisateur ordinaire ne peut rien faire.
+    actAs(user);
+    expect(
+      await warnUserAction({ status: "idle" }, form({ userId: user.id, reason: "Test" })),
+    ).toMatchObject({ status: "error" });
+
+    actAs(admin);
+    const detail = await getAdminUserDetail(user.id);
+    expect(detail).toMatchObject({
+      profile: { username: user.username, bio: "Texte inapproprié" },
+      isAdmin: false,
+      overview: { listings_active: 2, warnings: 0 },
+    });
+    expect(detail!.listings.map((listing) => listing.title).sort()).toEqual([
+      "Annonce douteuse",
+      "Autre annonce",
+    ]);
+    expect(await getAdminUserDetail("pas-un-uuid")).toBeNull();
+
+    expect(
+      await warnUserAction(
+        { status: "idle" },
+        form({ userId: user.id, reason: "Merci de rester courtois." }),
+      ),
+    ).toMatchObject({ status: "success" });
+    expect(
+      await resetProfileAction(
+        { status: "idle" },
+        form({ userId: user.id, reason: "Contenu inapproprié", bio: "on", displayName: "on" }),
+      ),
+    ).toMatchObject({ status: "success" });
+    expect(
+      await resetProfileAction({ status: "idle" }, form({ userId: user.id, reason: "Motif" })),
+    ).toMatchObject({ status: "error", message: expect.stringMatching(/au moins un élément/) });
+    expect(
+      await removeUserListingsAction({ status: "idle" }, form({ userId: user.id, reason: "Spam" })),
+    ).toMatchObject({ status: "success", message: expect.stringMatching(/^2 annonces retirées/) });
+
+    const after = await getAdminUserDetail(user.id);
+    expect(after).toMatchObject({
+      profile: { bio: null, displayName: user.username },
+      overview: { listings_active: 0, listings_removed: 2, warnings: 1 },
+    });
+    expect(after!.history.map((entry) => entry.action)).toEqual(
+      expect.arrayContaining(["user_warned", "profile_reset", "user_listings_removed"]),
+    );
+
+    // L'utilisateur voit l'avertissement dans ses notifications.
+    actAs(user);
+    const notifications = await getNotifications();
+    expect(notifications.items[0]?.type).toBeDefined();
+    expect(notifications.items.find((item) => item.type === "moderation_warning")).toMatchObject({
+      title: "Avertissement de la modération",
+      body: "Merci de rester courtois.",
+    });
+
+    // Aucune action possible sur un autre administrateur.
+    const otherAdmin = await createUser();
+    await makeAdmin(otherAdmin.id);
+    actAs(admin);
+    expect(
+      await warnUserAction({ status: "idle" }, form({ userId: otherAdmin.id, reason: "Test" })),
+    ).toMatchObject({ status: "error" });
+    const warnings = await asOwner((sql) =>
+      sql("select count(*)::int as count from public.notifications where user_id = $1", [
+        otherAdmin.id,
+      ]),
+    );
+    expect(warnings.rows[0]).toEqual({ count: 0 });
   });
 });

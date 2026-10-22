@@ -10,7 +10,16 @@ import { formText } from "@/lib/forms/form-state";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { conversationHref } from "./links";
-import { type ChatMessage, MESSAGES_PAGE_SIZE, messageBodySchema } from "./schemas";
+import { getMessages } from "./queries";
+import {
+  type ChatMessage,
+  isMessagePhotoPath,
+  MESSAGE_COLUMNS,
+  MESSAGE_PHOTO_BUCKET,
+  messageBodySchema,
+  type PhotoUrls,
+  photoCaptionSchema,
+} from "./schemas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SESSION_EXPIRED = "Votre session a expiré. Reconnectez-vous.";
@@ -50,15 +59,23 @@ export async function startConversationAction(
 export type SendMessageResult =
   { status: "sent"; message: ChatMessage } | { status: "error"; message: string };
 
+/**
+ * Envoie un message texte, ou une photo (déjà déposée dans le stockage privé
+ * de la conversation) avec un texte facultatif.
+ */
 export async function sendMessageAction(
   conversationId: string,
   body: string,
+  photoPath: string | null = null,
 ): Promise<SendMessageResult> {
-  const parsed = messageBodySchema.safeParse(body);
+  if (!UUID.test(conversationId)) return { status: "error", message: "Conversation introuvable." };
+  if (photoPath !== null && !isMessagePhotoPath(conversationId, photoPath)) {
+    return { status: "error", message: "Photo invalide." };
+  }
+  const parsed = (photoPath ? photoCaptionSchema : messageBodySchema).safeParse(body);
   if (!parsed.success) {
     return { status: "error", message: parsed.error.issues[0]?.message ?? "Message invalide." };
   }
-  if (!UUID.test(conversationId)) return { status: "error", message: "Conversation introuvable." };
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
@@ -66,10 +83,14 @@ export async function sendMessageAction(
 
   const { data, error } = await supabase
     .from("messages")
-    .insert({ conversation_id: conversationId, body: parsed.data })
-    .select("id, conversation_id, sender_id, body, created_at, read_at")
+    .insert({ conversation_id: conversationId, body: parsed.data, attachment_path: photoPath })
+    .select(MESSAGE_COLUMNS)
     .single();
   if (error || !data) {
+    if (photoPath) {
+      // Photo orpheline : son auteur peut la supprimer (politique Storage).
+      await supabase.storage.from(MESSAGE_PHOTO_BUCKET).remove([photoPath]);
+    }
     if (error?.code === "PT429") {
       return {
         status: "error",
@@ -97,21 +118,14 @@ export async function markConversationReadAction(conversationId: string): Promis
   if (data && data > 0) revalidatePath(routes.messages);
 }
 
-/** Messages plus anciens qu'une date donnée (chargement progressif). */
+/** Messages plus anciens qu'une date donnée (chargement progressif), avec leurs photos. */
 export async function loadOlderMessagesAction(
   conversationId: string,
   before: string,
-): Promise<ChatMessage[]> {
-  if (!UUID.test(conversationId) || Number.isNaN(Date.parse(before))) return [];
-  const supabase = await createSupabaseServerClient();
+): Promise<{ messages: ChatMessage[]; photoUrls: PhotoUrls }> {
+  const empty = { messages: [], photoUrls: {} };
+  if (!UUID.test(conversationId) || Number.isNaN(Date.parse(before))) return empty;
   const user = await getCurrentUser();
-  if (!supabase || !user) return [];
-  const { data } = await supabase
-    .from("messages")
-    .select("id, conversation_id, sender_id, body, created_at, read_at")
-    .eq("conversation_id", conversationId)
-    .lt("created_at", before)
-    .order("created_at", { ascending: false })
-    .limit(MESSAGES_PAGE_SIZE);
-  return (data ?? []).reverse();
+  if (!user) return empty;
+  return getMessages(conversationId, before).catch(() => empty);
 }

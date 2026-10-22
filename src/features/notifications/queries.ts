@@ -72,7 +72,7 @@ export async function getNotifications(page = 1): Promise<{
   const { data, error, count } = await supabase
     .from("notifications")
     .select(
-      `id, type, is_read, created_at, listing_id, conversation_id,
+      `id, type, is_read, created_at, listing_id, conversation_id, note,
        actor:profiles!notifications_actor_id_fkey(username, display_name, avatar_path),
        listing:listings(title)`,
       { count: "exact" },
@@ -91,6 +91,7 @@ export async function getNotifications(page = 1): Promise<{
       listingId: row.listing_id,
       listingTitle: row.listing?.title ?? null,
       conversationId: row.conversation_id,
+      note: row.note,
     };
     return {
       ...subject,
@@ -128,4 +129,27 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     .eq("user_id", user.id)
     .maybeSingle();
   return data ?? defaults;
+}
+
+export type LastPushResult = {
+  pushedAt: string;
+  status: string | null;
+  detail: string | null;
+};
+
+/** Dernière notification de l'utilisateur traitée par l'envoi push (diagnostic). */
+export async function getLastPushResult(): Promise<LastPushResult | null> {
+  const user = await getCurrentUser();
+  const supabase = await createSupabaseServerClient();
+  if (!user || !supabase) return null;
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("pushed_at, push_status, push_detail")
+    .eq("user_id", user.id)
+    .not("pushed_at", "is", null)
+    .order("pushed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data?.pushed_at) return null;
+  return { pushedAt: data.pushed_at, status: data.push_status, detail: data.push_detail };
 }

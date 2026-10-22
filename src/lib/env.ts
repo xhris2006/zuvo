@@ -31,7 +31,11 @@ export function parsePublicEnv(source: Record<string, string | undefined>): Publ
   const env: PublicEnv = {};
   const invalid: string[] = [];
   for (const name of Object.keys(rules) as PublicEnvName[]) {
-    const value = source[name];
+    // Espaces et guillemets copiés par erreur autour de la valeur sont ignorés.
+    const value = source[name]
+      ?.trim()
+      .replace(/^(["'])(.*)\1$/s, "$2")
+      .trim();
     if (value === undefined || value === "") continue;
     if (rules[name](value)) env[name] = value;
     else invalid.push(name);

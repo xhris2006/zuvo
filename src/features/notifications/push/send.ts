@@ -25,7 +25,13 @@ export type PushPayload = {
 
 export type StoredSubscription = { id: string; endpoint: string; p256dh: string; auth: string };
 
-export type SendResult = { sent: string[]; expired: string[]; failed: number };
+export type SendResult = {
+  sent: string[];
+  expired: string[];
+  failed: number;
+  /** Codes de réponse des échecs (ex. « HTTP 403 »), sans adresse ni jeton. */
+  errors: string[];
+};
 
 /**
  * Envoie la même charge utile à plusieurs abonnements. Les abonnements
@@ -38,7 +44,7 @@ export async function sendPush(
   config: PushConfig,
   options: { urgent?: boolean } = {},
 ): Promise<SendResult> {
-  const result: SendResult = { sent: [], expired: [], failed: 0 };
+  const result: SendResult = { sent: [], expired: [], failed: 0, errors: [] };
   const body = JSON.stringify(payload);
   await Promise.all(
     subscriptions.map(async (subscription) => {
@@ -71,6 +77,9 @@ export async function sendPush(
           result.expired.push(subscription.id);
         } else {
           result.failed += 1;
+          result.errors.push(
+            error instanceof WebPushError ? `HTTP ${error.statusCode}` : "réseau ou configuration",
+          );
         }
       }
     }),

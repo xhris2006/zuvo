@@ -53,6 +53,7 @@ export async function SiteHeader() {
   return (
     <header
       data-site-header
+      style={{ viewTransitionName: "site-header" }}
       className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80"
     >
       <div className="container-page flex h-14 items-center gap-3 md:h-16 lg:gap-6">

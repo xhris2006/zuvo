@@ -448,6 +448,9 @@ export type Database = {
           id: string;
           is_read: boolean;
           listing_id: string | null;
+          note: string | null;
+          push_detail: string | null;
+          push_status: string | null;
           pushed_at: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
@@ -460,6 +463,9 @@ export type Database = {
           id?: string;
           is_read?: boolean;
           listing_id?: string | null;
+          note?: string | null;
+          push_detail?: string | null;
+          push_status?: string | null;
           pushed_at?: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
@@ -471,6 +477,9 @@ export type Database = {
           id?: string;
           is_read?: boolean;
           listing_id?: string | null;
+          note?: string | null;
+          push_detail?: string | null;
+          push_status?: string | null;
           pushed_at?: string | null;
           type?: Database["public"]["Enums"]["notification_type"];
           user_id?: string;
@@ -708,6 +717,7 @@ export type Database = {
       admin_get_reported_message: {
         Args: { p_report_id: string };
         Returns: {
+          attachment_path: string;
           body: string;
           conversation_id: string;
           created_at: string;
@@ -717,6 +727,7 @@ export type Database = {
         }[];
       };
       admin_get_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_get_user_overview: { Args: { p_user_id: string }; Returns: Json };
       admin_list_reports: {
         Args: {
           p_limit?: number;
@@ -742,6 +753,20 @@ export type Database = {
         Args: { p_listing_id: string; p_reason: string; p_report_id?: string };
         Returns: undefined;
       };
+      admin_remove_user_listings: {
+        Args: { p_reason: string; p_user_id: string };
+        Returns: number;
+      };
+      admin_reset_profile: {
+        Args: {
+          p_avatar: boolean;
+          p_bio: boolean;
+          p_display_name: boolean;
+          p_reason: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
       admin_restore_listing: {
         Args: { p_listing_id: string; p_note?: string };
         Returns: undefined;
@@ -758,6 +783,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_warn_user: {
+        Args: { p_message: string; p_report_id?: string; p_user_id: string };
+        Returns: undefined;
+      };
       app_schema_version: { Args: Record<PropertyKey, never>; Returns: string };
       get_my_conversations: {
         Args: { p_limit?: number; p_offset?: number };
@@ -766,6 +795,7 @@ export type Database = {
           is_buyer: boolean;
           last_message_at: string;
           last_message_body: string;
+          last_message_has_photo: boolean;
           last_message_is_mine: boolean;
           listing_id: string;
           listing_image_path: string;
@@ -807,13 +837,17 @@ export type Database = {
         | "report_in_review"
         | "report_resolved"
         | "report_dismissed"
-        | "message_viewed";
+        | "message_viewed"
+        | "user_warned"
+        | "profile_reset"
+        | "user_listings_removed";
       notification_type:
         | "new_message"
         | "new_follower"
         | "followed_user_listing"
         | "listing_favorited"
-        | "listing_removed";
+        | "listing_removed"
+        | "moderation_warning";
       report_reason:
         | "scam"
         | "prohibited_item"
@@ -955,6 +989,9 @@ export const Constants = {
         "report_resolved",
         "report_dismissed",
         "message_viewed",
+        "user_warned",
+        "profile_reset",
+        "user_listings_removed",
       ],
       notification_type: [
         "new_message",
@@ -962,6 +999,7 @@ export const Constants = {
         "followed_user_listing",
         "listing_favorited",
         "listing_removed",
+        "moderation_warning",
       ],
       report_reason: [
         "scam",

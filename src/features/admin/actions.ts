@@ -6,6 +6,8 @@ import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, formText } from "@/lib/forms/form-state";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
+import { MESSAGE_PHOTO_BUCKET } from "@/features/messaging/schemas";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isCurrentUserAdmin } from "./queries";
 
@@ -166,6 +168,8 @@ export async function updateReportStatusAction(
 
 export type ReportedMessage = {
   body: string | null;
+  /** Lien signé de courte durée vers la photo du message, s'il y en a une. */
+  photoUrl: string | null;
   createdAt: string;
   senderUsername: string | null;
 };
@@ -185,10 +189,134 @@ export async function viewReportedMessageAction(
   });
   if (error) return { status: "error", message: errorMessage(error) };
   const row = data?.[0];
+  if (!row) return { status: "ok", message: null };
+
+  // La base a vérifié le rôle et journalisé la consultation : la photo (bucket
+  // privé, hors conversation de l'administrateur) est lue en service_role.
+  let photoUrl: string | null = null;
+  if (row.attachment_path) {
+    const { data: signed } = (await createSupabaseAdminClient()
+      ?.storage.from(MESSAGE_PHOTO_BUCKET)
+      .createSignedUrl(row.attachment_path, 5 * 60)) ?? { data: null };
+    photoUrl = signed?.signedUrl ?? null;
+  }
   return {
     status: "ok",
-    message: row
-      ? { body: row.body, createdAt: row.created_at, senderUsername: row.sender_username }
-      : null,
+    message: {
+      body: row.body,
+      photoUrl,
+      createdAt: row.created_at,
+      senderUsername: row.sender_username,
+    },
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Outils sur les comptes (fiche utilisateur)
+// -----------------------------------------------------------------------------
+const reasonSchema = z
+  .string()
+  .trim()
+  .min(3, "Indiquez un texte d'au moins 3 caractères.")
+  .max(500);
+
+function invalidReason(formData: FormData, message?: string): FormState<ModerationField> {
+  return {
+    status: "error",
+    fieldErrors: { reason: message ?? "Indiquez un texte d'au moins 3 caractères." },
+    values: { reason: formText(formData, "reason") },
+  };
+}
+
+function revalidateUser(userId: string) {
+  revalidateAdmin();
+  revalidatePath(`/admin/utilisateurs/${userId}`);
+}
+
+/** Avertissement écrit, reçu en notification (et en push) par l'utilisateur. */
+export async function warnUserAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const userId = z.uuid().safeParse(formText(formData, "userId"));
+  const reason = reasonSchema.safeParse(formText(formData, "reason"));
+  if (!userId.success) return { status: "error", message: "Requête invalide." };
+  if (!reason.success) return invalidReason(formData, reason.error.issues[0]?.message);
+  const supabase = await adminContext();
+  if (!supabase) return { status: "error", message: FORBIDDEN };
+
+  const { error } = await supabase.rpc("admin_warn_user", {
+    p_user_id: userId.data,
+    p_message: reason.data,
+  });
+  if (error) return { status: "error", message: errorMessage(error) };
+  schedulePushDispatch({ type: "moderation_warning" });
+  revalidateUser(userId.data);
+  return { status: "success", message: "Avertissement envoyé à l'utilisateur." };
+}
+
+/** Retire la photo, la présentation et/ou le nom affiché d'un profil. */
+export async function resetProfileAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const userId = z.uuid().safeParse(formText(formData, "userId"));
+  const reason = reasonSchema.safeParse(formText(formData, "reason"));
+  const avatar = formData.get("avatar") === "on";
+  const bio = formData.get("bio") === "on";
+  const displayName = formData.get("displayName") === "on";
+  if (!userId.success) return { status: "error", message: "Requête invalide." };
+  if (!avatar && !bio && !displayName) {
+    return {
+      status: "error",
+      message: "Choisissez au moins un élément à réinitialiser.",
+      values: { reason: formText(formData, "reason") },
+    };
+  }
+  if (!reason.success) return invalidReason(formData, reason.error.issues[0]?.message);
+  const supabase = await adminContext();
+  if (!supabase) return { status: "error", message: FORBIDDEN };
+
+  const { data: oldAvatar, error } = await supabase.rpc("admin_reset_profile", {
+    p_user_id: userId.data,
+    p_reason: reason.data,
+    p_avatar: avatar,
+    p_bio: bio,
+    p_display_name: displayName,
+  });
+  if (error) return { status: "error", message: errorMessage(error) };
+  // La photo retirée n'appartient pas à l'administrateur : suppression en service_role.
+  if (oldAvatar) await createSupabaseAdminClient()?.storage.from("avatars").remove([oldAvatar]);
+  revalidateUser(userId.data);
+  revalidatePath("/u", "layout");
+  return { status: "success", message: "Profil réinitialisé." };
+}
+
+/** Retire d'un coup toutes les annonces en ligne d'un utilisateur. */
+export async function removeUserListingsAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const userId = z.uuid().safeParse(formText(formData, "userId"));
+  const reason = reasonSchema.safeParse(formText(formData, "reason"));
+  if (!userId.success) return { status: "error", message: "Requête invalide." };
+  if (!reason.success) return invalidReason(formData, reason.error.issues[0]?.message);
+  const supabase = await adminContext();
+  if (!supabase) return { status: "error", message: FORBIDDEN };
+
+  const { data: count, error } = await supabase.rpc("admin_remove_user_listings", {
+    p_user_id: userId.data,
+    p_reason: reason.data,
+  });
+  if (error) return { status: "error", message: errorMessage(error) };
+  if (count) schedulePushDispatch({ type: "listing_removed" });
+  revalidateUser(userId.data);
+  revalidatePath("/", "layout");
+  return {
+    status: "success",
+    message:
+      count === 0
+        ? "Aucune annonce en ligne à retirer."
+        : `${count} annonce${count > 1 ? "s" : ""} retirée${count > 1 ? "s" : ""}. Le vendeur a été prévenu.`,
   };
 }

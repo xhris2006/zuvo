@@ -33,7 +33,7 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
   async function handleFile(file: File) {
     setMessage(null);
     if (!file.type.startsWith("image/")) {
-      setMessage("Choisissez une image (JPEG, PNG ou WebP).");
+      setMessage("Choisissez une image.");
       return;
     }
     if (file.size > MAX_INPUT_BYTES) {
@@ -106,7 +106,7 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
           ref={inputRef}
           id={inputId}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/*"
           className="sr-only"
           tabIndex={-1}
           onChange={(event) => {
@@ -115,7 +115,8 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
           }}
         />
         <p className="text-xs text-muted-foreground" aria-live="polite">
-          {message ?? "JPEG, PNG ou WebP. L'image est recadrée et allégée automatiquement."}
+          {message ??
+            "Photo de la galerie ou de l'appareil photo, recadrée et allégée automatiquement."}
         </p>
         {error ? (
           <p className="text-xs font-medium text-danger" role="alert">

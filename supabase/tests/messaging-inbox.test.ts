@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { asAnon, asUser, createActiveListing, createUser, expectDenied } from "./support/db";
 
@@ -40,6 +41,7 @@ describe("get_my_conversations", () => {
       other_display_name: "Acheteur",
       is_buyer: false,
       last_message_body: "Toujours disponible ?",
+      last_message_has_photo: false,
       last_message_is_mine: false,
       unread_count: 2,
     });
@@ -53,6 +55,27 @@ describe("get_my_conversations", () => {
     const { seller, buyer } = await setup();
     expect(await inbox(seller.id)).toEqual([]);
     expect(await inbox(buyer.id)).toHaveLength(1);
+  });
+
+  it("affiche au vendeur une conversation commencée par une photo", async () => {
+    const { seller, buyer, conversationId } = await setup();
+    const path = `${conversationId}/${randomUUID()}.webp`;
+    await asUser(buyer.id, async (sql) => {
+      await sql(
+        "insert into storage.objects (bucket_id, name, owner_id) values ('message-attachments', $1, $2)",
+        [path, buyer.id],
+      );
+      await sql("insert into public.messages (conversation_id, attachment_path) values ($1, $2)", [
+        conversationId,
+        path,
+      ]);
+    });
+    const [row] = await inbox(seller.id);
+    expect(row).toMatchObject({
+      last_message_body: null,
+      last_message_has_photo: true,
+      unread_count: 1,
+    });
   });
 
   it("n'expose rien à un tiers ni aux visiteurs", async () => {

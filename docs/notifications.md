@@ -103,10 +103,16 @@ Les variables sans préfixe `NEXT_PUBLIC_` ne sont lues que côté serveur
 journalisées. **Redéployez** après les avoir renseignées (les variables
 `NEXT_PUBLIC_*` sont figées au moment du build).
 
+Les espaces, retours à la ligne et guillemets copiés par erreur autour d'une
+valeur sont ignorés, et une adresse e-mail seule dans `VAPID_SUBJECT` est
+complétée par `mailto:`. Une variable encore mal formée est signalée par son
+nom dans la page Configuration (« Variables mal formées ») et ignorée.
+
 ### 2.3 Base de données à jour
 
-La migration `20261021100000_push_direct_dispatch.sql` (colonne `pushed_at`)
-est nécessaire. La page Configuration signale une base en retard.
+Les migrations `20261021100000_push_direct_dispatch.sql` (colonne `pushed_at`)
+et `20261022100000_push_delivery_status.sql` (résultat de chaque envoi) sont
+nécessaires. La page Configuration signale une base en retard.
 
 ### 2.4 Activation sur chaque appareil
 
@@ -114,6 +120,18 @@ Chaque utilisateur active les notifications **sur chacun de ses appareils** :
 bandeau « Activer les notifications » dans Messages ou Notifications, ou
 **Paramètres → Notifications push → Activer**, puis « Envoyer un test ».
 Sur iPhone, le site doit d'abord être ajouté à l'écran d'accueil (iOS 16.4+).
+
+### 2.5 Diagnostic
+
+- **Administration → Configuration → Derniers envois push** : résultat des
+  dernières notifications traitées (envoyée, aucun appareil activé, push
+  désactivé, refusée par le service push avec son code HTTP), sans
+  destinataire ni contenu, et nombre de notifications jamais traitées.
+- **Paramètres → Notifications push** : chaque utilisateur voit le résultat
+  de sa dernière notification.
+- Un code `HTTP 401/403` signifie que l'appareil a été abonné avec d'autres
+  clés VAPID : il est réabonné automatiquement au chargement suivant du site
+  (autorisation déjà accordée), sinon désactiver puis réactiver suffit.
 
 ## 3. Vérification sur appareils (obligatoire avant d'annoncer le push)
 
@@ -134,5 +152,5 @@ fermé) et le clic sur la notification.
 Points à contrôler : la notification s'affiche site fermé ; le clic ouvre la
 bonne page ; aucune notification n'apparaît pour une conversation déjà ouverte
 à l'écran ; « Désactiver sur cet appareil » arrête les envois ; après
-déconnexion, l'appareil ne reçoit plus rien ; les logs Vercel de
-`/api/push/dispatch` ne contiennent aucun secret.
+déconnexion, l'appareil ne reçoit plus rien ; les logs Vercel ne contiennent
+aucun secret.

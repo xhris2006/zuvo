@@ -8,7 +8,7 @@ import {
   startConversationAction,
 } from "@/features/messaging/actions";
 import { toggleFollowAction } from "@/features/profiles/actions";
-import { asUser, createActiveListing, createUser, suspendUser } from "../support/db";
+import { asOwner, asUser, createActiveListing, createUser, suspendUser } from "../support/db";
 import { actAs } from "./support/context";
 import { flushAfter, RedirectError } from "./support/setup";
 
@@ -47,6 +47,18 @@ async function registerDevice(userId: string) {
 }
 
 type SentPayload = { title: string; body: string; url: string; tag: string };
+
+/** Résultat d'envoi enregistré sur la dernière notification du destinataire. */
+async function lastPushStatus(userId: string) {
+  const { rows } = await asOwner((sql) =>
+    sql<{ push_status: string | null; push_detail: string | null }>(
+      `select push_status, push_detail from public.notifications
+       where user_id = $1 order by created_at desc limit 1`,
+      [userId],
+    ),
+  );
+  return rows[0];
+}
 
 function pushesTo(endpoint: string): SentPayload[] {
   return sendNotification.mock.calls
@@ -89,6 +101,8 @@ describe("notifications push envoyées par l'application", () => {
     expect(pushes[0]!.body).toContain("Vélo enfant");
     // Le contenu du message privé n'est jamais envoyé au service push.
     expect(JSON.stringify(pushes)).not.toContain("passer ce soir");
+
+    expect(await lastPushStatus(seller.id)).toEqual({ push_status: "sent", push_detail: null });
 
     // Un second envoi (rejeu) ne renvoie rien.
     await flushAfter();
@@ -160,6 +174,7 @@ describe("notifications push envoyées par l'application", () => {
     await sendMessageAction(conversationId, "Bonjour");
     await flushAfter();
     expect(pushesTo(endpoint)).toHaveLength(0);
+    expect(await lastPushStatus(seller.id)).toMatchObject({ push_status: "disabled" });
 
     await asUser(seller.id, (sql) =>
       sql("update public.notification_preferences set push_enabled = true where user_id = $1", [
@@ -171,5 +186,24 @@ describe("notifications push envoyées par l'application", () => {
     await sendMessageAction(conversationId, "Encore moi");
     await flushAfter();
     expect(pushesTo(endpoint)).toHaveLength(0);
+  });
+
+  it("enregistre le refus du service push pour le diagnostic", async () => {
+    const seller = await createUser();
+    const buyer = await createUser();
+    await registerDevice(seller.id);
+    const listingId = await createActiveListing(seller.id);
+    const conversationId = await openConversation(buyer.id, listingId);
+
+    const { WebPushError } = await import("web-push");
+    sendNotification.mockRejectedValueOnce(
+      new (WebPushError as unknown as new (statusCode: number) => Error)(403),
+    );
+    await sendMessageAction(conversationId, "Bonjour");
+    await flushAfter();
+    expect(await lastPushStatus(seller.id)).toEqual({
+      push_status: "failed",
+      push_detail: "HTTP 403",
+    });
   });
 });

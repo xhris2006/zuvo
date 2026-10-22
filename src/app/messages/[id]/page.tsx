@@ -31,7 +31,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
 
   const isBuyer = conversation.buyer_id === user.id;
   const other = isBuyer ? conversation.seller : conversation.buyer;
-  const messages = await getMessages(conversation.id);
+  const { messages, photoUrls } = await getMessages(conversation.id);
 
   // L'utilisateur ne voit que ses propres blocages.
   const blockedByMe = other ? await hasBlocked(user.id, other.id) : false;
@@ -127,6 +127,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
         conversationId={conversation.id}
         currentUserId={user.id}
         initialMessages={messages}
+        initialPhotoUrls={photoUrls}
         initialHasMore={messages.length >= MESSAGES_PAGE_SIZE}
         disabledReason={disabledReason}
       />

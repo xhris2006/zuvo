@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { siteConfig } from "@/config/site";
 import { getCurrentUser } from "@/features/auth/session";
+import { PushSync } from "@/features/notifications/components/push-sync";
 import { UnreadCountsProvider } from "@/features/notifications/components/unread-counts";
 import { getUnreadCounts } from "@/features/notifications/queries";
 import { getDictionary } from "@/i18n";
@@ -79,6 +80,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <BottomNav />
         </UnreadCountsProvider>
         <ServiceWorkerRegistrar />
+        {user ? <PushSync /> : null}
       </body>
     </html>
   );

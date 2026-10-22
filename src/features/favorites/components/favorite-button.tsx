@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useOptimistic } from "react";
 import { signInHref } from "@/features/auth/links";
 import { cn } from "@/lib/utils";
 import { toggleFavoriteAction } from "../actions";
@@ -28,8 +28,14 @@ export function FavoriteButton({
   const [state, formAction, pending] = useActionState(toggleFavoriteAction, {
     favorited: initialFavorited,
   });
-  const label = state.favorited ? "Retirer des favoris" : "Ajouter aux favoris";
-  const iconClass = cn("size-5", state.favorited && "fill-danger text-danger");
+  // Affichage immédiat du nouvel état, confirmé (ou annulé) par la réponse du serveur.
+  const [favorited, setOptimisticFavorited] = useOptimistic(state.favorited);
+  const label = favorited ? "Retirer des favoris" : "Ajouter aux favoris";
+  const iconClass = cn(
+    "size-5 transition-colors",
+    favorited && "fill-danger text-danger",
+    favorited && favorited !== initialFavorited && "animate-heart-pop",
+  );
   const iconButtonClass = cn(
     "inline-flex size-9 items-center justify-center rounded-full bg-card/95 text-foreground shadow-card transition-transform hover:scale-105 active:scale-95",
     className,
@@ -53,18 +59,23 @@ export function FavoriteButton({
   }
 
   return (
-    <form action={formAction}>
+    <form
+      action={(formData) => {
+        setOptimisticFavorited(!favorited);
+        formAction(formData);
+      }}
+    >
       <input type="hidden" name="listingId" value={listingId} />
       <button
         type="submit"
         disabled={pending}
-        aria-pressed={state.favorited}
+        aria-pressed={favorited}
         aria-label={variant === "icon" ? label : undefined}
         title={label}
         className={variant === "icon" ? iconButtonClass : fullButtonClass}
       >
         <Heart className={iconClass} aria-hidden="true" />
-        {variant === "button" ? (state.favorited ? "Dans vos favoris" : "Favori") : null}
+        {variant === "button" ? (favorited ? "Dans vos favoris" : "Favori") : null}
       </button>
       {state.message ? (
         <span className="sr-only" role="alert">

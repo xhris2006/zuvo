@@ -26,21 +26,27 @@ celui des notifications push dans [`notifications.md`](notifications.md).
   [`supabase.md` §1.6](supabase.md#16-désigner-un-administrateur).
 - Les actions de modération passent par les fonctions `admin_*`, qui vérifient
   le rôle **en base** à chaque appel ; l'interface `/admin` renvoie une 404
-  aux autres utilisateurs. Un administrateur ne peut ni se suspendre ni
-  suspendre un autre administrateur.
+  aux autres utilisateurs. Un administrateur ne peut agir (suspension,
+  avertissement, réinitialisation du profil, retrait de toutes les annonces)
+  ni sur son propre compte ni sur un autre administrateur. Aucune fonction ne
+  permet d'attribuer ou de retirer le rôle administrateur.
 - Chaque action est inscrite dans un journal non modifiable
   (`moderation_actions`). Les messages privés ne sont lisibles par
-  l'administration que pour le message signalé, et chaque consultation est
-  journalisée.
+  l'administration que pour le message signalé (photo comprise, par un lien
+  signé de 5 minutes), et chaque consultation est journalisée. La fiche d'un
+  utilisateur ne montre que des nombres sur sa messagerie, jamais de contenu.
+- L'adresse e-mail et la dernière connexion d'un compte sont lues côté
+  serveur (clé service_role), uniquement pour la fiche utilisateur de
+  l'administration.
 
 ## Secrets
 
-| Secret                                 | Où il vit                     | Utilisé par                                               |
-| -------------------------------------- | ----------------------------- | --------------------------------------------------------- |
-| Mot de passe de la base Supabase       | gestionnaire de mots de passe | CLI Supabase (migrations)                                 |
-| `SUPABASE_SERVICE_ROLE_KEY`            | variables Vercel (serveur)    | `src/lib/supabase/admin.ts` : push, suppression de compte |
-| `VAPID_PRIVATE_KEY`                    | variables Vercel (serveur)    | envoi des notifications push                              |
-| Secret OAuth Google, identifiants SMTP | tableau de bord Supabase      | Supabase Auth                                             |
+| Secret                                 | Où il vit                     | Utilisé par                                                                          |
+| -------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
+| Mot de passe de la base Supabase       | gestionnaire de mots de passe | CLI Supabase (migrations)                                                            |
+| `SUPABASE_SERVICE_ROLE_KEY`            | variables Vercel (serveur)    | `src/lib/supabase/admin.ts` : push, suppression de compte, fiche utilisateur (admin) |
+| `VAPID_PRIVATE_KEY`                    | variables Vercel (serveur)    | envoi des notifications push                                                         |
+| Secret OAuth Google, identifiants SMTP | tableau de bord Supabase      | Supabase Auth                                                                        |
 
 - Les secrets sont lus par `src/lib/server-env.ts`, protégé par `server-only`
   (toute importation depuis un composant client fait échouer le build) ; les

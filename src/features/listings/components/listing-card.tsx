@@ -2,6 +2,7 @@ import { ImageOff, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LinkPending } from "@/components/ui/link-pending";
 import { getCity } from "@/config/locations";
 import { getDictionary } from "@/i18n";
 import { formatPrice } from "@/lib/format";
@@ -24,7 +25,7 @@ export function ListingCard({ listing, action, priority = false }: ListingCardPr
 
   return (
     <article className="group relative flex flex-col gap-2.5">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted transition-transform duration-150 group-active:scale-[0.98]">
         {listing.imageUrl ? (
           <Image
             src={listing.imageUrl}
@@ -56,6 +57,7 @@ export function ListingCard({ listing, action, priority = false }: ListingCardPr
             className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"
           >
             {listing.title}
+            <LinkPending className="bottom-auto aspect-[4/5]" />
           </Link>
         </h3>
         <p className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">

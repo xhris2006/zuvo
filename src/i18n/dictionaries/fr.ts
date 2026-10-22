@@ -9,6 +9,15 @@ const conditions: Record<ListingCondition, string> = {
   for_parts: "Pour pièces",
 };
 
+const conditionHints: Record<ListingCondition, string> = {
+  new_with_tags: "Jamais utilisé, étiquette encore attachée.",
+  new_without_tags: "Jamais utilisé, sans étiquette.",
+  very_good: "Peu utilisé, aucun défaut visible.",
+  good: "Utilisé, quelques signes d'usure.",
+  fair: "Défauts visibles, précisés dans la description.",
+  for_parts: "Ne fonctionne pas ou incomplet.",
+};
+
 const statuses: Record<ListingStatus, string> = {
   draft: "Brouillon",
   active: "En vente",
@@ -110,6 +119,7 @@ export const fr = {
   },
   listing: {
     conditions,
+    conditionHints,
     statuses,
     favoriteAdd: "Ajouter aux favoris",
     favoriteRemove: "Retirer des favoris",
@@ -125,6 +135,32 @@ export const fr = {
     notConfiguredTitle: "Authentification pas encore disponible",
     notConfiguredBody:
       "La connexion sera activée dès que le service d'authentification (Supabase) sera configuré.",
+  },
+  sell: {
+    steps: {
+      photos: {
+        title: "Photos",
+        hint: "Jusqu'à 8 photos nettes. La première sera la photo principale.",
+      },
+      description: {
+        title: "Description",
+        hint: "Un titre clair et une description honnête font vendre plus vite.",
+      },
+      details: { title: "Catégorie et état", hint: "Aidez les acheteurs à trouver votre article." },
+      price: {
+        title: "Prix et lieu",
+        hint: "Gratuit et sans commission : vous encaissez tout le prix.",
+      },
+      review: { title: "Vérification", hint: "Relisez votre annonce avant de la publier." },
+    },
+    stepOf: (current: number, total: number) => `Étape ${current} sur ${total}`,
+    next: "Continuer",
+    back: "Retour",
+    edit: "Modifier",
+    publish: "Publier l'annonce",
+    saveDraft: "Enregistrer le brouillon",
+    saveChanges: "Enregistrer les modifications",
+    photosRequired: "Ajoutez au moins une photo pour continuer.",
   },
   pages: {
     messagesTitle: "Messages",

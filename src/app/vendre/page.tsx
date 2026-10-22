@@ -32,7 +32,12 @@ export default async function SellPage() {
     <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
         title={t.pages.sellTitle}
-        description="Gratuit et sans commission. Des photos nettes et une description honnête font vendre plus vite."
+        description={
+          <span className="hidden sm:inline">
+            Gratuit et sans commission. Des photos nettes et une description honnête font vendre
+            plus vite.
+          </span>
+        }
       />
       <ListingEditor userId={user.id} categories={categories} defaultCity={profile?.city} />
     </div>

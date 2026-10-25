@@ -150,6 +150,37 @@
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
+  /*
+   * Typographie discrète : tailles un cran sous les valeurs par défaut de
+   * Tailwind et graisses allégées (police variable : toutes les graisses
+   * intermédiaires sont disponibles). Les champs de saisie gardent 16 px sur
+   * mobile (text-control), sans quoi iOS agrandit la page à la saisie.
+   */
+  --text-sm: 0.84375rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.4rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.6rem;
+  --text-xl: 1.1875rem;
+  --text-xl--line-height: 1.65rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.8rem;
+  --text-3xl: 1.625rem;
+  --text-3xl--line-height: 2rem;
+  --text-4xl: 2rem;
+  --text-4xl--line-height: 2.35rem;
+  --text-5xl: 2.5rem;
+  --text-5xl--line-height: 1.1;
+  --text-6xl: 3rem;
+  --text-6xl--line-height: 1.05;
+  --text-control: 1rem;
+  --text-control--line-height: 1.5rem;
+
+  --font-weight-semibold: 560;
+  --font-weight-bold: 640;
+  --font-weight-extrabold: 720;
+
   --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: calc(var(--radius) - 0.125rem);
   --radius-lg: var(--radius);
@@ -245,6 +276,18 @@ body:has([data-standalone]) :is([data-site-header], [data-bottom-nav], [data-sid
 body:has([data-standalone]) main,
 body:has([data-standalone]) [data-shell] {
   padding: 0;
+}
+
+/*
+ * Administration : sa barre latérale est la seule navigation (ni en-tête, ni
+ * barre latérale, ni navigation du bas du site).
+ */
+body:has([data-admin])
+  :is([data-site-header], [data-site-banner], [data-bottom-nav], [data-sidebar]) {
+  display: none;
+}
+body:has([data-admin]) main {
+  padding-bottom: 0;
 }
 
 /* Panneau de marque des écrans de connexion et d'inscription. */

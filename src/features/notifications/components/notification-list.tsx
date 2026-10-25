@@ -1,4 +1,13 @@
-import { Ban, Heart, LifeBuoy, MessageCircle, Package, ShieldAlert, UserPlus } from "lucide-react";
+import {
+  Ban,
+  Heart,
+  LifeBuoy,
+  Megaphone,
+  MessageCircle,
+  Package,
+  ShieldAlert,
+  UserPlus,
+} from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getT } from "@/i18n/server";
@@ -15,6 +24,7 @@ const icons = {
   listing_removed: Ban,
   moderation_warning: ShieldAlert,
   support_reply: LifeBuoy,
+  admin_message: Megaphone,
 } satisfies Record<NotificationType, unknown>;
 
 export async function NotificationList({ items }: { items: NotificationItem[] }) {
@@ -39,7 +49,7 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                     <span className="flex size-10 items-center justify-center rounded-full bg-danger-soft text-danger">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
-                  ) : item.type === "support_reply" ? (
+                  ) : item.type === "support_reply" || item.type === "admin_message" ? (
                     <span className="flex size-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
@@ -55,11 +65,16 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {item.type === "moderation_warning" ? (
                     <span className="text-sm font-semibold text-danger">{item.title}</span>
+                  ) : item.type === "admin_message" ? (
+                    <span className="text-sm font-semibold text-primary">{item.title}</span>
                   ) : null}
                   <span
                     className={cn(
                       "text-sm break-words",
-                      !item.isRead && item.type !== "moderation_warning" && "font-semibold",
+                      !item.isRead &&
+                        item.type !== "moderation_warning" &&
+                        item.type !== "admin_message" &&
+                        "font-semibold",
                     )}
                   >
                     {item.body}

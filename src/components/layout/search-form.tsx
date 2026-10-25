@@ -32,7 +32,7 @@ export function SearchForm({ id, defaultValue, className }: SearchFormProps) {
         maxLength={100}
         autoComplete="off"
         enterKeyHint="search"
-        className="h-11 w-full rounded-full border border-transparent bg-muted pr-4 pl-10 text-base text-foreground transition-colors placeholder:text-muted-foreground hover:border-border focus-visible:border-ring focus-visible:bg-card focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
+        className="h-11 w-full rounded-full border border-transparent bg-muted pr-4 pl-10 text-control text-foreground transition-colors placeholder:text-muted-foreground hover:border-border focus-visible:border-ring focus-visible:bg-card focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
       />
     </Form>
   );

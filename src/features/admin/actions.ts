@@ -417,3 +417,117 @@ export async function answerSupportRequestAction(
     message: parsed.data.response ? tx.replySent : tx.requestClosed,
   };
 }
+
+// -----------------------------------------------------------------------------
+// Messages de l'équipe (reçus en notification)
+// -----------------------------------------------------------------------------
+const teamMessageSchema = z.string().trim().min(3).max(500);
+
+/** Message à un membre depuis sa fiche (champ « reason » de la fenêtre de modération). */
+export async function messageUserAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const tx = await texts();
+  const userId = z.uuid().safeParse(formText(formData, "userId"));
+  const message = teamMessageSchema.safeParse(formText(formData, "reason"));
+  if (!userId.success) return { status: "error", message: tx.invalidRequest };
+  if (!message.success) {
+    return {
+      status: "error",
+      fieldErrors: { reason: tx.messageLength },
+      values: { reason: formText(formData, "reason") },
+    };
+  }
+  const supabase = await staffContext();
+  if (!supabase) return { status: "error", message: tx.forbidden };
+
+  const { error } = await supabase.rpc("admin_message_user", {
+    p_user_id: userId.data,
+    p_message: message.data,
+  });
+  if (error) {
+    return {
+      status: "error",
+      message: adminErrorMessage(tx, error),
+      values: { reason: message.data },
+    };
+  }
+  schedulePushDispatch({ type: "admin_message" });
+  revalidateUser(userId.data);
+  return { status: "success", message: tx.messageSent };
+}
+
+export type TeamMessageField = "username" | "message";
+
+const teamMessageFormSchema = z.object({
+  recipients: z.enum(["one", "all"]),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .transform((value) => value.replace(/^@/, ""))
+    .pipe(z.string().max(30)),
+  message: teamMessageSchema,
+});
+
+/**
+ * Message de l'équipe à un membre (nom d'utilisateur) ou à tous les membres
+ * (administrateurs uniquement, vérifié par la base).
+ */
+export async function sendTeamMessageAction(
+  _previous: FormState<TeamMessageField>,
+  formData: FormData,
+): Promise<FormState<TeamMessageField>> {
+  const tx = await texts();
+  const values = {
+    username: formText(formData, "username"),
+    message: formText(formData, "message"),
+  };
+  const parsed = teamMessageFormSchema.safeParse({
+    recipients: formText(formData, "recipients") || "one",
+    ...values,
+  });
+  if (!parsed.success) {
+    const field = parsed.error.issues[0]?.path[0];
+    if (field === "message") {
+      return { status: "error", fieldErrors: { message: tx.messageLength }, values };
+    }
+    if (field === "username") {
+      return { status: "error", fieldErrors: { username: tx.usernameNotFound }, values };
+    }
+    return { status: "error", message: tx.invalidRequest, values };
+  }
+  const supabase = await staffContext();
+  if (!supabase) return { status: "error", message: tx.forbidden, values };
+
+  if (parsed.data.recipients === "all") {
+    const { data: count, error } = await supabase.rpc("admin_broadcast_message", {
+      p_message: parsed.data.message,
+    });
+    if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
+    if (count) schedulePushDispatch({ type: "admin_message" });
+    revalidateAdmin();
+    return { status: "success", message: tx.broadcastSent(count ?? 0) };
+  }
+
+  if (!parsed.data.username) {
+    return { status: "error", fieldErrors: { username: tx.usernameRequired }, values };
+  }
+  const { data: recipient } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", parsed.data.username)
+    .maybeSingle();
+  if (!recipient) {
+    return { status: "error", fieldErrors: { username: tx.usernameNotFound }, values };
+  }
+  const { error } = await supabase.rpc("admin_message_user", {
+    p_user_id: recipient.id,
+    p_message: parsed.data.message,
+  });
+  if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
+  schedulePushDispatch({ type: "admin_message" });
+  revalidateUser(recipient.id);
+  return { status: "success", message: tx.messageSent };
+}

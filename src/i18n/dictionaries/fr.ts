@@ -292,6 +292,7 @@ export const fr = {
       listing_removed: "Annonce retirée",
       moderation_warning: "Avertissement de la modération",
       support_reply: "Réponse de l'assistance",
+      admin_message: "Message de l'équipe",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -309,6 +310,7 @@ export const fr = {
         subject
           ? `L'équipe a répondu à votre demande ${quote(subject)}.`
           : "L'équipe a répondu à votre demande.",
+      admin_message: (note: string | null) => note ?? "",
     },
     unread: "Non lue",
   },
@@ -354,6 +356,7 @@ export const fr = {
       seller_verified: "Badge vendeur vérifié attribué",
       seller_unverified: "Badge vendeur vérifié retiré",
       support_answered: "Demande d'assistance traitée",
+      user_messaged: "Message envoyé",
     },
     roles: { admin: "Administrateur", moderator: "Modérateur" },
     entities: {
@@ -363,6 +366,7 @@ export const fr = {
       banned_word: "Mot interdit",
       setting: "Réglage",
       user_search: "Recherche de compte",
+      broadcast: "Message à tous les membres",
     } as Record<string, string>,
     settings: {
       new_account_days: "Durée d'un compte récent (jours)",
@@ -674,7 +678,8 @@ export const fr = {
     followedListing: "Nouvelles annonces des profils suivis",
     followedListingHint: "Quand un vendeur que vous suivez publie une annonce.",
     legend: "Me prévenir pour",
-    alwaysRemoval: "Les retraits d'annonce par la modération vous sont toujours signalés.",
+    alwaysRemoval:
+      "Les messages de l'équipe et les retraits d'annonce par la modération vous sont toujours signalés.",
     save: "Enregistrer",
   },
   messaging: {
@@ -777,6 +782,8 @@ export const fr = {
       space: "Espace administration",
       closeMenu: "Fermer le menu",
       sections: "Rubriques de l'espace administration",
+      notify: "Messages aux membres",
+      backToSite: (site: string) => `Retour sur ${site}`,
     },
     close: "Fermer",
     cancel: "Annuler",
@@ -861,6 +868,8 @@ export const fr = {
       active: "Activé",
       saveChanges: "Enregistrer les modifications",
       publish: "Publier le message",
+      notifyMembers: "Envoyer aussi ce message en notification à tous les membres",
+      notifyMembersHint: "Une notification par membre, en plus du bandeau.",
     },
     antiSpam: {
       days: "Un compte est « récent » pendant (jours)",
@@ -888,6 +897,18 @@ export const fr = {
         "Clés générées dans ce navigateur uniquement : elles ne sont ni envoyées ni enregistrées. Copiez-les maintenant dans Vercel. Ne communiquez jamais la clé privée à qui que ce soit.",
       publicHint: "Clé publique : peut être exposée au navigateur.",
       privateHint: "Clé privée : à cocher « Sensitive » dans Vercel. Ne la partagez avec personne.",
+    },
+    teamMessage: {
+      recipients: "Destinataires",
+      oneMember: "Un membre",
+      allMembers: "Tous les membres",
+      username: "Nom d'utilisateur du destinataire",
+      usernamePlaceholder: "@pseudo",
+      message: "Message",
+      messageHint:
+        "Reçu dans les notifications (et en push si elles sont activées). 500 caractères au maximum.",
+      send: "Envoyer le message",
+      sendAll: "Envoyer à tous les membres",
     },
   },
 };

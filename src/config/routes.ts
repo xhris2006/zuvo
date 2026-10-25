@@ -39,6 +39,7 @@ export const routes = {
   adminAnnouncements: "/admin/message",
   adminAntiSpam: "/admin/anti-spam",
   adminSupport: "/admin/assistance",
+  adminNotify: "/admin/notifications",
   support: "/assistance",
 } as const satisfies Record<string, Route>;
 

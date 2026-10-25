@@ -327,6 +327,11 @@ export const enServer: ServerOnlyDictionary = {
       cannot_change_own_role: "You cannot change your own role.",
       user_suspended: "This account is suspended: reactivate it before giving it a role.",
       role_unchanged: "This role is already in that state.",
+      admin_message_invalid: "Write a message of 3 to 500 characters.",
+      cannot_message_self: "You cannot write to yourself.",
+      user_not_found: "Account not found.",
+      broadcast_too_soon:
+        "A message to all members has just been sent. Wait a minute before sending another one.",
     } as Record<string, string>,
     notFound: "Item not found or already handled.",
     reasonMin: "Enter a reason of at least 3 characters.",
@@ -377,6 +382,18 @@ export const enServer: ServerOnlyDictionary = {
     bannedWordAdded: (word: string) => `“${word}” added to the list.`,
     badgeGranted: "“Verified seller” badge granted.",
     badgeRevoked: "Badge removed.",
+    messageLength: "Write a message of 3 to 500 characters.",
+    usernameRequired: "Enter the recipient's username.",
+    usernameNotFound: "No account with this username.",
+    messageSent: "Message sent: it appears in the member's notifications.",
+    broadcastSent: (count: number) =>
+      count === 0
+        ? "No members to notify for now."
+        : `Message sent as a notification to ${count} member${count > 1 ? "s" : ""}.`,
+    announcementBroadcast: (count: number) =>
+      `Message published and sent as a notification to ${count} member${count > 1 ? "s" : ""}.`,
+    announcementBroadcastFailed: (error: string) =>
+      `Message published, but the notification to members was not sent: ${error}`,
   },
   adminPages: {
     titleTemplate: "%s · Administration",
@@ -640,6 +657,10 @@ export const enServer: ServerOnlyDictionary = {
       noReports: "No reports.",
       history: "Moderation history",
       noHistory: "No actions.",
+      sendMessage: "Send a message",
+      sendMessageTitle: (name: string) => `Write to ${name}`,
+      sendMessageDescription:
+        "The message arrives in their notifications (and as a push notification if enabled). Sending is recorded in the log.",
     },
     log: {
       title: "Moderation log",
@@ -761,6 +782,16 @@ export const enServer: ServerOnlyDictionary = {
       trends: ["day", "sign_ups", "listings_published", "reports"],
       cities: ["city", "identifier", "listings_on_sale", "members"],
       categories: ["category", "identifier", "listings_on_sale"],
+    },
+    notify: {
+      description:
+        "Write to one member or to all members: the message arrives in their notifications, and as a push notification if they enabled it.",
+      moderatorNote: "Only administrators can write to all members.",
+      members: (count: string) =>
+        `${count} members will receive a message sent to all (excluding suspended accounts).`,
+      bannerTip: "For a banner shown at the top of the site, use the site-wide message.",
+      historyUsers: "Messages sent to a member",
+      historyAll: "Messages sent to all",
     },
   },
 };

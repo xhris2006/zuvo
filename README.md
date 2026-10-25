@@ -67,9 +67,10 @@ l'authentification n'est pas encore disponible.
 - **Confiance** : signalement d'annonces, d'utilisateurs et de messages,
   blocage, badge « vendeur vérifié » attribué par l'équipe, page Assistance
   (contact et contestation d'un retrait), espace d'administration `/admin`
-  (signalements, annonces, suspensions temporaires, équipe et modérateurs,
-  catégories et villes, message global, tendances et export CSV, anti-spam,
-  assistance, journal).
+  avec sa propre barre latérale (signalements, annonces, suspensions
+  temporaires, messages de l'équipe en notification à un membre ou à tous,
+  équipe et modérateurs, catégories et villes, message global, tendances et
+  export CSV, anti-spam, assistance, journal).
 - **PWA** : installable, page hors connexion, icônes.
 - **SEO** : métadonnées, Open Graph, sitemap des annonces, données structurées.
 
@@ -188,9 +189,15 @@ e2e/                   Tests Playwright
   texte blanc sur primaire 5,6:1, bordures de champs 3,1:1). Le mode sombre
   (`:root[data-theme="dark"]`, variante Tailwind `dark:`) a ses propres jetons,
   vérifiés eux aussi (texte 15:1, texte secondaire 7:1, primaire 6,8:1).
+- Typographie discrète : tailles de texte un cran sous celles de Tailwind et
+  graisses allégées, réglées par les jetons `--text-*` et `--font-weight-*` de
+  `globals.css` ; les champs de saisie gardent 16 px sur mobile (`text-control`)
+  pour éviter le zoom automatique d'iOS.
 - Mobile d'abord : navigation basse à 5 entrées (Accueil, Explorer, Vendre,
   Messages, Profil), logo centré et notifications dans l'en-tête ; sur
-  ordinateur, barre latérale avec les mêmes rubriques.
+  ordinateur, barre latérale avec les mêmes rubriques. L'administration n'a
+  que sa barre latérale (fixe sur ordinateur, ouverte par le bouton menu sur
+  mobile), sans navigation du bas.
 - Les animations sont désactivées si l'utilisateur préfère réduire les mouvements.
 
 ## Sécurité

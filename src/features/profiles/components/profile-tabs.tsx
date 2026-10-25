@@ -49,14 +49,14 @@ export async function ProfileTabs({ tabs, labelledBy, trailing, className }: Pro
             {tab.current ? (
               <h2
                 id={labelledBy}
-                className="border-b-2 border-foreground pb-2.5 text-[0.9375rem] font-bold tracking-tight whitespace-nowrap sm:text-lg"
+                className="border-b-2 border-foreground pb-2.5 text-sm font-semibold tracking-tight whitespace-nowrap sm:text-base"
               >
                 {content}
               </h2>
             ) : (
               <Link
                 href={tab.href}
-                className="block border-b-2 border-transparent pb-2.5 text-[0.9375rem] font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-border hover:text-foreground sm:text-lg"
+                className="block border-b-2 border-transparent pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-border hover:text-foreground sm:text-base"
               >
                 {content}
               </Link>

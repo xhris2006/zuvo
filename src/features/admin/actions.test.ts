@@ -20,12 +20,15 @@ vi.mock("./queries", () => ({
 }));
 
 const {
+  messageUserAction,
   removeListingAction,
   restoreListingAction,
+  sendTeamMessageAction,
   setUserSuspensionAction,
   updateReportStatusAction,
   viewReportedMessageAction,
 } = await import("./actions");
+const { queryBuilder } = await import("@/test/supabase-mock");
 
 beforeEach(() => {
   supabase = createSupabaseMock();
@@ -123,5 +126,88 @@ describe("actions d'administration", () => {
         senderUsername: "x",
       },
     });
+  });
+});
+
+describe("messages de l'équipe", () => {
+  it("écrit à un membre depuis sa fiche", async () => {
+    supabase!.rpc.mockResolvedValueOnce({ data: null, error: null });
+    const state = await messageUserAction(
+      { status: "idle" },
+      formData({ userId: USER_ID, reason: "  Merci d'ajouter des photos.  " }),
+    );
+    expect(state).toEqual({
+      status: "success",
+      message: "Message envoyé : il apparaît dans les notifications du membre.",
+    });
+    expect(supabase!.rpc).toHaveBeenCalledWith("admin_message_user", {
+      p_user_id: USER_ID,
+      p_message: "Merci d'ajouter des photos.",
+    });
+  });
+
+  it("refuse un message trop court sans appeler la base", async () => {
+    const state = await messageUserAction(
+      { status: "idle" },
+      formData({ userId: USER_ID, reason: "ok" }),
+    );
+    expect(state.fieldErrors?.reason).toBe("Écrivez un message de 3 à 500 caractères.");
+    expect(supabase!.rpc).not.toHaveBeenCalled();
+  });
+
+  it("retrouve le destinataire par son nom d'utilisateur", async () => {
+    supabase!.from.mockReturnValueOnce(queryBuilder({ data: { id: USER_ID } }));
+    supabase!.rpc.mockResolvedValueOnce({ data: null, error: null });
+    const state = await sendTeamMessageAction(
+      { status: "idle" },
+      formData({ recipients: "one", username: "@Awa_Ndiaye", message: "Bonjour Awa" }),
+    );
+    expect(state.status).toBe("success");
+    expect(supabase!.rpc).toHaveBeenCalledWith("admin_message_user", {
+      p_user_id: USER_ID,
+      p_message: "Bonjour Awa",
+    });
+
+    supabase!.from.mockReturnValueOnce(queryBuilder({ data: null }));
+    const unknown = await sendTeamMessageAction(
+      { status: "idle" },
+      formData({ recipients: "one", username: "inconnu", message: "Bonjour" }),
+    );
+    expect(unknown.fieldErrors?.username).toBe("Aucun compte avec ce nom d'utilisateur.");
+  });
+
+  it("écrit à tous les membres et traduit le délai entre deux envois", async () => {
+    supabase!.rpc.mockResolvedValueOnce({ data: 42, error: null });
+    const sent = await sendTeamMessageAction(
+      { status: "idle" },
+      formData({ recipients: "all", username: "", message: "Maintenance ce soir" }),
+    );
+    expect(sent).toEqual({
+      status: "success",
+      message: "Message envoyé en notification à 42 membres.",
+    });
+    expect(supabase!.rpc).toHaveBeenCalledWith("admin_broadcast_message", {
+      p_message: "Maintenance ce soir",
+    });
+
+    supabase!.rpc.mockResolvedValueOnce({
+      data: null,
+      error: { code: "P0001", message: "broadcast_too_soon" },
+    });
+    const tooSoon = await sendTeamMessageAction(
+      { status: "idle" },
+      formData({ recipients: "all", username: "", message: "Maintenance ce soir" }),
+    );
+    expect(tooSoon.message).toMatch(/Patientez une minute/);
+  });
+
+  it("est refusé hors de l'équipe", async () => {
+    admin = false;
+    const state = await sendTeamMessageAction(
+      { status: "idle" },
+      formData({ recipients: "all", username: "", message: "Message pirate" }),
+    );
+    expect(state.message).toBe("Action réservée à l'administration.");
+    expect(supabase!.rpc).not.toHaveBeenCalled();
   });
 });

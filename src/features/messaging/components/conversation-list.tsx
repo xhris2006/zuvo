@@ -58,7 +58,7 @@ export async function ConversationList({
                 <span className="flex items-baseline gap-2">
                   <span
                     className={cn(
-                      "min-w-0 flex-1 truncate text-[0.95rem]",
+                      "min-w-0 flex-1 truncate text-sm",
                       unread ? "font-bold" : "font-semibold",
                     )}
                   >

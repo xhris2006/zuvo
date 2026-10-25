@@ -32,7 +32,7 @@ export async function ShopSearchForm({ defaultValue, className }: ShopSearchForm
         maxLength={SHOP_QUERY_MAX}
         autoComplete="off"
         enterKeyHint="search"
-        className="h-11 w-full rounded-full border border-border bg-card pr-4 pl-10 text-base text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
+        className="h-11 w-full rounded-full border border-border bg-card pr-4 pl-10 text-control text-foreground transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
       />
     </Form>
   );

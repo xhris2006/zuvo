@@ -7,6 +7,7 @@ import { z } from "zod";
 import { routes } from "@/config/routes";
 import { listUserFiles, removeUserFiles } from "@/features/account/storage-cleanup";
 import { getCurrentUser } from "@/features/auth/session";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
 import { vm } from "@/lib/forms/validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -430,6 +431,22 @@ export async function saveAnnouncementAction(
     : await context.supabase.from("site_announcements").insert(row);
   if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
   revalidatePath("/", "layout");
+
+  // Facultatif : le même texte en notification à tous les membres.
+  if (formData.get("notifyMembers") === "on") {
+    const { data: count, error: broadcastError } = await context.supabase.rpc(
+      "admin_broadcast_message",
+      { p_message: parsed.data.message },
+    );
+    if (broadcastError) {
+      return {
+        status: "error",
+        message: tx.announcementBroadcastFailed(adminErrorMessage(tx, broadcastError)),
+      };
+    }
+    if (count) schedulePushDispatch({ type: "admin_message" });
+    return { status: "success", message: tx.announcementBroadcast(count ?? 0) };
+  }
   return {
     status: "success",
     message: id ? tx.announcementUpdated : tx.announcementPublished,

@@ -532,3 +532,16 @@ export async function getOpenSupportCount(): Promise<number> {
     .eq("status", "open");
   return count ?? 0;
 }
+
+/**
+ * Destinataires d'un message à tous les membres : comptes non suspendus, hors
+ * expéditeur (même règle que la fonction SQL admin_broadcast_message).
+ */
+export async function getBroadcastAudienceCount(): Promise<number> {
+  const supabase = await client();
+  const { count } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .or(`suspended_at.is.null,suspended_until.lte.${new Date().toISOString()}`);
+  return Math.max(0, (count ?? 0) - 1);
+}

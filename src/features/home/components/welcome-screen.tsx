@@ -147,11 +147,11 @@ export async function WelcomeScreen({
           {notice}
           <h1
             id="welcome-title"
-            className="max-w-xl text-[1.875rem] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+            className="max-w-xl text-[1.625rem] leading-[1.15] font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl"
           >
             {t.home.heroTitle}
           </h1>
-          <p className="max-w-md text-[0.9375rem] text-pretty text-muted-foreground sm:text-lg">
+          <p className="max-w-md text-sm text-pretty text-muted-foreground sm:text-base">
             {t.home.heroSubtitle}
           </p>
           <div className="flex w-full max-w-sm flex-col gap-3 pt-1 lg:max-w-none lg:flex-row">

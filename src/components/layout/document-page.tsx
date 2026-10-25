@@ -23,8 +23,8 @@ export async function DocumentPage({
   return (
     <article className="container-page max-w-3xl pt-6 sm:pt-12">
       <header className="flex flex-col gap-3 border-b border-border pb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-4xl">{title}</h1>
-        {intro ? <p className="text-base text-muted-foreground sm:text-lg">{intro}</p> : null}
+        <h1 className="text-xl font-bold tracking-tight text-balance sm:text-3xl">{title}</h1>
+        {intro ? <p className="text-sm text-muted-foreground sm:text-base">{intro}</p> : null}
         {updatedAt ? (
           <p className="text-xs text-muted-foreground">
             {t.legal.lastUpdated} : <time dateTime={updatedAt}>{t.format.date(updatedAt)}</time>

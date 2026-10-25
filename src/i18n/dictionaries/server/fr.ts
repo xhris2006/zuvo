@@ -340,6 +340,11 @@ export const frServer = {
       cannot_change_own_role: "Vous ne pouvez pas modifier votre propre rôle.",
       user_suspended: "Ce compte est suspendu : réactivez-le avant de lui attribuer un rôle.",
       role_unchanged: "Ce rôle est déjà dans cet état.",
+      admin_message_invalid: "Écrivez un message de 3 à 500 caractères.",
+      cannot_message_self: "Vous ne pouvez pas vous écrire à vous-même.",
+      user_not_found: "Compte introuvable.",
+      broadcast_too_soon:
+        "Un message à tous les membres vient d'être envoyé. Patientez une minute avant d'en envoyer un autre.",
     } as Record<string, string>,
     notFound: "Élément introuvable ou déjà traité.",
     reasonMin: "Indiquez un motif d'au moins 3 caractères.",
@@ -389,6 +394,18 @@ export const frServer = {
     bannedWordAdded: (word: string) => `« ${word} » ajouté à la liste.`,
     badgeGranted: "Badge « vendeur vérifié » attribué.",
     badgeRevoked: "Badge retiré.",
+    messageLength: "Écrivez un message de 3 à 500 caractères.",
+    usernameRequired: "Indiquez le nom d'utilisateur du destinataire.",
+    usernameNotFound: "Aucun compte avec ce nom d'utilisateur.",
+    messageSent: "Message envoyé : il apparaît dans les notifications du membre.",
+    broadcastSent: (count: number) =>
+      count === 0
+        ? "Aucun membre à prévenir pour le moment."
+        : `Message envoyé en notification à ${count} membre${count > 1 ? "s" : ""}.`,
+    announcementBroadcast: (count: number) =>
+      `Message publié et envoyé en notification à ${count} membre${count > 1 ? "s" : ""}.`,
+    announcementBroadcastFailed: (error: string) =>
+      `Message publié, mais la notification aux membres n'a pas été envoyée : ${error}`,
   },
   adminPages: {
     titleTemplate: "%s · Administration",
@@ -655,6 +672,10 @@ export const frServer = {
       noReports: "Aucun signalement.",
       history: "Historique de modération",
       noHistory: "Aucune action.",
+      sendMessage: "Envoyer un message",
+      sendMessageTitle: (name: string) => `Écrire à ${name}`,
+      sendMessageDescription:
+        "Le message arrive dans ses notifications (et en notification push si elle est activée). L'envoi est inscrit au journal.",
     },
     log: {
       title: "Journal de modération",
@@ -779,6 +800,16 @@ export const frServer = {
       trends: ["jour", "inscriptions", "annonces_publiees", "signalements"],
       cities: ["ville", "identifiant", "annonces_en_vente", "membres"],
       categories: ["categorie", "identifiant", "annonces_en_vente"],
+    },
+    notify: {
+      description:
+        "Écrivez à un membre ou à tous les membres : le message arrive dans leurs notifications, et en notification push s'ils l'ont activée.",
+      moderatorNote: "Seuls les administrateurs peuvent écrire à tous les membres.",
+      members: (count: string) =>
+        `${count} membres recevront un message envoyé à tous (hors comptes suspendus).`,
+      bannerTip: "Pour un bandeau affiché en haut du site, utilisez le message global.",
+      historyUsers: "Messages envoyés à un membre",
+      historyAll: "Messages envoyés à tous",
     },
   },
 };

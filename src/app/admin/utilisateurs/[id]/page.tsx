@@ -5,6 +5,7 @@ import {
   Mail,
   PackageX,
   RotateCcw,
+  Send,
   ShieldAlert,
   UserX,
   UserRoundX,
@@ -21,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { adminUserHref, publicProfileHref, routes } from "@/config/routes";
 import {
+  messageUserAction,
   removeListingAction,
   removeUserListingsAction,
   resetProfileAction,
@@ -196,80 +198,101 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
               : t.adminPages.user.actionsDescription}
           </CardDescription>
         </CardHeader>
-        {protectedAccount ? null : (
+        {isSelf ? null : (
           <CardContent className="flex flex-wrap gap-2">
             <ModerationDialog
               trigger={
                 <Button variant="outline" size="sm">
-                  <ShieldAlert aria-hidden="true" />
-                  {t.adminPages.user.warn}
+                  <Send aria-hidden="true" />
+                  {t.adminPages.user.sendMessage}
                 </Button>
               }
-              title={t.adminPages.user.warnTitle(profile.displayName)}
-              description={t.adminPages.user.warnDescription}
-              confirmLabel={t.adminPages.user.warnConfirm}
+              title={t.adminPages.user.sendMessageTitle(profile.displayName)}
+              description={t.adminPages.user.sendMessageDescription}
+              confirmLabel={t.adminUi.teamMessage.send}
               confirmVariant="primary"
-              action={warnUserAction}
+              action={messageUserAction}
               fields={{ userId: profile.id }}
-              reasonLabel={t.adminPages.user.warnLabel}
+              reasonLabel={t.adminUi.teamMessage.message}
             />
-            <ModerationDialog
-              trigger={
-                <Button variant="outline" size="sm">
-                  <UserRoundX aria-hidden="true" />
-                  {t.adminPages.user.resetProfile}
-                </Button>
-              }
-              title={t.adminPages.user.resetProfile}
-              description={t.adminPages.user.resetDescription}
-              confirmLabel={t.adminPages.user.resetConfirm}
-              action={resetProfileAction}
-              fields={{ userId: profile.id }}
-              reasonLabel={t.adminUi.reasonForLog}
-            >
-              <fieldset className="flex flex-col gap-3">
-                <legend className="mb-2 text-sm font-medium">{t.adminPages.user.resetItems}</legend>
-                <ResetChoice name="avatar" label={t.adminPages.user.resetAvatar} />
-                <ResetChoice name="bio" label={t.adminPages.user.resetBio} />
-                <ResetChoice name="displayName" label={t.adminPages.user.resetDisplayName}>
-                  {t.adminPages.user.resetDisplayNameHint(profile.username)}
-                </ResetChoice>
-              </fieldset>
-            </ModerationDialog>
-            {onlineListings > 0 ? (
-              <ModerationDialog
-                trigger={
-                  <Button variant="outline" size="sm" className="text-danger">
-                    <PackageX aria-hidden="true" />
-                    {t.adminPages.user.removeAll(onlineListings)}
-                  </Button>
-                }
-                title={t.adminPages.user.removeAllTitle}
-                description={t.adminPages.user.removeAllDescription}
-                confirmLabel={t.adminPages.user.removeAllConfirm}
-                action={removeUserListingsAction}
-                fields={{ userId: profile.id }}
-              />
-            ) : null}
-            {suspended ? (
-              <UnsuspendButton userId={profile.id} />
-            ) : (
-              <ModerationDialog
-                trigger={
-                  <Button variant="destructive" size="sm">
-                    <UserX aria-hidden="true" />
-                    {t.adminPages.suspend}
-                  </Button>
-                }
-                title={t.adminPages.suspendTitle(profile.displayName)}
-                description={t.adminPages.suspendDescription}
-                confirmLabel={t.adminPages.suspend}
-                action={setUserSuspensionAction}
-                fields={{ userId: profile.id, suspended: "true" }}
-                reasonLabel={t.adminUi.reasonForLog}
-              >
-                <SuspensionFields />
-              </ModerationDialog>
+            {protectedAccount ? null : (
+              <>
+                <ModerationDialog
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <ShieldAlert aria-hidden="true" />
+                      {t.adminPages.user.warn}
+                    </Button>
+                  }
+                  title={t.adminPages.user.warnTitle(profile.displayName)}
+                  description={t.adminPages.user.warnDescription}
+                  confirmLabel={t.adminPages.user.warnConfirm}
+                  confirmVariant="primary"
+                  action={warnUserAction}
+                  fields={{ userId: profile.id }}
+                  reasonLabel={t.adminPages.user.warnLabel}
+                />
+                <ModerationDialog
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <UserRoundX aria-hidden="true" />
+                      {t.adminPages.user.resetProfile}
+                    </Button>
+                  }
+                  title={t.adminPages.user.resetProfile}
+                  description={t.adminPages.user.resetDescription}
+                  confirmLabel={t.adminPages.user.resetConfirm}
+                  action={resetProfileAction}
+                  fields={{ userId: profile.id }}
+                  reasonLabel={t.adminUi.reasonForLog}
+                >
+                  <fieldset className="flex flex-col gap-3">
+                    <legend className="mb-2 text-sm font-medium">
+                      {t.adminPages.user.resetItems}
+                    </legend>
+                    <ResetChoice name="avatar" label={t.adminPages.user.resetAvatar} />
+                    <ResetChoice name="bio" label={t.adminPages.user.resetBio} />
+                    <ResetChoice name="displayName" label={t.adminPages.user.resetDisplayName}>
+                      {t.adminPages.user.resetDisplayNameHint(profile.username)}
+                    </ResetChoice>
+                  </fieldset>
+                </ModerationDialog>
+                {onlineListings > 0 ? (
+                  <ModerationDialog
+                    trigger={
+                      <Button variant="outline" size="sm" className="text-danger">
+                        <PackageX aria-hidden="true" />
+                        {t.adminPages.user.removeAll(onlineListings)}
+                      </Button>
+                    }
+                    title={t.adminPages.user.removeAllTitle}
+                    description={t.adminPages.user.removeAllDescription}
+                    confirmLabel={t.adminPages.user.removeAllConfirm}
+                    action={removeUserListingsAction}
+                    fields={{ userId: profile.id }}
+                  />
+                ) : null}
+                {suspended ? (
+                  <UnsuspendButton userId={profile.id} />
+                ) : (
+                  <ModerationDialog
+                    trigger={
+                      <Button variant="destructive" size="sm">
+                        <UserX aria-hidden="true" />
+                        {t.adminPages.suspend}
+                      </Button>
+                    }
+                    title={t.adminPages.suspendTitle(profile.displayName)}
+                    description={t.adminPages.suspendDescription}
+                    confirmLabel={t.adminPages.suspend}
+                    action={setUserSuspensionAction}
+                    fields={{ userId: profile.id, suspended: "true" }}
+                    reasonLabel={t.adminUi.reasonForLog}
+                  >
+                    <SuspensionFields />
+                  </ModerationDialog>
+                )}
+              </>
             )}
           </CardContent>
         )}

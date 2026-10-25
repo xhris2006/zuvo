@@ -175,7 +175,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
             <h1 className="text-xl leading-snug font-semibold tracking-tight text-balance sm:text-3xl sm:font-bold">
               {listing.title}
             </h1>
-            <p className="text-[1.75rem] leading-none font-bold tracking-tight sm:text-3xl">
+            <p className="text-2xl leading-none font-bold tracking-tight sm:text-3xl">
               {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -266,7 +266,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           <h2 id="description-title" className="mb-2 text-lg font-bold tracking-tight sm:text-xl">
             {t.listingPage.description}
           </h2>
-          <p className="text-[0.95rem] leading-7 whitespace-pre-line text-foreground/90">
+          <p className="text-sm leading-6 whitespace-pre-line text-foreground/90">
             {listing.description || t.listingPage.noDescription}
           </p>
         </section>

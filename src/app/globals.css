@@ -255,6 +255,41 @@ body:has([data-immersive]) [data-site-footer] {
   }
 }
 
+/*
+ * Mosaïque d'accueil : chaque colonne contient deux copies identiques et
+ * défile de la hauteur d'une copie (50 %), ce qui boucle sans à-coup.
+ * Durée réglée par colonne avec --marquee-duration.
+ */
+@keyframes marquee-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+@keyframes marquee-down {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@utility animate-marquee-up {
+  animation: marquee-up var(--marquee-duration, 50s) linear infinite;
+}
+@utility animate-marquee-down {
+  animation: marquee-down var(--marquee-duration, 50s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none !important;
+  }
+}
+
 /* Petit rebond du cœur quand une annonce est ajoutée aux favoris. */
 @keyframes heart-pop {
   0% {

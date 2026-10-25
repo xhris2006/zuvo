@@ -63,7 +63,6 @@ export const fr = {
     heroTitle: "Donnez une seconde vie à vos affaires",
     heroSubtitle:
       "Vendez gratuitement ce que vous n'utilisez plus et trouvez de bonnes affaires près de chez vous, partout au Cameroun.",
-    heroPrimary: "Vendre un article",
     heroSecondary: "Explorer les annonces",
     valueTitle: "Pourquoi vendre sur Zuvo ?",
     values: {

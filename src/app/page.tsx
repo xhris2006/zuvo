@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BadgePercent,
   HandCoins,
   MessagesSquare,
@@ -16,46 +15,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { CategoryList } from "@/features/categories/components/category-list";
-import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
+import { defaultCategories } from "@/features/categories/data";
 import { getCurrentUser } from "@/features/auth/session";
+import { GuestWelcome } from "@/features/home/components/guest-welcome";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
-
-const heroTiles = ["mode-femme", "telephones-tablettes", "chaussures", "maison"] as const;
-
-function HeroIllustration() {
-  const categories = heroTiles.map(
-    (slug) => defaultCategories.find((category) => category.slug === slug) ?? { slug, name: slug },
-  );
-  return (
-    <div aria-hidden="true" className="relative hidden pb-8 lg:block">
-      <div className="absolute -inset-6 rounded-[2rem] bg-brand-100/70" />
-      <div className="relative grid grid-cols-2 gap-4">
-        {categories.map((category, index) => {
-          const Icon = getCategoryIcon(category.slug);
-          return (
-            <div
-              key={category.slug}
-              className={
-                index % 2 === 1
-                  ? "translate-y-8 rounded-2xl border border-border bg-card p-6 shadow-raised"
-                  : "rounded-2xl border border-border bg-card p-6 shadow-raised"
-              }
-            >
-              <div className="mb-10 flex size-12 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
-                <Icon className="size-6" />
-              </div>
-              <p className="text-sm font-semibold">{category.name}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 /** Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage. */
 async function loadHomeListings(userId: string | null): Promise<{
@@ -71,40 +38,6 @@ async function loadHomeListings(userId: string | null): Promise<{
   } catch {
     return { recent: [], followed: [] };
   }
-}
-
-/** Présentation du site pour les visiteurs non connectés. */
-function GuestHero() {
-  const t = getDictionary();
-  return (
-    <section className="border-b border-border bg-gradient-to-b from-brand-50 to-background">
-      <div className="container-page grid items-center gap-10 py-7 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:py-20">
-        <div className="flex flex-col gap-3 sm:gap-5">
-          <h1 className="max-w-xl text-[1.75rem] leading-tight font-bold tracking-tight text-balance sm:text-5xl sm:leading-[1.1]">
-            {t.home.heroTitle}
-          </h1>
-          <p className="max-w-lg text-[0.9375rem] text-pretty text-muted-foreground sm:text-lg">
-            {t.home.heroSubtitle}
-          </p>
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <Button asChild size="lg">
-              <Link href={routes.sell}>
-                <Plus aria-hidden="true" />
-                {t.home.heroPrimary}
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="hidden sm:inline-flex">
-              <Link href={routes.explore}>
-                {t.home.heroSecondary}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <HeroIllustration />
-      </div>
-    </section>
-  );
 }
 
 /** Raccourci de mise en vente pour les membres connectés. */
@@ -186,7 +119,7 @@ export default async function HomePage(props: PageProps<"/">) {
           <SellCard />
         </>
       ) : (
-        <GuestHero />
+        <GuestWelcome listings={recent} />
       )}
 
       <section aria-labelledby="categories-title" className="container-page">

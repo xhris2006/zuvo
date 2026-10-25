@@ -6,6 +6,7 @@ import {
   Flag,
   FolderTree,
   LayoutDashboard,
+  LifeBuoy,
   type LucideIcon,
   Megaphone,
   Package,
@@ -27,6 +28,7 @@ const moderation: Item[] = [
   { href: routes.adminReports, label: "Signalements", icon: Flag },
   { href: routes.adminListings, label: "Annonces", icon: Package },
   { href: routes.adminUsers, label: "Utilisateurs", icon: Users },
+  { href: routes.adminSupport, label: "Assistance", icon: LifeBuoy },
   { href: routes.adminLog, label: "Journal", icon: ClipboardList },
 ];
 

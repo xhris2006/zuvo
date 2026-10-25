@@ -52,6 +52,11 @@ export function describeNotification(
       return { title, body: copy.bodies.listing_removed(listing ?? copy.unavailableListing) };
     case "moderation_warning":
       return { title, body: copy.bodies.moderation_warning(subject.note ?? null) };
+    case "support_reply":
+      return {
+        title,
+        body: copy.bodies.support_reply(subject.note ? shorten(subject.note) : null),
+      };
   }
 }
 
@@ -70,5 +75,7 @@ export function notificationHref(
       return subject.listingId ? listingHref(subject.listingId) : routes.notifications;
     case "moderation_warning":
       return routes.notifications;
+    case "support_reply":
+      return routes.support;
   }
 }

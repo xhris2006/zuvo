@@ -33,6 +33,8 @@ import { ModerationDialog } from "@/features/admin/components/moderation-dialog"
 import { RoleForm } from "@/features/admin/components/role-form";
 import { SuspensionFields } from "@/features/admin/components/suspension-fields";
 import { UnsuspendButton } from "@/features/admin/components/unsuspend-button";
+import { VerificationForm } from "@/features/admin/components/verification-form";
+import { VerifiedBadge } from "@/features/profiles/components/verified-badge";
 import { getAdminUserDetail, requireStaff } from "@/features/admin/queries";
 import { isSuspensionActive } from "@/features/admin/suspension";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
@@ -110,6 +112,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                   <Badge variant="primary">{t.admin.roles[profile.role]}</Badge>
                 ) : null}
                 {suspended ? <Badge variant="danger">Suspendu</Badge> : null}
+                {profile.verifiedAt ? <VerifiedBadge /> : null}
               </h1>
               <p className="text-sm text-muted-foreground">
                 @{profile.username}
@@ -300,6 +303,9 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
             {protectedAccount ? null : (
               <DeleteUserDialog userId={profile.id} username={profile.username} />
             )}
+          </CardContent>
+          <CardContent className="border-t border-border pt-4">
+            <VerificationForm userId={profile.id} verified={Boolean(profile.verifiedAt)} />
           </CardContent>
         </Card>
       ) : null}

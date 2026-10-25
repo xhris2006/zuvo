@@ -86,6 +86,7 @@ describe("recherche de boutiques (API)", () => {
         avatarPath: null,
         city: null,
         activeListings: 2,
+        verified: false,
       },
     ]);
     expect(byUsername.total).toBe(1);

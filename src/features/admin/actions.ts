@@ -353,3 +353,60 @@ export async function removeUserListingsAction(
         : `${count} annonce${count > 1 ? "s" : ""} retirée${count > 1 ? "s" : ""}. Le vendeur a été prévenu.`,
   };
 }
+
+// -----------------------------------------------------------------------------
+// Assistance
+// -----------------------------------------------------------------------------
+export type SupportAnswerField = "response";
+
+const supportAnswerSchema = z.object({
+  requestId: z.uuid(),
+  response: z.string().trim().max(2000, "2 000 caractères au maximum."),
+  close: z.boolean(),
+});
+
+/** Répond à une demande d'assistance (notification à son auteur) et/ou la clôt. */
+export async function answerSupportRequestAction(
+  _previous: FormState<SupportAnswerField>,
+  formData: FormData,
+): Promise<FormState<SupportAnswerField>> {
+  const parsed = supportAnswerSchema.safeParse({
+    requestId: formText(formData, "requestId"),
+    response: formText(formData, "response"),
+    close: formData.get("close") === "on",
+  });
+  const values = { response: formText(formData, "response") };
+  if (!parsed.success) {
+    return {
+      status: "error",
+      fieldErrors: { response: parsed.error.issues[0]?.message ?? "Réponse invalide." },
+      values,
+    };
+  }
+  if (!parsed.data.close && parsed.data.response.length < 3) {
+    return {
+      status: "error",
+      fieldErrors: {
+        response: "Écrivez une réponse d'au moins 3 caractères, ou cochez « Clore ».",
+      },
+      values,
+    };
+  }
+  const supabase = await staffContext();
+  if (!supabase) return { status: "error", message: FORBIDDEN };
+
+  const { error } = await supabase.rpc("admin_answer_support_request", {
+    p_request_id: parsed.data.requestId,
+    p_response: parsed.data.response,
+    p_close: parsed.data.close,
+  });
+  if (error) return { status: "error", message: errorMessage(error), values };
+  if (parsed.data.response) schedulePushDispatch({ type: "support_reply" });
+  revalidateAdmin();
+  return {
+    status: "success",
+    message: parsed.data.response
+      ? "Réponse envoyée. L'utilisateur a été prévenu."
+      : "Demande close.",
+  };
+}

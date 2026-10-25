@@ -4,6 +4,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { publicProfileHref } from "@/config/routes";
 import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
+import { VerifiedBadge } from "@/features/profiles/components/verified-badge";
 import { formatMonthYear } from "@/lib/format";
 
 type SellerCardProps = {
@@ -13,6 +14,8 @@ type SellerCardProps = {
     avatar_path: string | null;
     city: string | null;
     created_at: string;
+    /** Badge « vendeur vérifié ». */
+    verified_at?: string | null;
   };
   /** Version réduite (sous le prix, sur mobile). */
   compact?: boolean;
@@ -28,7 +31,10 @@ export async function SellerCard({ seller, compact = false }: SellerCardProps) {
       >
         <Avatar name={seller.display_name} src={avatarUrl(seller.avatar_path)} />
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-semibold">{seller.display_name}</span>
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate text-sm font-semibold">{seller.display_name}</span>
+            {seller.verified_at ? <VerifiedBadge variant="icon" /> : null}
+          </span>
           <span className="truncate text-xs text-muted-foreground">
             @{seller.username}
             {city ? ` · ${city}` : ""}
@@ -45,7 +51,10 @@ export async function SellerCard({ seller, compact = false }: SellerCardProps) {
     >
       <Avatar name={seller.display_name} src={avatarUrl(seller.avatar_path)} size="lg" />
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-semibold">{seller.display_name}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate font-semibold">{seller.display_name}</span>
+          {seller.verified_at ? <VerifiedBadge variant="icon" /> : null}
+        </span>
         <span className="truncate text-sm text-muted-foreground">@{seller.username}</span>
         <span className="text-xs text-muted-foreground">
           {city ? `${city} · ` : ""}Membre depuis {formatMonthYear(seller.created_at)}

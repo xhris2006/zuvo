@@ -498,3 +498,39 @@ export async function removeBannedWordAction(formData: FormData): Promise<void> 
   await context.supabase.from("banned_words").delete().eq("id", id.data);
   revalidatePath(routes.adminAntiSpam);
 }
+
+// -----------------------------------------------------------------------------
+// Badge vendeur vérifié
+// -----------------------------------------------------------------------------
+const verificationSchema = z.object({
+  userId: z.uuid(),
+  verified: z.enum(["true", "false"]).transform((value) => value === "true"),
+  note: z.string().trim().max(500, "500 caractères au maximum."),
+});
+
+export async function setSellerVerificationAction(
+  _previous: FormState<"note">,
+  formData: FormData,
+): Promise<FormState<"note">> {
+  const parsed = verificationSchema.safeParse({
+    userId: formText(formData, "userId"),
+    verified: formText(formData, "verified"),
+    note: formText(formData, "note"),
+  });
+  if (!parsed.success) {
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error) };
+  }
+  const context = await adminContext();
+  if (!context) return { status: "error", message: FORBIDDEN };
+  const { error } = await context.supabase.rpc("admin_set_seller_verification", {
+    p_user_id: parsed.data.userId,
+    p_verified: parsed.data.verified,
+    p_note: parsed.data.note || undefined,
+  });
+  if (error) return { status: "error", message: adminErrorMessage(error) };
+  revalidatePath("/", "layout");
+  return {
+    status: "success",
+    message: parsed.data.verified ? "Badge « vendeur vérifié » attribué." : "Badge retiré.",
+  };
+}

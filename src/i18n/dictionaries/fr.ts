@@ -159,6 +159,8 @@ export const fr = {
     onSale: "En vente",
     myListings: "Mes annonces",
     favorites: "Favoris",
+    verified: "Vendeur vérifié",
+    verifiedHint: "Identité vérifiée par l'équipe Zuvo",
     menuLabel: "Menu du profil",
     settings: "Paramètres",
     editProfile: "Modifier le profil",
@@ -218,6 +220,7 @@ export const fr = {
       listing_favorited: "Annonce ajoutée aux favoris",
       listing_removed: "Annonce retirée",
       moderation_warning: "Avertissement de la modération",
+      support_reply: "Réponse de l'assistance",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -231,6 +234,10 @@ export const fr = {
         `Votre annonce ${quote(listing)} a été retirée par la modération.`,
       moderation_warning: (note: string | null) =>
         note ?? "Merci de respecter les règles de la communauté.",
+      support_reply: (subject: string | null) =>
+        subject
+          ? `L'équipe a répondu à votre demande ${quote(subject)}.`
+          : "L'équipe a répondu à votre demande.",
     },
   },
   reports: {
@@ -272,6 +279,9 @@ export const fr = {
       role_granted: "Rôle attribué",
       role_revoked: "Rôle retiré",
       user_deleted: "Compte supprimé",
+      seller_verified: "Badge vendeur vérifié attribué",
+      seller_unverified: "Badge vendeur vérifié retiré",
+      support_answered: "Demande d'assistance traitée",
     },
     roles: { admin: "Administrateur", moderator: "Modérateur" },
     entities: {

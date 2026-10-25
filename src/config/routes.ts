@@ -36,6 +36,8 @@ export const routes = {
   adminTeam: "/admin/equipe",
   adminAnnouncements: "/admin/message",
   adminAntiSpam: "/admin/anti-spam",
+  adminSupport: "/admin/assistance",
+  support: "/assistance",
 } as const satisfies Record<string, Route>;
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */
@@ -49,6 +51,7 @@ export const protectedRoutePrefixes = [
   routes.notifications,
   routes.resetPassword,
   routes.admin,
+  routes.support,
 ] as const;
 
 /** Pages d'authentification inutiles une fois connecté. */

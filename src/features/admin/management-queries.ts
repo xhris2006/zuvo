@@ -453,3 +453,82 @@ export async function getBannedWords(): Promise<{ id: string; word: string; crea
   if (error) throw new ManagementQueryError();
   return data.map((row) => ({ id: row.id, word: row.word, createdAt: row.created_at }));
 }
+
+// -----------------------------------------------------------------------------
+// Assistance (équipe)
+// -----------------------------------------------------------------------------
+export const supportInboxStatuses = ["open", "answered", "closed"] as const;
+export type SupportInboxStatus = (typeof supportInboxStatuses)[number];
+
+export type SupportInboxItem = {
+  id: string;
+  kind: "contact" | "appeal";
+  subject: string;
+  message: string;
+  status: SupportInboxStatus;
+  response: string | null;
+  createdAt: string;
+  handledAt: string | null;
+  author: { id: string; username: string; displayName: string } | null;
+  listing: {
+    id: string;
+    title: string;
+    removedAt: string | null;
+    removedReason: string | null;
+  } | null;
+};
+
+export async function getSupportRequests(
+  status: SupportInboxStatus,
+  page: number,
+): Promise<Page<SupportInboxItem>> {
+  const pageSize = ADMIN_PAGE_SIZE;
+  const supabase = await client();
+  const from = (page - 1) * pageSize;
+  const { data, error, count } = await supabase
+    .from("support_requests")
+    .select(
+      "id, kind, subject, message, status, response, created_at, handled_at, author:profiles!support_requests_user_id_fkey(id, username, display_name), listing:listings(id, title, removed_at, removed_reason)",
+      { count: "exact" },
+    )
+    .eq("status", status)
+    // Les plus anciennes d'abord tant qu'elles attendent une réponse.
+    .order("created_at", { ascending: status !== "open" ? false : true })
+    .range(from, from + pageSize - 1);
+  if (error && error.code !== "PGRST103") throw new ManagementQueryError();
+  return {
+    items: (data ?? []).map((row) => ({
+      id: row.id,
+      kind: row.kind === "appeal" ? "appeal" : "contact",
+      subject: row.subject,
+      message: row.message,
+      status: supportInboxStatuses.find((value) => value === row.status) ?? "open",
+      response: row.response,
+      createdAt: row.created_at,
+      handledAt: row.handled_at,
+      author: row.author
+        ? { id: row.author.id, username: row.author.username, displayName: row.author.display_name }
+        : null,
+      listing: row.listing
+        ? {
+            id: row.listing.id,
+            title: row.listing.title,
+            removedAt: row.listing.removed_at,
+            removedReason: row.listing.removed_reason,
+          }
+        : null,
+    })),
+    total: count ?? 0,
+    pageSize,
+  };
+}
+
+/** Nombre de demandes en attente de réponse (tableau de bord). */
+export async function getOpenSupportCount(): Promise<number> {
+  const supabase = await client();
+  const { count } = await supabase
+    .from("support_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "open");
+  return count ?? 0;
+}

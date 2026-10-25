@@ -7,13 +7,18 @@ import type { ListingCardData } from "./types";
 /** Annonce affichée dans le fil : carte enrichie du vendeur et de la date de publication. */
 export type FeedListingData = ListingCardData & {
   publishedAt: string | null;
-  seller: { username: string; displayName: string; avatarPath: string | null } | null;
+  seller: {
+    username: string;
+    displayName: string;
+    avatarPath: string | null;
+    verified: boolean;
+  } | null;
 };
 
 export type FeedResult = { items: FeedListingData[]; total: number; pageSize: number };
 
 const FEED_COLUMNS =
-  `${CARD_COLUMNS}, seller:profiles!seller_id(username, display_name, avatar_path)` as const;
+  `${CARD_COLUMNS}, seller:profiles!seller_id(username, display_name, avatar_path, verified_at)` as const;
 
 type FeedOptions = {
   /** Limite le fil aux vendeurs suivis par cet utilisateur. */
@@ -65,6 +70,7 @@ export async function getFeedListings({
           username: row.seller.username,
           displayName: row.seller.display_name,
           avatarPath: row.seller.avatar_path,
+          verified: row.seller.verified_at !== null,
         }
       : null,
   }));

@@ -1,4 +1,13 @@
-import { Download, Flag, Package, ShieldAlert, UserPlus, Users, UserX } from "lucide-react";
+import {
+  Download,
+  Flag,
+  LifeBuoy,
+  Package,
+  ShieldAlert,
+  UserPlus,
+  Users,
+  UserX,
+} from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
@@ -7,6 +16,7 @@ import { RankedBars } from "@/features/admin/components/ranked-bars";
 import { TrendColumns } from "@/features/admin/components/trend-columns";
 import {
   getAdminTrends,
+  getOpenSupportCount,
   parseTrendPeriod,
   type TrendPeriod,
   trendPeriods,
@@ -30,10 +40,11 @@ function exportHref(type: "tendances" | "villes" | "categories", days: TrendPeri
 export default async function AdminDashboardPage(props: PageProps<"/admin">) {
   await requireStaff(routes.admin);
   const days = parseTrendPeriod((await props.searchParams).jours);
-  const [stats, trends, cityNames] = await Promise.all([
+  const [stats, trends, cityNames, openSupport] = await Promise.all([
     getAdminStats(),
     getAdminTrends(days),
     getCityNames(),
+    getOpenSupportCount(),
   ]);
   const tiles: Array<{
     label: string;
@@ -54,6 +65,13 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
       value: stats.in_review_reports,
       icon: ShieldAlert,
       href: `${routes.adminReports}?statut=in_review` as Route,
+    },
+    {
+      label: "Demandes d'assistance",
+      value: openSupport,
+      icon: LifeBuoy,
+      href: routes.adminSupport,
+      highlight: openSupport > 0,
     },
     { label: "Utilisateurs", value: stats.users, icon: Users, href: routes.adminUsers },
     { label: "Nouveaux comptes (7 j)", value: stats.new_users_7d, icon: UserPlus },

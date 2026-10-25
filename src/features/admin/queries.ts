@@ -313,7 +313,7 @@ const overviewSchema = z.object({
 export type AdminUserOverview = z.infer<typeof overviewSchema>;
 
 export type AdminUserDetail = {
-  profile: AdminUser & { bio: string | null };
+  profile: AdminUser & { bio: string | null; verifiedAt: string | null };
   isAdmin: boolean;
   /**
    * Compte de connexion (lu en service_role, administrateurs uniquement) ;
@@ -361,7 +361,7 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
     supabase
       .from("profiles")
       .select(
-        "id, username, display_name, avatar_path, bio, city, created_at, suspended_at, suspended_until",
+        "id, username, display_name, avatar_path, bio, city, created_at, suspended_at, suspended_until, verified_at",
       )
       .eq("id", userId)
       .maybeSingle(),
@@ -425,6 +425,7 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
       createdAt: profile.created_at,
       suspendedAt: profile.suspended_at,
       suspendedUntil: profile.suspended_until,
+      verifiedAt: profile.verified_at,
       role,
     },
     isAdmin,

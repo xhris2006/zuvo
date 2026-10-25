@@ -10,6 +10,8 @@ export type ShopSummary = {
   city: string | null;
   /** Annonces actuellement en vente. */
   activeListings: number;
+  /** Badge « vendeur vérifié ». */
+  verified: boolean;
 };
 
 export type ShopSearchResult = { items: ShopSummary[]; total: number; pageSize: number };
@@ -20,7 +22,7 @@ class ShopQueryError extends Error {
   }
 }
 
-const SHOP_COLUMNS = "id, username, display_name, avatar_path, city";
+const SHOP_COLUMNS = "id, username, display_name, avatar_path, city, verified_at";
 
 type ShopSearchOptions = { q?: string; page?: number; pageSize?: number };
 
@@ -75,6 +77,7 @@ export async function searchShops({
     avatarPath: row.avatar_path,
     city: row.city,
     activeListings: row.on_sale[0]?.count ?? 0,
+    verified: row.verified_at !== null,
   }));
   return { items, total: count ?? 0, pageSize };
 }

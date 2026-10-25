@@ -8,7 +8,7 @@ type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 
 export type PublicProfile = Pick<
   ProfileRow,
-  "id" | "username" | "display_name" | "avatar_path" | "bio" | "city" | "created_at"
+  "id" | "username" | "display_name" | "avatar_path" | "bio" | "city" | "created_at" | "verified_at"
 >;
 
 export type ProfileStats = {
@@ -17,7 +17,8 @@ export type ProfileStats = {
   activeListings: number;
 };
 
-const PUBLIC_COLUMNS = "id, username, display_name, avatar_path, bio, city, created_at";
+const PUBLIC_COLUMNS =
+  "id, username, display_name, avatar_path, bio, city, created_at, verified_at";
 
 /** Erreur d'accès aux données : affichée par la page d'erreur, jamais en détail. */
 class ProfileQueryError extends Error {

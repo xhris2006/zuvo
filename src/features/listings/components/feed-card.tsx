@@ -7,6 +7,7 @@ import { LinkPending } from "@/components/ui/link-pending";
 import { publicProfileHref } from "@/config/routes";
 import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
+import { VerifiedBadge } from "@/features/profiles/components/verified-badge";
 import { getDictionary } from "@/i18n";
 import { formatPrice, formatRelativeTime } from "@/lib/format";
 import type { FeedListingData } from "../feed";
@@ -81,6 +82,7 @@ export async function FeedCard({ listing, action, priority = false }: FeedCardPr
             >
               {seller.displayName}
             </Link>
+            {seller.verified ? <VerifiedBadge variant="icon" className="relative z-10" /> : null}
             {listing.publishedAt ? <span aria-hidden="true">·</span> : null}
           </>
         ) : null}

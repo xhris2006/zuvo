@@ -56,7 +56,18 @@ export default function HelpPage() {
         Plus de détails dans <Link href={routes.reportsInfo}>Signalements et blocage</Link>.
       </p>
 
+      <h2>Badge « vendeur vérifié »</h2>
+      <p>
+        Ce badge est attribué manuellement par l&apos;équipe Zuvo après vérification de
+        l&apos;identité du vendeur. Il ne garantit pas l&apos;état d&apos;un article : appliquez
+        toujours les <Link href={routes.safety}>conseils de sécurité</Link>.
+      </p>
+
       <h2>Nous contacter</h2>
+      <p>
+        Membres connectés : <Link href={routes.support}>écrivez à l&apos;assistance</Link> (réponse
+        par notification). Une annonce retirée par la modération peut être contestée depuis sa page.
+      </p>
       <p>
         Assistance par téléphone :{" "}
         <a href={`tel:${siteConfig.supportPhone}`}>{formatSupportPhone()}</a>.

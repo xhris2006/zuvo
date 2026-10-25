@@ -209,6 +209,7 @@ Vérifiez ensuite la version dans **Administration → Configuration**
 | `site_announcements`       | Message global : information ou maintenance, dates facultatives      |
 | `banned_words`             | Mots interdits dans les annonces (administrateurs)                   |
 | `app_settings`             | Réglages anti-spam (limite de publication des comptes récents)       |
+| `support_requests`         | Demandes d'assistance et contestations de retrait, avec la réponse   |
 
 ### Écarts justifiés par rapport au cahier des charges
 
@@ -224,6 +225,10 @@ Vérifiez ensuite la version dans **Administration → Configuration**
   tâche planifiée (`private.is_suspended` et les politiques RLS en tiennent
   compte) ; `admin_lift_expired_suspensions` nettoie ensuite les colonnes et
   l'inscrit au journal.
+- **`profiles.verified_at`** : badge « vendeur vérifié », attribué ou retiré
+  par un administrateur (`admin_set_seller_verification`, journalisé) après
+  une vérification faite hors de l'application. Voir
+  [§2 Badge vendeur vérifié](#badge-vendeur-vérifié).
 - **`country_code`** sur profils et annonces : prépare l'ouverture à d'autres pays.
 - **`listings.search_vector`** : colonne calculée pour la recherche plein texte
   en français, insensible aux accents (configuration `french_unaccent`).
@@ -256,6 +261,44 @@ atteindre ; les pièces jointes de messages sont conservées avec les
 conversations. La suppression est demandée depuis **Paramètres → Supprimer mon
 compte** (saisie du nom d'utilisateur) et utilise, côté serveur uniquement, la
 clé `SUPABASE_SERVICE_ROLE_KEY`. Testée dans `supabase/tests/account-deletion.test.ts`.
+
+### Badge vendeur vérifié
+
+Le badge signifie que l'équipe a contrôlé l'identité du vendeur (pièce
+d'identité présentée en agence, appel au numéro du compte…). Il est **manuel** :
+seul un administrateur l'attribue ou le retire, depuis la fiche de
+l'utilisateur, avec une note facultative inscrite au journal. Un compte
+suspendu ne peut pas le recevoir. Le badge apparaît sur le profil, la fiche
+vendeur d'une annonce, les cartes du fil et la liste des boutiques.
+
+**Option non mise en place : vérification du téléphone par SMS.** Elle
+nécessiterait un fournisseur SMS configuré dans Supabase Auth
+(**Authentication → Providers → Phone** : Twilio, MessageBird, Vonage ou
+Textlocal), avec un compte et des clés propres au projet, saisis uniquement
+dans le tableau de bord Supabase. Le flux serait : saisie du numéro dans les
+paramètres, envoi d'un code par `supabase.auth.updateUser({ phone })`,
+validation par `supabase.auth.verifyOtp({ phone, token, type: "phone_change" })`,
+puis lecture de `auth.users.phone_confirmed_at` par une fonction `private`
+(`SECURITY DEFINER`) pour proposer le badge à l'équipe. Un SMS confirme la
+possession d'un numéro, pas l'identité : il ne remplace pas la vérification
+manuelle. Les envois SMS sont payants : réglez leur plafond dans les limites
+d'authentification du projet Supabase avant toute ouverture.
+
+### Demandes d'assistance et contestations
+
+La page **Assistance** (`/assistance`, compte requis) permet d'écrire à
+l'équipe (`kind = contact`) ou de contester le retrait d'une de ses annonces
+(`kind = appeal`, lien « Contester ce retrait » sur l'annonce). La base
+impose l'auteur (`auth.uid()`), le statut initial et l'absence de réponse ;
+une contestation n'est acceptée que pour une annonce de l'auteur retirée par
+la modération, et une seule contestation ouverte par annonce. Un compte
+suspendu peut écrire (c'est son seul recours). Limite : 5 demandes par jour.
+
+L'équipe (administrateurs et modérateurs) traite les demandes dans
+**Administration → Assistance** : réponse (notification `support_reply` à
+l'auteur), clôture, et rétablissement de l'annonce contestée. Chaque réponse
+passe par `admin_answer_support_request` et s'inscrit au journal de
+modération. Un utilisateur ne voit que ses propres demandes.
 
 ### Index
 
@@ -322,17 +365,18 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
 
 ### Codes d'erreur métier
 
-| Code / message                                         | Signification                                     |
-| ------------------------------------------------------ | ------------------------------------------------- |
-| `42501`                                                | Accès refusé (privilège ou politique RLS)         |
-| `23505`                                                | Doublon (nom d'utilisateur, favori, signalement…) |
-| `23514`                                                | Donnée invalide (contrainte de validation)        |
-| `PT429` `rate_limit_exceeded`                          | Limite anti-spam atteinte                         |
-| `P0001` `listing_requires_image`                       | Publication sans photo                            |
-| `P0001` `listing_cannot_return_to_draft`               | Retour en brouillon interdit                      |
-| `P0001` `listing_removed_by_moderation`                | Annonce retirée par la modération                 |
-| `P0001` `listing_image_limit_reached`                  | Plus de 8 photos                                  |
-| `P0002` `listing_not_found`, `report_target_not_found` | Cible introuvable ou inaccessible                 |
+| Code / message                                         | Signification                                      |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| `42501`                                                | Accès refusé (privilège ou politique RLS)          |
+| `23505`                                                | Doublon (nom d'utilisateur, favori, signalement…)  |
+| `23514`                                                | Donnée invalide (contrainte de validation)         |
+| `PT429` `rate_limit_exceeded`                          | Limite anti-spam atteinte                          |
+| `P0001` `listing_requires_image`                       | Publication sans photo                             |
+| `P0001` `listing_cannot_return_to_draft`               | Retour en brouillon interdit                       |
+| `P0001` `listing_removed_by_moderation`                | Annonce retirée par la modération                  |
+| `P0001` `listing_image_limit_reached`                  | Plus de 8 photos                                   |
+| `P0002` `listing_not_found`, `report_target_not_found` | Cible introuvable ou inaccessible                  |
+| `P0002` `appeal_listing_not_found`                     | Contestation d'une annonce non retirée ou d'autrui |
 
 ---
 

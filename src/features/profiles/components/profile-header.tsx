@@ -8,6 +8,7 @@ import { cityName } from "@/features/locations/queries";
 import { getDictionary } from "@/i18n";
 import { formatCount, formatMonthYear } from "@/lib/format";
 import { avatarUrl } from "../avatar-url";
+import { VerifiedBadge } from "./verified-badge";
 import type { ProfileStats, PublicProfile } from "../queries";
 
 type ProfileHeaderProps = {
@@ -82,9 +83,12 @@ export async function ProfileHeader({
 
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-col">
-            <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
-              {profile.display_name}
-            </h1>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
+                {profile.display_name}
+              </h1>
+              {profile.verified_at ? <VerifiedBadge /> : null}
+            </div>
             <p className="truncate text-sm text-muted-foreground">@{profile.username}</p>
           </div>
           <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">

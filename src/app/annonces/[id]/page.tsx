@@ -1,5 +1,5 @@
 import { BadgeCheck, ShieldCheck } from "lucide-react";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SectionHeader } from "@/components/layout/section-header";
@@ -135,6 +135,17 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           {listing.removed_at ? (
             <Alert variant="danger" title="Annonce retirée par la modération">
               {listing.removed_reason ?? "Elle n'est plus visible par les autres utilisateurs."}
+              {isOwner ? (
+                <>
+                  {" "}
+                  <Link
+                    href={`${routes.support}?contester=${listing.id}` as Route}
+                    className="font-semibold underline underline-offset-2"
+                  >
+                    Contester ce retrait
+                  </Link>
+                </>
+              ) : null}
             </Alert>
           ) : null}
           {listing.status === "draft" ? (

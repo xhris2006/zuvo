@@ -54,6 +54,12 @@ celui des notifications push dans [`notifications.md`](notifications.md).
 - Anti-spam appliqué par la base : mots interdits (titre et description,
   mot entier, sans accents), nombre de publications par 24 h limité pour
   les comptes récents (réglable), doublons probables signalés à l'équipe.
+- Le badge « vendeur vérifié » (`profiles.verified_at`) n'est modifiable
+  que par un administrateur, via `admin_set_seller_verification` (colonne
+  sans droit d'écriture via l'API, changement journalisé).
+- Les demandes d'assistance ne sont lisibles que par leur auteur et par
+  l'équipe ; l'auteur, le statut et la réponse sont imposés par la base,
+  et seule l'équipe répond, via `admin_answer_support_request` (journalisé).
 - L'adresse e-mail et la dernière connexion d'un compte sont lues côté
   serveur (clé service_role), uniquement pour la fiche utilisateur et
   uniquement pour un administrateur.

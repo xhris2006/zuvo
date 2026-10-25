@@ -660,6 +660,7 @@ export type Database = {
           suspended_until: string | null;
           updated_at: string;
           username: string;
+          verified_at: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -674,6 +675,7 @@ export type Database = {
           suspended_until?: string | null;
           updated_at?: string;
           username: string;
+          verified_at?: string | null;
         };
         Update: {
           avatar_path?: string | null;
@@ -687,6 +689,7 @@ export type Database = {
           suspended_until?: string | null;
           updated_at?: string;
           username?: string;
+          verified_at?: string | null;
         };
         Relationships: [];
       };
@@ -827,6 +830,74 @@ export type Database = {
         };
         Relationships: [];
       };
+      support_requests: {
+        Row: {
+          created_at: string;
+          handled_at: string | null;
+          handled_by: string | null;
+          id: string;
+          kind: string;
+          listing_id: string | null;
+          message: string;
+          response: string | null;
+          status: string;
+          subject: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          handled_at?: string | null;
+          handled_by?: string | null;
+          id?: string;
+          kind?: string;
+          listing_id?: string | null;
+          message: string;
+          response?: string | null;
+          status?: string;
+          subject: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          handled_at?: string | null;
+          handled_by?: string | null;
+          id?: string;
+          kind?: string;
+          listing_id?: string | null;
+          message?: string;
+          response?: string | null;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_requests_handled_by_fkey";
+            columns: ["handled_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_requests_listing_id_fkey";
+            columns: ["listing_id"];
+            isOneToOne: false;
+            referencedRelation: "listings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       user_roles: {
         Row: {
           granted_at: string;
@@ -859,6 +930,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_answer_support_request: {
+        Args: { p_close?: boolean; p_request_id: string; p_response: string };
+        Returns: undefined;
+      };
       admin_check_user_deletion: { Args: { p_user_id: string }; Returns: string };
       admin_find_duplicate_listings: {
         Args: { p_limit?: number };
@@ -951,6 +1026,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_set_seller_verification: {
+        Args: { p_note?: string; p_user_id: string; p_verified: boolean };
+        Returns: undefined;
+      };
       admin_set_user_suspension: {
         Args: {
           p_reason?: string;
@@ -1029,14 +1108,18 @@ export type Database = {
         | "user_listings_removed"
         | "role_granted"
         | "role_revoked"
-        | "user_deleted";
+        | "user_deleted"
+        | "seller_verified"
+        | "seller_unverified"
+        | "support_answered";
       notification_type:
         | "new_message"
         | "new_follower"
         | "followed_user_listing"
         | "listing_favorited"
         | "listing_removed"
-        | "moderation_warning";
+        | "moderation_warning"
+        | "support_reply";
       report_reason:
         | "scam"
         | "prohibited_item"
@@ -1184,6 +1267,9 @@ export const Constants = {
         "role_granted",
         "role_revoked",
         "user_deleted",
+        "seller_verified",
+        "seller_unverified",
+        "support_answered",
       ],
       notification_type: [
         "new_message",
@@ -1192,6 +1278,7 @@ export const Constants = {
         "listing_favorited",
         "listing_removed",
         "moderation_warning",
+        "support_reply",
       ],
       report_reason: [
         "scam",

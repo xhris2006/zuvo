@@ -123,7 +123,7 @@ const DETAIL_COLUMNS = `
   id, seller_id, title, description, price, condition, city, status, removed_at,
   removed_reason, created_at, updated_at, published_at,
   category:categories(id, slug, name),
-  seller:profiles!seller_id(id, username, display_name, avatar_path, city, created_at),
+  seller:profiles!seller_id(id, username, display_name, avatar_path, city, created_at, verified_at),
   images:listing_images(id, storage_path, sort_order)
 `;
 

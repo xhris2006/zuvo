@@ -52,8 +52,11 @@ l'authentification n'est pas encore disponible.
   profils suivis, retrait par la modération ; préférences ; Web Push
   (à configurer, voir [`docs/notifications.md`](docs/notifications.md)).
 - **Confiance** : signalement d'annonces, d'utilisateurs et de messages,
-  blocage, espace d'administration `/admin` (signalements, suspensions,
-  retraits, journal).
+  blocage, badge « vendeur vérifié » attribué par l'équipe, page Assistance
+  (contact et contestation d'un retrait), espace d'administration `/admin`
+  (signalements, annonces, suspensions temporaires, équipe et modérateurs,
+  catégories et villes, message global, tendances et export CSV, anti-spam,
+  assistance, journal).
 - **PWA** : installable, page hors connexion, icônes.
 - **SEO** : métadonnées, Open Graph, sitemap des annonces, données structurées.
 

@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { BottomNav } from "@/components/layout/bottom-nav";
-import { FooterGate } from "@/components/layout/footer-gate";
-import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SiteSidebar } from "@/components/layout/site-sidebar";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { siteConfig } from "@/config/site";
 import { SiteAnnouncementBanner } from "@/features/announcements/components/site-announcement";
@@ -12,6 +12,7 @@ import { getCurrentUser } from "@/features/auth/session";
 import { PushSync } from "@/features/notifications/components/push-sync";
 import { UnreadCountsProvider } from "@/features/notifications/components/unread-counts";
 import { getUnreadCounts } from "@/features/notifications/queries";
+import { parseTheme, THEME_COOKIE, themeColors } from "@/features/theme/theme";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
 import "./globals.css";
@@ -43,12 +44,19 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false, address: false, email: false },
 };
 
-export const viewport: Viewport = {
-  themeColor: siteConfig.themeColor,
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-};
+/** Thème choisi dans les paramètres (cookie de l'appareil), clair par défaut. */
+async function getTheme() {
+  return parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+}
+
+export async function generateViewport(): Promise<Viewport> {
+  return {
+    themeColor: themeColors[await getTheme()],
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Rendu à chaque requête : nécessaire au nonce de la CSP (src/proxy.ts) et
@@ -57,8 +65,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const t = getDictionary();
   const user = await getCurrentUser();
   const unread = user ? await getUnreadCounts() : { messages: 0, notifications: 0 };
+  const theme = await getTheme();
   return (
-    <html lang={siteConfig.defaultLocale} className={jakarta.variable}>
+    <html lang={siteConfig.defaultLocale} className={jakarta.variable} data-theme={theme}>
       <body className="flex min-h-dvh flex-col">
         <a
           href="#contenu"
@@ -67,18 +76,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {t.common.skipToContent}
         </a>
         <UnreadCountsProvider userId={user?.id ?? null} initial={unread}>
-          <SiteHeader />
-          <SiteAnnouncementBanner />
-          <main
-            id="contenu"
-            tabIndex={-1}
-            className="min-h-dvh flex-1 pb-safe-nav outline-none md:pb-16"
-          >
-            {children}
-          </main>
-          <FooterGate>
-            <SiteFooter />
-          </FooterGate>
+          <SiteSidebar />
+          {/* Colonne de contenu, décalée de la barre latérale sur ordinateur. */}
+          <div data-shell className="flex min-h-dvh flex-1 flex-col lg:pl-64">
+            <SiteHeader />
+            <SiteAnnouncementBanner />
+            <main
+              id="contenu"
+              tabIndex={-1}
+              className="min-h-dvh flex-1 pb-safe-nav outline-none md:pb-16"
+            >
+              {children}
+            </main>
+          </div>
           <BottomNav />
         </UnreadCountsProvider>
         <ServiceWorkerRegistrar />

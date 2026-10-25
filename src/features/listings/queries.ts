@@ -34,6 +34,11 @@ function sortImages<T extends ImageRow>(images: T[]): T[] {
   return [...images].sort((a, b) => a.sort_order - b.sort_order);
 }
 
+/** Adresses de toutes les photos d'une annonce, photo principale en premier. */
+export function listingImageUrls(images: ImageRow[]): string[] {
+  return sortImages(images).flatMap((image) => listingImageUrl(image.storage_path) ?? []);
+}
+
 export function toListingCard(row: CardRow): ListingCardData {
   const main = sortImages(row.images)[0];
   return {

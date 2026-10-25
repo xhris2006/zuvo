@@ -11,7 +11,7 @@ export const revalidate = 3600;
 const MAX_LISTINGS = 5000;
 
 const staticPages = [
-  { path: routes.home, priority: 1, changeFrequency: "daily" },
+  { path: routes.welcome, priority: 1, changeFrequency: "daily" },
   { path: routes.explore, priority: 0.9, changeFrequency: "hourly" },
   { path: routes.safety, priority: 0.5, changeFrequency: "monthly" },
   { path: routes.help, priority: 0.4, changeFrequency: "monthly" },
@@ -61,7 +61,7 @@ async function listingEntries(siteUrl: string): Promise<MetadataRoute.Sitemap> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
   const pages = staticPages.map((page) => ({
-    url: `${siteUrl}${page.path === "/" ? "" : page.path}`,
+    url: `${siteUrl}${page.path}`,
     changeFrequency: page.changeFrequency,
     priority: page.priority,
   }));

@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { exploreHref } from "@/config/routes";
-import { toSearchParams } from "@/features/search/schema";
+import { type SearchFilters, toSearchParams } from "@/features/search/schema";
 import { type CategorySummary, getCategoryIcon } from "../data";
 
 /**
  * Catégories sous forme d'icônes rondes : rangée défilante sur mobile,
  * grille sur grand écran.
  */
-export function CategoryList({ categories }: { categories: readonly CategorySummary[] }) {
+export function CategoryList({
+  categories,
+  filters,
+}: {
+  categories: readonly CategorySummary[];
+  /** Filtres conservés en choisissant une catégorie (ville, prix…). */
+  filters?: SearchFilters;
+}) {
   return (
     <ul className="-mx-4 flex snap-x scroll-px-2 [scrollbar-width:none] gap-1 overflow-x-auto px-2 pb-1 sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-x-2 sm:gap-y-4 sm:overflow-visible sm:px-0 lg:grid-cols-8 [&::-webkit-scrollbar]:hidden">
       {categories.map((category) => {
@@ -15,7 +22,7 @@ export function CategoryList({ categories }: { categories: readonly CategorySumm
         return (
           <li key={category.slug} className="shrink-0 snap-start">
             <Link
-              href={exploreHref(toSearchParams({ category: category.slug }))}
+              href={exploreHref(toSearchParams({ ...filters, category: category.slug, page: 1 }))}
               className="group flex w-[4.75rem] flex-col items-center gap-2 rounded-xl p-1 text-center sm:w-auto"
             >
               <span className="flex size-14 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-colors group-hover:bg-secondary-hover">

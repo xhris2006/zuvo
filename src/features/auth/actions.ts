@@ -102,7 +102,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      emailRedirectTo: callbackUrl(routes.profile),
+      emailRedirectTo: callbackUrl(routes.home),
       data: { username, display_name: displayName },
     },
   });
@@ -119,7 +119,7 @@ export async function signUpAction(
   // (développement local). En production, l'e-mail doit être vérifié.
   if (data.session) {
     revalidatePath("/", "layout");
-    redirect(routes.profile);
+    redirect(routes.home);
   }
   redirect(routes.signUpCheckEmail);
 }
@@ -141,7 +141,7 @@ export async function resendConfirmationAction(
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
-    options: { emailRedirectTo: callbackUrl(routes.profile) },
+    options: { emailRedirectTo: callbackUrl(routes.home) },
   });
   const resendError = emailRequestError(error);
   if (resendError) return { status: "error", message: resendError };
@@ -219,7 +219,7 @@ export async function signOutAction(formData?: FormData) {
     await supabase.auth.signOut({ scope: "local" });
   }
   revalidatePath("/", "layout");
-  redirect(routes.home);
+  redirect(routes.welcome);
 }
 
 export async function signInWithGoogleAction(formData: FormData) {
@@ -273,6 +273,6 @@ export async function verifyEmailLinkAction(formData: FormData) {
   if (error) redirect(invalidLink);
 
   revalidatePath("/", "layout");
-  const fallback = type === "recovery" ? routes.resetPassword : routes.profile;
+  const fallback = type === "recovery" ? routes.resetPassword : routes.home;
   redirect(safeRedirectPath(formText(formData, "next"), fallback));
 }

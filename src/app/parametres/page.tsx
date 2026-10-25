@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,9 @@ import { PushSettings } from "@/features/notifications/components/push-settings"
 import { getLastPushResult, getNotificationPreferences } from "@/features/notifications/queries";
 import { isCurrentUserAdmin } from "@/features/admin/queries";
 import { getCurrentProfile } from "@/features/profiles/queries";
+import { ThemeSwitch } from "@/features/theme/components/theme-switch";
+import { parseTheme, THEME_COOKIE } from "@/features/theme/theme";
+import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -24,6 +28,8 @@ export const metadata: Metadata = {
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
+  const t = getDictionary();
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   const [preferences, blockedUsers, profile, lastPush, isAdmin] = await Promise.all([
     getNotificationPreferences(),
     getBlockedUsers(user.id),
@@ -44,6 +50,15 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <SignOutButton variant="outline" />
+        </CardContent>
+      </Card>
+      <Card id="apparence">
+        <CardHeader>
+          <CardTitle>{t.appearance.title}</CardTitle>
+          <CardDescription>{t.appearance.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemeSwitch initial={theme} />
         </CardContent>
       </Card>
       <Card id="notifications">

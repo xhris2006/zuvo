@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { exploreHref, routes } from "@/config/routes";
 import { ListingResults } from "@/features/listings/components/listing-results";
+import { CategoryList } from "@/features/categories/components/category-list";
 import { defaultCategories } from "@/features/categories/data";
 import {
   type Category,
@@ -187,11 +188,21 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
 
       <ExploreTabs current="articles" query={filters.q} />
 
-      <CategoryChips filters={filters} categories={categories} className="lg:hidden" />
+      {/* Sans recherche ni catégorie : les catégories en icônes ; sinon, des raccourcis. */}
+      {!filters.q && !filters.category ? (
+        <section aria-labelledby="categories-title">
+          <h2 id="categories-title" className="mb-3 text-lg font-bold tracking-tight sm:text-xl">
+            {t.home.categoriesTitle}
+          </h2>
+          <CategoryList categories={categories} filters={filters} />
+        </section>
+      ) : (
+        <CategoryChips filters={filters} categories={categories} className="lg:hidden" />
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
         <aside aria-label={t.explore.filters} className="hidden lg:block">
-          <div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-card">
+          <div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-card lg:top-6">
             <FiltersForm
               filters={filters}
               categories={categories}

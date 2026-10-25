@@ -357,7 +357,11 @@ export function ListingEditor({
                 <span
                   className={cn(
                     "block h-1.5 rounded-full transition-colors duration-300",
-                    index <= step ? "bg-primary" : index <= maxStep ? "bg-brand-200" : "bg-muted",
+                    index <= step
+                      ? "bg-primary"
+                      : index <= maxStep
+                        ? "bg-secondary-hover"
+                        : "bg-muted",
                   )}
                 />
               </button>
@@ -622,7 +626,7 @@ function ChoiceGroup({
         {options.map(({ value, label, hint, icon: Icon }) => (
           <label
             key={value}
-            className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm transition-colors select-none hover:border-brand-300 has-checked:border-primary has-checked:bg-accent has-checked:ring-1 has-checked:ring-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
+            className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm transition-colors select-none hover:border-primary/50 has-checked:border-primary has-checked:bg-accent has-checked:ring-1 has-checked:ring-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
           >
             <input
               type="radio"

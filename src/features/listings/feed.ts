@@ -1,11 +1,13 @@
 import "server-only";
 import { searchLimits } from "@/config/limits";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { CARD_COLUMNS, ListingQueryError, toListingCard } from "./queries";
+import { CARD_COLUMNS, ListingQueryError, listingImageUrls, toListingCard } from "./queries";
 import type { ListingCardData } from "./types";
 
 /** Annonce affichée dans le fil : carte enrichie du vendeur et de la date de publication. */
 export type FeedListingData = ListingCardData & {
+  /** Toutes les photos, pour les faire défiler dans la carte. */
+  imageUrls: string[];
   publishedAt: string | null;
   seller: {
     username: string;
@@ -64,6 +66,7 @@ export async function getFeedListings({
 
   const items = (data ?? []).map((row) => ({
     ...toListingCard(row),
+    imageUrls: listingImageUrls(row.images),
     publishedAt: row.published_at,
     seller: row.seller
       ? {

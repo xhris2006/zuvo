@@ -45,7 +45,11 @@ l'authentification n'est pas encore disponible.
   retiré), modification, suppression, annonces similaires, partage.
 - **Recherche** : plein texte insensible aux accents, filtres (catégorie,
   ville, état, prix), tri, pagination.
-- **Social** : favoris, abonnements, fil des profils suivis.
+- **Social** : favoris (onglet du profil), abonnements, fil des profils suivis
+  avec photos à faire défiler.
+- **Navigation** : page de bienvenue pour les visiteurs (`/bienvenue`), accueil
+  réservé aux membres connectés, en-tête mobile qui se masque au défilement,
+  barre latérale sur ordinateur, mode sombre (Paramètres → Apparence).
 - **Messagerie** : une conversation par acheteur et par annonce, temps réel,
   accusés de lecture, compteur de non-lus.
 - **Notifications** : nouveaux abonnés, favoris, nouvelles annonces des
@@ -151,7 +155,8 @@ src/
   app/                 Routes (App Router). (info)/ regroupe les pages d'information
   components/ui/       Design system : Button, Input, Select, Field, Badge, Card,
                        Dialog, Alert, Skeleton, EmptyState, Avatar…
-  components/layout/   En-tête, navigation mobile, pied de page, mises en page
+  components/layout/   En-tête (mobile), barre latérale (ordinateur), navigation
+                       mobile, mises en page
   config/              Nom du produit, routes, villes, limites métier
   features/            Code par domaine : auth, profiles, listings, search,
                        favorites, messaging, notifications, moderation,
@@ -170,9 +175,12 @@ e2e/                   Tests Playwright
   bleu nuit, gris bleutés, couleurs de statut. Changer la couleur de marque se fait
   uniquement dans ce fichier (et `themeColor` dans `src/config/site.ts`).
 - Contrastes vérifiés au niveau WCAG AA (texte 16:1, texte secondaire 5,8:1,
-  texte blanc sur primaire 5,6:1, bordures de champs 3,1:1).
+  texte blanc sur primaire 5,6:1, bordures de champs 3,1:1). Le mode sombre
+  (`:root[data-theme="dark"]`, variante Tailwind `dark:`) a ses propres jetons,
+  vérifiés eux aussi (texte 15:1, texte secondaire 7:1, primaire 6,8:1).
 - Mobile d'abord : navigation basse à 5 entrées (Accueil, Explorer, Vendre,
-  Messages, Profil), favoris et notifications dans l'en-tête.
+  Messages, Profil), logo centré et notifications dans l'en-tête ; sur
+  ordinateur, barre latérale avec les mêmes rubriques.
 - Les animations sont désactivées si l'utilisateur préfère réduire les mouvements.
 
 ## Sécurité

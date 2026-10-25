@@ -46,7 +46,7 @@ export function RankedBars({
               </span>
               <span className="flex items-center gap-2">
                 <span
-                  className="h-3.5 rounded-r-[4px] bg-brand-600"
+                  className="h-3.5 rounded-r-[4px] bg-brand-600 dark:bg-brand-400"
                   style={{ width: `${Math.max(2, barPercent(item.value, max))}%` }}
                   aria-hidden="true"
                 />

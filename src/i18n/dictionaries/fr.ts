@@ -54,6 +54,10 @@ export const fr = {
     profile: "Profil",
     favorites: "Favoris",
     notifications: "Notifications",
+    help: "Aide et contact",
+    helpShort: "Aide",
+    admin: "Administration",
+    more: "Plus",
     sellCta: "Vendre un article",
     searchPlaceholder: "Rechercher un article…",
     searchLabel: "Rechercher des annonces",
@@ -62,11 +66,20 @@ export const fr = {
     unreadNotifications: (count: number) =>
       count === 1 ? "1 notification non lue" : `${count} notifications non lues`,
   },
+  appearance: {
+    title: "Apparence",
+    description: "Le thème choisi s'applique sur cet appareil.",
+    darkMode: "Mode sombre",
+    darkModeHint: "Fond sombre, plus reposant le soir.",
+  },
+  welcome: {
+    signIn: "J'ai déjà un compte",
+    browse: "Découvrir les annonces sans compte",
+  },
   home: {
     heroTitle: "Donnez une seconde vie à vos affaires",
     heroSubtitle:
       "Vendez gratuitement ce que vous n'utilisez plus et trouvez de bonnes affaires près de chez vous, partout au Cameroun.",
-    heroSecondary: "Explorer les annonces",
     valueTitle: "Pourquoi vendre sur Zuvo ?",
     values: {
       freeTitle: "Publication gratuite",
@@ -144,6 +157,10 @@ export const fr = {
     favoriteRemove: "Retirer des favoris",
     photoAlt: (title: string) => `Photo de l'annonce « ${title} »`,
     noPhoto: "Pas de photo",
+    photosLabel: (title: string) => `Photos de «\u00a0${title}\u00a0»`,
+    previousPhoto: "Photo précédente",
+    nextPhoto: "Photo suivante",
+    photoPosition: (index: number, total: number) => `Photo ${index} sur ${total}`,
     viewLabel: "Affichage des annonces",
     viewFeed: "Affichage en fil",
     viewGrid: "Affichage en grille",
@@ -159,6 +176,11 @@ export const fr = {
     onSale: "En vente",
     myListings: "Mes annonces",
     favorites: "Favoris",
+    favoritesEmptyTitle: "Aucun favori",
+    favoritesEmptyBody: "Touchez le cœur d'une annonce pour la retrouver facilement ici.",
+    favoritesEmptyCta: "Explorer les annonces",
+    feed: "Mon fil",
+    signOut: "Se déconnecter",
     verified: "Vendeur vérifié",
     verifiedHint: "Identité vérifiée par l'équipe Zuvo",
     menuLabel: "Menu du profil",
@@ -168,6 +190,9 @@ export const fr = {
     help: "Aide et contact",
   },
   auth: {
+    heroTitle: "Achetez et vendez près de chez vous",
+    heroBody:
+      "Rejoignez les particuliers qui donnent une seconde vie à leurs affaires, partout au Cameroun.",
     requiredTitle: "Connexion requise",
     requiredBody: "Connectez-vous ou créez un compte gratuit pour accéder à cette page.",
     sellRequiredBody: "Connectez-vous ou créez un compte gratuit pour mettre un article en vente.",

@@ -18,7 +18,7 @@ export function BottomNav() {
       data-bottom-nav
       style={{ viewTransitionName: "bottom-nav" }}
       aria-label={t.nav.primary}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/85 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-card/92 md:hidden"
     >
       <ul className="mx-auto grid h-(--bottom-nav-height) max-w-md grid-cols-5">
         {items.map((item) => {
@@ -37,7 +37,7 @@ export function BottomNav() {
                 {item.emphasis ? (
                   <span
                     className={cn(
-                      "flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-primary-foreground shadow-raised ring-4 ring-card transition-transform group-hover:scale-105 group-active:scale-90",
+                      "flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-raised ring-4 ring-card transition-transform group-hover:scale-105 group-active:scale-90",
                       active && "from-brand-600 to-brand-800",
                     )}
                   >

@@ -1,15 +1,5 @@
-import {
-  ChevronRight,
-  Eye,
-  Heart,
-  LifeBuoy,
-  PackageOpen,
-  Pencil,
-  Plus,
-  Rss,
-  Settings,
-} from "lucide-react";
-import type { Metadata } from "next";
+import { Eye, Heart, PackageOpen, Pencil, Plus } from "lucide-react";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
@@ -17,12 +7,12 @@ import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
 import { publicProfileHref, routes } from "@/config/routes";
 import { AuthRequired } from "@/features/auth/components/auth-required";
-import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { requireUser } from "@/features/auth/session";
 import { ListingResults } from "@/features/listings/components/listing-results";
-import { getOwnListings } from "@/features/listings/queries";
+import { getFavoriteListings, getOwnListings } from "@/features/listings/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { AvatarQuickEdit } from "@/features/profiles/components/avatar-quick-edit";
 import { OwnProfileMenu } from "@/features/profiles/components/own-profile-menu";
@@ -31,6 +21,7 @@ import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
 import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
+import { parsePageParam } from "@/lib/pagination";
 
 export const metadata: Metadata = {
   title: "Mon profil",
@@ -52,20 +43,19 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
   const profile = await getProfileById(user.id);
   // Profil absent : compte supprimé entre-temps ou incohérence ; on repart de zéro.
   if (!profile) redirect(routes.signIn);
-  const [stats, listings] = await Promise.all([getProfileStats(user.id), getOwnListings(user.id)]);
+  // Onglet « Favoris » affiché sur la page même, comme les annonces.
+  const tab = searchParams.onglet === "favoris" ? "favorites" : "listings";
+  const favoritesPage = tab === "favorites" ? parsePageParam(searchParams.page) : 1;
+  const [stats, listings, favorites] = await Promise.all([
+    getProfileStats(user.id),
+    getOwnListings(user.id),
+    getFavoriteListings(user.id, favoritesPage),
+  ]);
   const t = getDictionary();
-
-  const menu = [
-    { href: routes.feed, icon: Rss, label: "Mon fil", description: "Annonces des profils suivis" },
-    { href: routes.favorites, icon: Heart, label: "Favoris", description: "Articles sauvegardés" },
-    {
-      href: routes.settings,
-      icon: Settings,
-      label: "Paramètres",
-      description: "Compte, notifications, confidentialité",
-    },
-    { href: routes.help, icon: LifeBuoy, label: "Aide et contact", description: null },
-  ] as const;
+  const favoritesHref = (page: number) =>
+    (page > 1
+      ? `${routes.profileFavorites}&page=${page}`
+      : routes.profileFavorites) as typeof routes.profileFavorites;
 
   return (
     <div className="container-page flex max-w-4xl flex-col gap-8 pt-5 sm:gap-10 sm:pt-10">
@@ -101,15 +91,39 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
         }
       />
 
-      <section aria-labelledby="my-listings" className="flex flex-col gap-4">
+      <section aria-labelledby="profile-tab" className="flex flex-col gap-4">
         <ProfileTabs
-          labelledBy="my-listings"
+          labelledBy="profile-tab"
           tabs={[
-            { key: "listings", label: t.profile.myListings, count: listings.length, current: true },
-            { key: "favorites", label: t.profile.favorites, href: routes.favorites },
+            tab === "listings"
+              ? {
+                  key: "listings",
+                  label: t.profile.myListings,
+                  count: listings.length,
+                  current: true,
+                }
+              : {
+                  key: "listings",
+                  label: t.profile.myListings,
+                  count: listings.length,
+                  href: routes.profile as Route,
+                },
+            tab === "favorites"
+              ? {
+                  key: "favorites",
+                  label: t.profile.favorites,
+                  count: favorites.total,
+                  current: true,
+                }
+              : {
+                  key: "favorites",
+                  label: t.profile.favorites,
+                  count: favorites.total,
+                  href: routes.profileFavorites,
+                },
           ]}
           trailing={
-            listings.length > 0 ? (
+            tab === "listings" && listings.length > 0 ? (
               <Button asChild size="sm">
                 <Link href={routes.sell}>
                   <Plus aria-hidden="true" />
@@ -122,7 +136,30 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
         {searchParams.annonce === "supprimee" ? (
           <Alert variant="success">L&apos;annonce a été supprimée.</Alert>
         ) : null}
-        {listings.length > 0 ? (
+        {tab === "favorites" ? (
+          favorites.items.length > 0 ? (
+            <>
+              <ListingResults listings={favorites.items} />
+              <Pagination
+                page={favoritesPage}
+                pageCount={Math.ceil(favorites.total / favorites.pageSize)}
+                hrefFor={favoritesHref}
+              />
+            </>
+          ) : (
+            <EmptyState
+              icon={Heart}
+              headingLevel="h3"
+              title={t.profile.favoritesEmptyTitle}
+              description={t.profile.favoritesEmptyBody}
+              action={
+                <Button asChild>
+                  <Link href={routes.explore}>{t.profile.favoritesEmptyCta}</Link>
+                </Button>
+              }
+            />
+          )
+        ) : listings.length > 0 ? (
           <ListingResults listings={listings} />
         ) : (
           <EmptyState
@@ -140,34 +177,6 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
             }
           />
         )}
-      </section>
-
-      <section aria-labelledby="account-menu" className="flex flex-col gap-3">
-        <h2 id="account-menu" className="text-lg font-bold tracking-tight sm:text-xl">
-          Mon compte
-        </h2>
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          {menu.map(({ href, icon: Icon, label, description }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-accent"
-              >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-                  <Icon className="size-[1.125rem]" aria-hidden="true" />
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-sm font-medium">{label}</span>
-                  {description ? (
-                    <span className="truncate text-xs text-muted-foreground">{description}</span>
-                  ) : null}
-                </span>
-                <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <SignOutButton className="self-start text-danger hover:bg-danger-soft hover:text-danger" />
       </section>
     </div>
   );

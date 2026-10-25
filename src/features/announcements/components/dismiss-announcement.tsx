@@ -17,7 +17,7 @@ export function DismissAnnouncement({ id }: { id: string }) {
         document.cookie = `${HIDDEN_ANNOUNCEMENT_COOKIE}=${encodeURIComponent(id)}; path=/; max-age=2592000; samesite=lax`;
         router.refresh();
       }}
-      className="-my-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/5"
+      className="-my-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/5"
       aria-label={t.announcement.dismiss}
       title={t.announcement.dismiss}
     >

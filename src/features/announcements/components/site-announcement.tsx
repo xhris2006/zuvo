@@ -27,7 +27,7 @@ export async function SiteAnnouncementBanner() {
         "border-b text-sm",
         maintenance
           ? "border-warning/40 bg-warning-soft text-foreground"
-          : "border-brand-200 bg-brand-50 text-brand-900",
+          : "border-secondary bg-accent text-accent-foreground",
       )}
     >
       <div className="container-page flex items-start gap-3 py-2.5">

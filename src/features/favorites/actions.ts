@@ -39,7 +39,7 @@ export async function toggleFavoriteAction(
     return { favorited: currentlyFavorited, message: "Impossible de modifier vos favoris." };
   }
 
-  revalidatePath(routes.favorites);
+  revalidatePath(routes.profile);
   if (!currentlyFavorited) {
     schedulePushDispatch({ type: "listing_favorited", actorId: user.id, listingId });
   }

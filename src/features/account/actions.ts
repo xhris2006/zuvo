@@ -64,5 +64,5 @@ export async function deleteAccountAction(
   // Le compte n'existe plus : on efface simplement les cookies de session.
   await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
   revalidatePath("/", "layout");
-  redirect(`${routes.home}?compte=supprime` as Route);
+  redirect(`${routes.welcome}?compte=supprime` as Route);
 }

@@ -40,7 +40,7 @@ export function PushPrompt({ context }: { context: "messages" | "notifications" 
   return (
     <section
       aria-label="Notifications sur cet appareil"
-      className="relative flex items-start gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-4 pr-10"
+      className="relative flex items-start gap-3 rounded-2xl border border-secondary bg-accent p-4 pr-10"
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
         <BellRing className="size-5" aria-hidden="true" />
@@ -69,7 +69,7 @@ export function PushPrompt({ context }: { context: "messages" | "notifications" 
       <button
         type="button"
         onClick={dismiss}
-        className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-brand-100"
+        className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
         aria-label="Masquer"
       >
         <X className="size-4" aria-hidden="true" />

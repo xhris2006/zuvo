@@ -1,6 +1,15 @@
 "use client";
 
-import { Heart, LogOut, Pencil, Rss, Settings, ShieldCheck, UserRound } from "lucide-react";
+import {
+  Heart,
+  LifeBuoy,
+  LogOut,
+  Pencil,
+  Rss,
+  Settings,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -51,7 +60,7 @@ export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: 
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={routes.favorites}>
+          <Link href={routes.profileFavorites}>
             <Heart aria-hidden="true" />
             Mes favoris
           </Link>
@@ -66,6 +75,12 @@ export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: 
           <Link href={routes.settings}>
             <Settings aria-hidden="true" />
             Paramètres
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.help}>
+            <LifeBuoy aria-hidden="true" />
+            Aide et contact
           </Link>
         </DropdownMenuItem>
         {isAdmin ? (

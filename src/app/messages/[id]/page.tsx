@@ -51,9 +51,9 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
   return (
     <div
       data-immersive
-      className="container-page flex min-h-dvh max-w-3xl flex-col md:min-h-[calc(100dvh-4rem)]"
+      className="container-page flex min-h-dvh max-w-3xl flex-col md:min-h-[calc(100dvh-4rem)] lg:min-h-dvh"
     >
-      <header className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 border-b border-border bg-background/95 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0 md:top-16 md:pt-4">
+      <header className="sticky top-0 z-30 -mx-4 flex flex-col gap-2 border-b border-border bg-background/95 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0 md:top-16 md:pt-4 lg:top-0">
         <div className="flex items-center gap-2">
           <Link
             href={routes.messages}

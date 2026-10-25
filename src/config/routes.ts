@@ -3,6 +3,7 @@ import type { Route } from "next";
 /** Chemins de l'application, centralisés pour pouvoir les renommer facilement. */
 export const routes = {
   home: "/",
+  welcome: "/bienvenue",
   explore: "/explorer",
   sell: "/vendre",
   messages: "/messages",
@@ -10,6 +11,7 @@ export const routes = {
   editProfile: "/profil/modifier",
   settings: "/parametres",
   favorites: "/favoris",
+  profileFavorites: "/profil?onglet=favoris",
   feed: "/fil",
   notifications: "/notifications",
   signIn: "/connexion",
@@ -55,7 +57,12 @@ export const protectedRoutePrefixes = [
 ] as const;
 
 /** Pages d'authentification inutiles une fois connecté. */
-export const guestOnlyRoutes = [routes.signIn, routes.signUp, routes.forgotPassword] as const;
+export const guestOnlyRoutes = [
+  routes.welcome,
+  routes.signIn,
+  routes.signUp,
+  routes.forgotPassword,
+] as const;
 
 function matchesPrefix(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);

@@ -41,7 +41,11 @@ export default async function SignInPage(props: PageProps<"/connexion">) {
   );
 
   return (
-    <AuthCard title="Connexion" description="Heureux de vous revoir." footer={signUpLink}>
+    <AuthCard
+      title="Connexion"
+      description="Heureux de vous revoir ! Retrouvez vos annonces, vos messages et vos favoris."
+      footer={signUpLink}
+    >
       {callbackError ? <Alert variant="danger">{callbackError}</Alert> : null}
       <GoogleSignIn settings={settings} next={next} />
       <SignInForm next={next} />

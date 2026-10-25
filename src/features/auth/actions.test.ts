@@ -113,7 +113,7 @@ describe("signUpAction", () => {
       email: "awa@example.cm",
       password: "motdepasse1",
       options: {
-        emailRedirectTo: "http://localhost:3000/auth/callback?next=%2Fprofil",
+        emailRedirectTo: "http://localhost:3000/auth/callback?next=%2F",
         data: { username: "awa_237", display_name: "Awa" },
       },
     });
@@ -132,7 +132,7 @@ describe("signUpAction", () => {
       data: { user: {}, session: { access_token: "t" } },
       error: null,
     } as never);
-    await expectRedirect(signUpAction(idle, formData(valid)), "/profil");
+    await expectRedirect(signUpAction(idle, formData(valid)), "/");
   });
 
   it("exige l'acceptation des conditions", async () => {

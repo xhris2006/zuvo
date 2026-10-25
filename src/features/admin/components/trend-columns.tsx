@@ -85,7 +85,9 @@ export function TrendColumns({ title, summary, points, unit }: TrendColumnsProps
               <div
                 className={cn(
                   "w-full max-w-6 rounded-t-[4px] transition-colors",
-                  index === active ? "bg-brand-800" : "bg-brand-600",
+                  index === active
+                    ? "bg-brand-800 dark:bg-brand-300"
+                    : "bg-brand-600 dark:bg-brand-400",
                 )}
                 style={{ height: `${barPercent(point.value, max)}%` }}
               />

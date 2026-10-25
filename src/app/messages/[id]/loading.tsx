@@ -9,7 +9,7 @@ export default function ConversationLoading() {
       data-immersive
       role="status"
       aria-label={t.common.loading}
-      className="container-page flex min-h-dvh max-w-3xl flex-col gap-4 pt-3 md:min-h-[calc(100dvh-4rem)] md:pt-4"
+      className="container-page flex min-h-dvh max-w-3xl flex-col gap-4 pt-3 md:min-h-[calc(100dvh-4rem)] md:pt-4 lg:min-h-dvh"
     >
       <div className="flex items-center gap-3">
         <Skeleton className="size-8 rounded-full" />

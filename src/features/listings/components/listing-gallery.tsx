@@ -2,13 +2,29 @@
 
 import { ImageOff } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type GalleryImage = { id: string; url: string | null };
 
+type ListingGalleryProps = {
+  images: GalleryImage[];
+  title: string;
+  /** Boutons posés en haut de la photo sur mobile (retour, favori, partage). */
+  overlay?: ReactNode;
+};
+
+/** Boutons superposés à la photo, sur mobile uniquement. */
+function GalleryOverlay({ children }: { children: ReactNode }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-2 md:hidden [&>*]:pointer-events-auto">
+      {children}
+    </div>
+  );
+}
+
 /** Galerie : défilement tactile (scroll-snap) et vignettes cliquables. */
-export function ListingGallery({ images, title }: { images: GalleryImage[]; title: string }) {
+export function ListingGallery({ images, title, overlay }: ListingGalleryProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const visible = images.filter((image): image is { id: string; url: string } =>
@@ -17,9 +33,12 @@ export function ListingGallery({ images, title }: { images: GalleryImage[]; titl
 
   if (visible.length === 0) {
     return (
-      <div className="flex aspect-square flex-col items-center justify-center gap-2 bg-muted text-muted-foreground sm:aspect-[4/3] sm:rounded-2xl">
-        <ImageOff className="size-8" aria-hidden="true" />
-        <span className="text-sm">Pas de photo</span>
+      <div className="relative">
+        <div className="flex aspect-[4/5] flex-col items-center justify-center gap-2 rounded-3xl bg-muted text-muted-foreground sm:aspect-[4/3] sm:rounded-2xl">
+          <ImageOff className="size-8" aria-hidden="true" />
+          <span className="text-sm">Pas de photo</span>
+        </div>
+        {overlay ? <GalleryOverlay>{overlay}</GalleryOverlay> : null}
       </div>
     );
   }
@@ -36,7 +55,7 @@ export function ListingGallery({ images, title }: { images: GalleryImage[]; titl
       <div className="relative">
         <div
           ref={trackRef}
-          className="flex aspect-square snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto bg-muted sm:aspect-[4/3] sm:rounded-2xl [&::-webkit-scrollbar]:hidden"
+          className="flex aspect-[4/5] snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto rounded-3xl bg-muted sm:aspect-[4/3] sm:rounded-2xl [&::-webkit-scrollbar]:hidden"
           onScroll={(event) => {
             const track = event.currentTarget;
             setActive(Math.round(track.scrollLeft / Math.max(track.clientWidth, 1)));
@@ -57,11 +76,12 @@ export function ListingGallery({ images, title }: { images: GalleryImage[]; titl
                 fill
                 priority={index === 0}
                 sizes="(min-width: 1024px) 40rem, 100vw"
-                className="object-contain"
+                className="object-cover sm:object-contain"
               />
             </div>
           ))}
         </div>
+        {overlay ? <GalleryOverlay>{overlay}</GalleryOverlay> : null}
         {visible.length > 1 ? (
           <>
             <span className="absolute right-3 bottom-3 hidden rounded-full bg-foreground/70 px-2.5 py-1 text-xs font-medium text-background sm:block">

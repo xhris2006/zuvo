@@ -14,10 +14,30 @@ type SellerCardProps = {
     city: string | null;
     created_at: string;
   };
+  /** Version réduite (sous le prix, sur mobile). */
+  compact?: boolean;
 };
 
-export function SellerCard({ seller }: SellerCardProps) {
+export function SellerCard({ seller, compact = false }: SellerCardProps) {
   const city = seller.city ? (getCity(seller.city)?.name ?? null) : null;
+  if (compact) {
+    return (
+      <Link
+        href={publicProfileHref(seller.username)}
+        className="flex items-center gap-3 rounded-2xl bg-muted/60 px-3 py-2.5 transition-colors hover:bg-muted"
+      >
+        <Avatar name={seller.display_name} src={avatarUrl(seller.avatar_path)} />
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-sm font-semibold">{seller.display_name}</span>
+          <span className="truncate text-xs text-muted-foreground">
+            @{seller.username}
+            {city ? ` · ${city}` : ""}
+          </span>
+        </span>
+        <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+      </Link>
+    );
+  }
   return (
     <Link
       href={publicProfileHref(seller.username)}

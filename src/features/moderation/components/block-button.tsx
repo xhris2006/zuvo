@@ -16,6 +16,7 @@ import {
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
 import { type BlockState, toggleBlockAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 type BlockButtonProps = {
   userId: string;
@@ -43,6 +44,7 @@ export function BlockButton({
   onBlockedChange,
   returnFocusRef,
 }: BlockButtonProps) {
+  const t = useT();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
@@ -71,7 +73,7 @@ export function BlockButton({
         {fields}
         <SubmitButton pending={pending} variant="outline" size="sm">
           <CircleCheck aria-hidden="true" />
-          Débloquer
+          {t.moderation.unblock}
         </SubmitButton>
         {state.message ? (
           <p className="text-sm text-danger" role="alert">
@@ -88,7 +90,7 @@ export function BlockButton({
         <DialogTrigger asChild>
           <Button variant="ghost" size="sm" className={cn("text-muted-foreground", className)}>
             <Ban aria-hidden="true" />
-            Bloquer
+            {t.moderation.block}
           </Button>
         </DialogTrigger>
       ) : null}
@@ -100,12 +102,8 @@ export function BlockButton({
         }}
       >
         <DialogHeader>
-          <DialogTitle>Bloquer {displayName} ?</DialogTitle>
-          <DialogDescription>
-            Vous ne pourrez plus échanger de messages ni vous suivre mutuellement. Vos abonnements
-            réciproques seront supprimés. Cette personne n&apos;en sera pas informée. Vous pourrez
-            la débloquer à tout moment depuis vos paramètres.
-          </DialogDescription>
+          <DialogTitle>{t.moderation.blockTitle(displayName)}</DialogTitle>
+          <DialogDescription>{t.moderation.blockBody}</DialogDescription>
         </DialogHeader>
         <form action={formAction} className="flex flex-col gap-3">
           {fields}
@@ -117,11 +115,11 @@ export function BlockButton({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                Annuler
+                {t.moderation.cancel}
               </Button>
             </DialogClose>
             <SubmitButton pending={pending} variant="destructive">
-              Bloquer
+              {t.moderation.block}
             </SubmitButton>
           </DialogFooter>
         </form>

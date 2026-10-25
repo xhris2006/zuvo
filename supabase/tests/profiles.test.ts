@@ -219,13 +219,20 @@ describe("user_roles", () => {
     );
   });
 
-  it("permet à un administrateur de voir son rôle, pas celui des autres", async () => {
+  it("montre les rôles de l'équipe aux administrateurs, aucun aux utilisateurs", async () => {
     const admin = await createUser();
+    const otherAdmin = await createUser();
     const user = await createUser();
     await makeAdmin(admin.id);
-    expect(
-      (await asUser(admin.id, (sql) => sql("select role from public.user_roles"))).rows,
-    ).toEqual([{ role: "admin" }]);
+    await makeAdmin(otherAdmin.id);
+    // Gestion des rôles depuis l'administration : l'équipe voit qui en fait partie.
+    const query = "select role from public.user_roles where user_id = $1";
+    expect((await asUser(admin.id, (sql) => sql(query, [admin.id]))).rows).toEqual([
+      { role: "admin" },
+    ]);
+    expect((await asUser(admin.id, (sql) => sql(query, [otherAdmin.id]))).rows).toEqual([
+      { role: "admin" },
+    ]);
     expect(
       (await asUser(user.id, (sql) => sql("select role from public.user_roles"))).rows,
     ).toEqual([]);

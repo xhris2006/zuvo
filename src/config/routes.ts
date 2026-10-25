@@ -3,6 +3,7 @@ import type { Route } from "next";
 /** Chemins de l'application, centralisés pour pouvoir les renommer facilement. */
 export const routes = {
   home: "/",
+  welcome: "/bienvenue",
   explore: "/explorer",
   sell: "/vendre",
   messages: "/messages",
@@ -10,6 +11,7 @@ export const routes = {
   editProfile: "/profil/modifier",
   settings: "/parametres",
   favorites: "/favoris",
+  profileFavorites: "/profil?onglet=favoris",
   feed: "/fil",
   notifications: "/notifications",
   signIn: "/connexion",
@@ -30,6 +32,14 @@ export const routes = {
   adminUsers: "/admin/utilisateurs",
   adminLog: "/admin/journal",
   adminConfig: "/admin/configuration",
+  adminListings: "/admin/annonces",
+  adminCategories: "/admin/categories",
+  adminCities: "/admin/villes",
+  adminTeam: "/admin/equipe",
+  adminAnnouncements: "/admin/message",
+  adminAntiSpam: "/admin/anti-spam",
+  adminSupport: "/admin/assistance",
+  support: "/assistance",
 } as const satisfies Record<string, Route>;
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */
@@ -43,10 +53,16 @@ export const protectedRoutePrefixes = [
   routes.notifications,
   routes.resetPassword,
   routes.admin,
+  routes.support,
 ] as const;
 
 /** Pages d'authentification inutiles une fois connecté. */
-export const guestOnlyRoutes = [routes.signIn, routes.signUp, routes.forgotPassword] as const;
+export const guestOnlyRoutes = [
+  routes.welcome,
+  routes.signIn,
+  routes.signUp,
+  routes.forgotPassword,
+] as const;
 
 function matchesPrefix(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);

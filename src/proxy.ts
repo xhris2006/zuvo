@@ -49,7 +49,7 @@ async function handle(request: NextRequest) {
   }
 
   if (userId && isGuestOnlyPath(pathname)) {
-    const next = safeRedirectPath(request.nextUrl.searchParams.get("next"), routes.profile);
+    const next = safeRedirectPath(request.nextUrl.searchParams.get("next"), routes.home);
     return redirectWithCookies(new URL(next, request.url), response);
   }
 

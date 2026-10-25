@@ -1,9 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListingGridSkeleton } from "@/features/listings/components/listing-grid";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
-export default function ExploreLoading() {
-  const t = getDictionary();
+export default async function ExploreLoading() {
+  const t = await getT();
   return (
     <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <div className="flex flex-col gap-2">

@@ -1,12 +1,18 @@
 import { ArrowRight, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
+import {
+  defaultCategories,
+  getCategoryIcon,
+  localizedCategoryName,
+} from "@/features/categories/data";
+import { LanguageToggle } from "@/features/language/components/language-switch";
 import type { ListingCardData } from "@/features/listings/types";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { buildMosaicColumns, type MosaicTile } from "../mosaic";
 
@@ -20,21 +26,19 @@ const columnMotion = [
 /** Formes variées pour éviter un effet de grille trop régulier. */
 const tileShapes = ["aspect-[3/4]", "aspect-[4/5]", "aspect-square"] as const;
 
-function categoryName(slug: string) {
-  return defaultCategories.find((category) => category.slug === slug)?.name ?? slug;
-}
-
 function Tile({
   tile,
   shape,
   eager,
   icon: Icon,
+  label,
 }: {
   tile: MosaicTile;
   shape: string;
   eager: boolean;
-  /** Icône de la catégorie (vignettes sans photo). */
+  /** Icône et nom de la catégorie (vignettes sans photo). */
   icon?: LucideIcon;
+  label?: string;
 }) {
   if (tile.kind === "photo") {
     return (
@@ -53,34 +57,48 @@ function Tile({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-2 rounded-2xl bg-brand-100 px-2 text-center text-brand-800 shadow-card",
+        "flex flex-col items-center justify-center gap-2 rounded-2xl bg-secondary px-2 text-center text-secondary-foreground shadow-card",
         shape,
       )}
     >
       {Icon ? <Icon className="size-7" strokeWidth={1.6} /> : null}
-      <span className="text-xs leading-tight font-semibold">{categoryName(tile.categorySlug)}</span>
+      <span className="text-xs leading-tight font-semibold">{label}</span>
     </div>
   );
 }
 
 /**
- * Accueil des visiteurs : mosaïque de photos d'annonces qui défile en continu
- * (colonnes en sens opposés, arrêtée si l'utilisateur réduit les animations),
- * message de bienvenue et accès à la connexion et à l'inscription.
+ * Page de bienvenue des visiteurs, séparée de l'accueil : mosaïque de photos
+ * d'annonces qui défile en continu (colonnes en sens opposés, arrêtée si
+ * l'utilisateur réduit les animations), message et accès à l'inscription et
+ * à la connexion. Les membres connectés arrivent directement sur l'accueil.
  */
-export function GuestWelcome({ listings }: { listings: ListingCardData[] }) {
-  const t = getDictionary();
+export async function WelcomeScreen({
+  listings,
+  notice,
+}: {
+  listings: ListingCardData[];
+  /** Message affiché au-dessus (ex. compte supprimé). */
+  notice?: ReactNode;
+}) {
+  const t = await getT();
   const columns = buildMosaicColumns(listings, 3, 4);
+  const categoryLabel = (slug: string) => {
+    const category = defaultCategories.find((item) => item.slug === slug);
+    return category ? localizedCategoryName(t.categoryNames, category) : slug;
+  };
 
   return (
     <section
-      aria-labelledby="guest-welcome-title"
-      className="overflow-hidden border-b border-border bg-gradient-to-b from-brand-50 to-background"
+      aria-labelledby="welcome-title"
+      className="welcome-backdrop relative flex min-h-dvh flex-col overflow-hidden"
     >
-      <div className="container-page grid items-center gap-6 pt-3 pb-8 lg:grid-cols-[1fr_1.05fr] lg:gap-12 lg:py-14">
+      <LanguageToggle className="absolute top-[max(1.25rem,env(safe-area-inset-top))] right-4 z-10 sm:right-6 lg:right-8" />
+      <div className="container-page flex flex-1 flex-col gap-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-14 lg:py-10">
+        <Logo className="self-center lg:hidden" />
         <div
           aria-hidden="true"
-          className="relative h-[26rem] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)] sm:h-[30rem] lg:order-2 lg:h-[34rem]"
+          className="relative h-[38dvh] min-h-52 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_88%,transparent)] sm:h-[30rem] lg:order-2 lg:h-[40rem]"
         >
           <div className="grid h-full grid-cols-3 gap-3">
             {columns.map((tiles, column) => {
@@ -108,6 +126,11 @@ export function GuestWelcome({ listings }: { listings: ListingCardData[] }) {
                                 ? getCategoryIcon(tile.categorySlug)
                                 : undefined
                             }
+                            label={
+                              tile.kind === "placeholder"
+                                ? categoryLabel(tile.categorySlug)
+                                : undefined
+                            }
                           />
                         ))}
                       </div>
@@ -119,10 +142,12 @@ export function GuestWelcome({ listings }: { listings: ListingCardData[] }) {
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-4 text-center lg:order-1 lg:items-start lg:gap-5 lg:text-left">
+        <div className="mt-auto flex flex-col items-center gap-4 text-center lg:order-1 lg:mt-0 lg:items-start lg:gap-6 lg:text-left">
+          <Logo className="hidden lg:inline-flex" />
+          {notice}
           <h1
-            id="guest-welcome-title"
-            className="max-w-xl text-[1.75rem] leading-tight font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl lg:leading-[1.1]"
+            id="welcome-title"
+            className="max-w-xl text-[1.875rem] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl"
           >
             {t.home.heroTitle}
           </h1>
@@ -130,23 +155,23 @@ export function GuestWelcome({ listings }: { listings: ListingCardData[] }) {
             {t.home.heroSubtitle}
           </p>
           <div className="flex w-full max-w-sm flex-col gap-3 pt-1 lg:max-w-none lg:flex-row">
-            <Button asChild size="lg" className="rounded-full lg:min-w-44">
-              <Link href={routes.signIn}>{t.common.signIn}</Link>
+            <Button asChild size="lg" className="rounded-full shadow-raised lg:min-w-48">
+              <Link href={routes.signUp}>{t.common.signUp}</Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="rounded-full border-primary text-primary hover:bg-accent lg:min-w-44"
+              className="rounded-full border-primary bg-card/60 text-primary backdrop-blur hover:bg-accent lg:min-w-48"
             >
-              <Link href={routes.signUp}>{t.common.signUp}</Link>
+              <Link href={routes.signIn}>{t.welcome.signIn}</Link>
             </Button>
           </div>
           <Link
             href={routes.explore}
-            className="inline-flex items-center gap-1 rounded-md px-1 py-1 text-sm font-semibold text-primary hover:text-primary-hover"
+            className="inline-flex items-center gap-1 rounded-md px-1 py-1 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
-            {t.home.heroSecondary}
+            {t.welcome.browse}
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>

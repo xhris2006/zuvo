@@ -3,6 +3,7 @@
 import { ImageOff } from "lucide-react";
 import Image from "next/image";
 import { type ReactNode, useRef, useState } from "react";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 type GalleryImage = { id: string; url: string | null };
@@ -25,6 +26,7 @@ function GalleryOverlay({ children }: { children: ReactNode }) {
 
 /** Galerie : défilement tactile (scroll-snap) et vignettes cliquables. */
 export function ListingGallery({ images, title, overlay }: ListingGalleryProps) {
+  const t = useT();
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const visible = images.filter((image): image is { id: string; url: string } =>
@@ -36,7 +38,7 @@ export function ListingGallery({ images, title, overlay }: ListingGalleryProps) 
       <div className="relative">
         <div className="flex aspect-[4/5] flex-col items-center justify-center gap-2 rounded-3xl bg-muted text-muted-foreground sm:aspect-[4/3] sm:rounded-2xl">
           <ImageOff className="size-8" aria-hidden="true" />
-          <span className="text-sm">Pas de photo</span>
+          <span className="text-sm">{t.listing.noPhoto}</span>
         </div>
         {overlay ? <GalleryOverlay>{overlay}</GalleryOverlay> : null}
       </div>
@@ -60,19 +62,19 @@ export function ListingGallery({ images, title, overlay }: ListingGalleryProps) 
             const track = event.currentTarget;
             setActive(Math.round(track.scrollLeft / Math.max(track.clientWidth, 1)));
           }}
-          aria-roledescription="carrousel"
-          aria-label={`Photos de « ${title} »`}
+          aria-roledescription={t.listing.carousel}
+          aria-label={t.listing.photosLabel(title)}
         >
           {visible.map((image, index) => (
             <div
               key={image.id}
               className="relative size-full shrink-0 snap-center"
-              aria-roledescription="diapositive"
-              aria-label={`${index + 1} sur ${visible.length}`}
+              aria-roledescription={t.listing.slide}
+              aria-label={t.listing.slidePosition(index + 1, visible.length)}
             >
               <Image
                 src={image.url}
-                alt={`${title} — photo ${index + 1}`}
+                alt={t.listing.photoNumbered(title, index + 1)}
                 fill
                 priority={index === 0}
                 sizes="(min-width: 1024px) 40rem, 100vw"
@@ -111,7 +113,7 @@ export function ListingGallery({ images, title, overlay }: ListingGalleryProps) 
               key={image.id}
               type="button"
               onClick={() => goTo(index)}
-              aria-label={`Afficher la photo ${index + 1}`}
+              aria-label={t.listing.showPhoto(index + 1)}
               aria-current={index === active}
               className={cn(
                 "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",

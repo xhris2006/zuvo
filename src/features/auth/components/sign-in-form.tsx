@@ -12,8 +12,10 @@ import { idleFormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { signInAction } from "../actions";
 import { ResendConfirmationForm } from "./resend-confirmation-form";
+import { useT } from "@/i18n/client";
 
 export function SignInForm({ next }: { next?: string }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(signInAction, idleFormState);
   const formRef = useRef<HTMLFormElement>(null);
   useFocusFirstError(formRef, state);
@@ -23,7 +25,7 @@ export function SignInForm({ next }: { next?: string }) {
       <form ref={formRef} action={formAction} className="flex flex-col gap-4" noValidate>
         <input type="hidden" name="next" value={next ?? ""} />
         <FormMessage state={state} />
-        <Field id="email" label="Adresse e-mail" error={state.fieldErrors?.email}>
+        <Field id="email" label={t.authForms.email} error={state.fieldErrors?.email}>
           {(control) => (
             <Input
               {...control}
@@ -36,7 +38,7 @@ export function SignInForm({ next }: { next?: string }) {
             />
           )}
         </Field>
-        <Field id="password" label="Mot de passe" error={state.fieldErrors?.password}>
+        <Field id="password" label={t.authForms.password} error={state.fieldErrors?.password}>
           {(control) => (
             <PasswordInput {...control} name="password" autoComplete="current-password" required />
           )}
@@ -46,11 +48,11 @@ export function SignInForm({ next }: { next?: string }) {
             href={routes.forgotPassword}
             className="text-sm font-medium text-primary hover:text-primary-hover"
           >
-            Mot de passe oublié ?
+            {t.authForms.forgotPassword}
           </Link>
         </div>
         <SubmitButton pending={pending} className="w-full">
-          Se connecter
+          {t.authForms.signIn}
         </SubmitButton>
       </form>
       {state.code === "email_not_confirmed" ? (

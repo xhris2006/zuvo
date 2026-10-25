@@ -6,7 +6,8 @@ et échangent directement avec les acheteurs.
 
 - Publication gratuite, aucune commission, aucun abonnement obligatoire.
 - Pas de paiement ni de livraison intégrés dans la première version.
-- Prix en FCFA (XAF), interface en français (architecture prête pour l'anglais).
+- Prix en FCFA (XAF), interface en français ou en anglais (choix dans Paramètres →
+  Langue, ou FR / EN sur les pages de bienvenue et de connexion).
 
 > **Nom provisoire.** Le nom, le pays, la devise et la langue sont centralisés
 > dans [`src/config/site.ts`](src/config/site.ts).
@@ -45,15 +46,30 @@ l'authentification n'est pas encore disponible.
   retiré), modification, suppression, annonces similaires, partage.
 - **Recherche** : plein texte insensible aux accents, filtres (catégorie,
   ville, état, prix), tri, pagination.
-- **Social** : favoris, abonnements, fil des profils suivis.
+- **Social** : favoris (onglet du profil), abonnements, fil des profils suivis
+  avec photos à faire défiler.
+- **Navigation** : page de bienvenue pour les visiteurs (`/bienvenue`), accueil
+  réservé aux membres connectés, en-tête mobile qui se masque au défilement,
+  barre latérale sur ordinateur, mode sombre (Paramètres → Apparence).
+- **Langues** : français (par défaut) et anglais sur tout le site, y compris
+  l'administration et les pages d'information. Le choix est mémorisé sur
+  l'appareil (cookie `zuvo-locale`) et appliqué dès le rendu serveur. Restent
+  dans une seule langue : les contenus saisis par les membres et l'équipe
+  (annonces, message global, catégories ajoutées), les e-mails de Supabase Auth
+  et le texte des notifications push (français, voir
+  [`docs/notifications.md`](docs/notifications.md)). Les versions anglaises des
+  documents juridiques sont, comme les françaises, des brouillons à faire valider.
 - **Messagerie** : une conversation par acheteur et par annonce, temps réel,
   accusés de lecture, compteur de non-lus.
 - **Notifications** : nouveaux abonnés, favoris, nouvelles annonces des
   profils suivis, retrait par la modération ; préférences ; Web Push
   (à configurer, voir [`docs/notifications.md`](docs/notifications.md)).
 - **Confiance** : signalement d'annonces, d'utilisateurs et de messages,
-  blocage, espace d'administration `/admin` (signalements, suspensions,
-  retraits, journal).
+  blocage, badge « vendeur vérifié » attribué par l'équipe, page Assistance
+  (contact et contestation d'un retrait), espace d'administration `/admin`
+  (signalements, annonces, suspensions temporaires, équipe et modérateurs,
+  catégories et villes, message global, tendances et export CSV, anti-spam,
+  assistance, journal).
 - **PWA** : installable, page hors connexion, icônes.
 - **SEO** : métadonnées, Open Graph, sitemap des annonces, données structurées.
 
@@ -148,12 +164,14 @@ src/
   app/                 Routes (App Router). (info)/ regroupe les pages d'information
   components/ui/       Design system : Button, Input, Select, Field, Badge, Card,
                        Dialog, Alert, Skeleton, EmptyState, Avatar…
-  components/layout/   En-tête, navigation mobile, pied de page, mises en page
+  components/layout/   En-tête (mobile), barre latérale (ordinateur), navigation
+                       mobile, mises en page
   config/              Nom du produit, routes, villes, limites métier
   features/            Code par domaine : auth, profiles, listings, search,
                        favorites, messaging, notifications, moderation,
                        admin, account…
-  i18n/                Dictionnaires de traduction (fr)
+  i18n/                Langues : dictionnaires fr/en partagés (navigateur) et
+                       serveur (dictionaries/server), getT() et useT()
   lib/                 Utilitaires : env, CSP, formatage (prix XAF, dates),
                        clients et types générés de la base (lib/supabase)
   proxy.ts             Session, redirections, Content-Security-Policy
@@ -167,14 +185,17 @@ e2e/                   Tests Playwright
   bleu nuit, gris bleutés, couleurs de statut. Changer la couleur de marque se fait
   uniquement dans ce fichier (et `themeColor` dans `src/config/site.ts`).
 - Contrastes vérifiés au niveau WCAG AA (texte 16:1, texte secondaire 5,8:1,
-  texte blanc sur primaire 5,6:1, bordures de champs 3,1:1).
+  texte blanc sur primaire 5,6:1, bordures de champs 3,1:1). Le mode sombre
+  (`:root[data-theme="dark"]`, variante Tailwind `dark:`) a ses propres jetons,
+  vérifiés eux aussi (texte 15:1, texte secondaire 7:1, primaire 6,8:1).
 - Mobile d'abord : navigation basse à 5 entrées (Accueil, Explorer, Vendre,
-  Messages, Profil), favoris et notifications dans l'en-tête.
+  Messages, Profil), logo centré et notifications dans l'en-tête ; sur
+  ordinateur, barre latérale avec les mêmes rubriques.
 - Les animations sont désactivées si l'utilisateur préfère réduire les mouvements.
 
 ## Sécurité
 
-RLS sur toutes les tables, rôle administrateur attribué uniquement en SQL,
+RLS sur toutes les tables, rôles de l'équipe attribués par une fonction réservée aux administrateurs,
 validation serveur de toutes les entrées, CSP stricte à nonce, secrets
 uniquement côté serveur, aucune page privée en cache. Détails et tests :
 [`docs/security.md`](docs/security.md).
@@ -200,7 +221,8 @@ faite depuis le code) :
 1. Créer le projet Supabase, appliquer les migrations, régler
    l'authentification et un **fournisseur SMTP**.
 2. Créer le projet Vercel et renseigner les variables d'environnement.
-3. Désigner au moins un administrateur (SQL).
+3. Désigner le premier administrateur (SQL) ; les suivants et les modérateurs
+   se nomment ensuite depuis Administration → Équipe.
 4. Faire relire et compléter les **pages juridiques** (brouillons) par un
    professionnel du droit.
 5. Facultatif : connexion Google ; notifications push (clés VAPID et clé

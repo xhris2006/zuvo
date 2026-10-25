@@ -1,15 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
 /** Conversation en chargement : même disposition plein écran que la page. */
-export default function ConversationLoading() {
-  const t = getDictionary();
+export default async function ConversationLoading() {
+  const t = await getT();
   return (
     <div
       data-immersive
       role="status"
       aria-label={t.common.loading}
-      className="container-page flex min-h-dvh max-w-3xl flex-col gap-4 pt-3 md:min-h-[calc(100dvh-4rem)] md:pt-4"
+      className="container-page flex min-h-dvh max-w-3xl flex-col gap-4 pt-3 md:min-h-[calc(100dvh-4rem)] md:pt-4 lg:min-h-dvh"
     >
       <div className="flex items-center gap-3">
         <Skeleton className="size-8 rounded-full" />

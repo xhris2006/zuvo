@@ -12,6 +12,7 @@ import {
 import { publicProfileHref } from "@/config/routes";
 import { BlockButton } from "./block-button";
 import { ReportDialog } from "./report-dialog";
+import { useT } from "@/i18n/client";
 
 type UserActionsMenuProps = {
   user: { id: string; username: string; displayName: string };
@@ -33,6 +34,7 @@ export function UserActionsMenu({
   returnTo,
   showProfileLink = false,
 }: UserActionsMenuProps) {
+  const t = useT();
   const [blocked, setBlocked] = useState(initialBlocked);
   const [reportOpen, setReportOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
@@ -54,7 +56,7 @@ export function UserActionsMenu({
         <DropdownMenuTrigger
           ref={triggerRef}
           className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted data-[state=open]:bg-muted"
-          aria-label="Plus d'options"
+          aria-label={t.moderation.moreOptions}
         >
           <EllipsisVertical className="size-5" aria-hidden="true" />
         </DropdownMenuTrigger>
@@ -63,13 +65,13 @@ export function UserActionsMenu({
             <DropdownMenuItem asChild>
               <Link href={publicProfileHref(user.username)}>
                 <UserRound aria-hidden="true" />
-                Voir le profil
+                {t.moderation.viewProfile}
               </Link>
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem onSelect={() => setReportOpen(true)}>
             <Flag aria-hidden="true" />
-            Signaler
+            {t.moderation.report}
           </DropdownMenuItem>
           {blocked ? null : (
             <DropdownMenuItem
@@ -77,7 +79,7 @@ export function UserActionsMenu({
               className="text-danger [&_svg]:text-danger"
             >
               <Ban aria-hidden="true" />
-              Bloquer
+              {t.moderation.block}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

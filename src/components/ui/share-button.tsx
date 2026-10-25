@@ -2,7 +2,7 @@
 
 import { Check, Share2 } from "lucide-react";
 import { useState } from "react";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
@@ -16,7 +16,7 @@ type ShareButtonProps = {
 
 /** Partage natif (mobile) ou copie du lien dans le presse-papiers. */
 export function ShareButton({ title, url, variant = "button", className }: ShareButtonProps) {
-  const t = getDictionary();
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   async function share() {

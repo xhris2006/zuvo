@@ -7,17 +7,20 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
 import { PhotoViewer } from "@/components/ui/photo-viewer";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { intlLocales } from "@/i18n";
+import { useLocale, useT } from "@/i18n/client";
 import { ImageProcessingError, resizeImage } from "@/lib/images/resize";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { loadOlderMessagesAction, markConversationReadAction, sendMessageAction } from "../actions";
-import { dayKey, formatDayLabel, formatMessageTime } from "../format";
+import { createMessageFormatters, dayKey } from "../format";
 import { conversationHref } from "../links";
 import {
   type ChatMessage,
@@ -59,6 +62,12 @@ export function ChatView({
   initialHasMore,
   disabledReason,
 }: ChatViewProps) {
+  const t = useT();
+  const locale = useLocale();
+  const formats = useMemo(
+    () => createMessageFormatters(intlLocales[locale], t.messaging),
+    [locale, t],
+  );
   const [messages, setMessages] = useState(initialMessages);
   const [photoUrls, setPhotoUrls] = useState<PhotoUrls>(initialPhotoUrls);
   const [photo, setPhoto] = useState<{ blob: Blob; previewUrl: string } | null>(null);
@@ -148,8 +157,8 @@ export function ChatView({
     } catch (caught) {
       setError(
         caught instanceof ImageProcessingError
-          ? caught.message
-          : "Cette photo n'a pas pu être lue.",
+          ? t.images[caught.code]
+          : t.messaging.unreadablePhoto,
       );
     } finally {
       setPreparingPhoto(false);
@@ -172,7 +181,7 @@ export function ChatView({
         .upload(photoPath, photo.blob, { contentType: photo.blob.type, upsert: false });
       if (!upload || upload.error) {
         setSending(false);
-        setError("La photo n'a pas pu être envoyée. Vérifiez votre connexion et réessayez.");
+        setError(t.messaging.photoSendFailed);
         return;
       }
     }
@@ -227,7 +236,7 @@ export function ChatView({
       <div
         role="log"
         aria-live="polite"
-        aria-label="Messages"
+        aria-label={t.messaging.log}
         className="flex flex-1 flex-col gap-1 py-4"
       >
         {hasMore ? (
@@ -238,14 +247,13 @@ export function ChatView({
               onClick={() => void loadOlder()}
               loading={loadingOlder}
             >
-              Messages précédents
+              {t.messaging.olderMessages}
             </Button>
           </div>
         ) : null}
         {messages.length === 0 ? (
           <p className="m-auto max-w-xs text-center text-sm text-muted-foreground">
-            Présentez-vous et posez vos questions sur l&apos;article. Ne communiquez jamais vos
-            codes Mobile Money.
+            {t.messaging.intro}
           </p>
         ) : null}
         {messages.map((message, index) => {
@@ -256,7 +264,7 @@ export function ChatView({
             <Fragment key={message.id}>
               {newDay ? (
                 <p className="my-3 text-center text-xs font-medium text-muted-foreground">
-                  {formatDayLabel(message.created_at)}
+                  {formats.dayLabel(message.created_at)}
                 </p>
               ) : null}
               <div
@@ -295,11 +303,13 @@ export function ChatView({
                     )}
                   >
                     <span className="sr-only">
-                      {mine ? "Vous, " : "Reçu, "}
-                      {message.attachment_path && !message.body ? "une photo, " : ""}
+                      {mine ? t.messaging.youSent : t.messaging.received}
+                      {message.attachment_path && !message.body ? t.messaging.aPhoto : ""}
                     </span>
-                    {formatMessageTime(message.created_at)}
-                    {mine && message.id === lastOwnRead?.id && message.read_at ? " · Vu" : ""}
+                    {formats.time(message.created_at)}
+                    {mine && message.id === lastOwnRead?.id && message.read_at
+                      ? t.messaging.seen
+                      : ""}
                   </p>
                 </div>
                 {!mine && message.sender_id ? (
@@ -336,18 +346,16 @@ export function ChatView({
                 {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob:) */}
                 <img
                   src={photo.previewUrl}
-                  alt="Photo prête à être envoyée"
+                  alt={t.messaging.photoReadyAlt}
                   className="size-14 rounded-lg object-cover"
                 />
-                <p className="flex-1 text-sm text-muted-foreground">
-                  Photo prête. Ajoutez un message si vous le souhaitez.
-                </p>
+                <p className="flex-1 text-sm text-muted-foreground">{t.messaging.photoReady}</p>
                 <button
                   type="button"
                   onClick={discardPhoto}
                   disabled={sending}
                   className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label="Retirer la photo"
+                  aria-label={t.messaging.removePhoto}
                 >
                   <X className="size-4" aria-hidden="true" />
                 </button>
@@ -371,12 +379,12 @@ export function ChatView({
                 onClick={() => fileInputRef.current?.click()}
                 loading={preparingPhoto}
                 disabled={sending || preparingPhoto}
-                aria-label="Joindre une photo"
+                aria-label={t.messaging.attachPhoto}
               >
                 {preparingPhoto ? null : <ImagePlus aria-hidden="true" />}
               </Button>
               <label htmlFor="message-input" className="sr-only">
-                Votre message
+                {t.messaging.yourMessage}
               </label>
               <textarea
                 id="message-input"
@@ -385,7 +393,7 @@ export function ChatView({
                 onKeyDown={handleKeyDown}
                 rows={1}
                 maxLength={MESSAGE_MAX_LENGTH}
-                placeholder={photo ? "Ajouter un message…" : "Écrire un message…"}
+                placeholder={photo ? t.messaging.addMessage : t.messaging.writeMessage}
                 className="field-sizing-content max-h-36 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-card px-4 py-2.5 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
               />
               <Button
@@ -393,7 +401,7 @@ export function ChatView({
                 size="icon"
                 className="shrink-0 rounded-full"
                 disabled={(!draft.trim() && !photo) || sending}
-                aria-label="Envoyer"
+                aria-label={t.messaging.send}
               >
                 {sending ? (
                   <Loader2 className="animate-spin" aria-hidden="true" />
@@ -410,20 +418,25 @@ export function ChatView({
           </p>
         ) : null}
       </div>
-      <PhotoViewer src={viewer} alt="Photo de la conversation" onClose={() => setViewer(null)} />
+      <PhotoViewer
+        src={viewer}
+        alt={t.messaging.conversationPhoto}
+        onClose={() => setViewer(null)}
+      />
     </div>
   );
 }
 
 /** Photo d'un message : miniature cliquable, ou espace réservé (chargement, lien expiré). */
 function MessagePhoto({ url, onOpen }: { url: string | null; onOpen: (url: string) => void }) {
+  const t = useT();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   if (!url || failedUrl === url) {
     return (
       <div className="flex h-48 w-56 max-w-full flex-col items-center justify-center gap-1 rounded-xl bg-muted text-muted-foreground">
         <ImageIcon className="size-6" aria-hidden="true" />
         <span className={cn("text-xs", !url && "sr-only")}>
-          {url ? "Photo indisponible : rechargez la page" : "Photo en cours de chargement"}
+          {url ? t.messaging.photoUnavailable : t.messaging.photoLoading}
         </span>
       </div>
     );
@@ -433,12 +446,12 @@ function MessagePhoto({ url, onOpen }: { url: string | null; onOpen: (url: strin
       type="button"
       onClick={() => onOpen(url)}
       className="block overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      aria-label="Agrandir la photo"
+      aria-label={t.messaging.enlargePhoto}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- photo privée (lien signé), jamais optimisée ni mise en cache par le serveur */}
       <img
         src={url}
-        alt="Photo envoyée dans la conversation"
+        alt={t.messaging.sentPhoto}
         loading="lazy"
         onError={() => setFailedUrl(url)}
         className="max-h-72 w-60 max-w-full bg-muted object-cover sm:w-72"

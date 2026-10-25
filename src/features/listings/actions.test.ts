@@ -25,6 +25,12 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(async () => supabase),
 }));
 vi.mock("@/features/auth/session", () => ({ getCurrentUser: vi.fn(async () => currentUser) }));
+vi.mock("@/features/locations/queries", async () => {
+  const { cities } = await import("@/config/locations");
+  return {
+    isAvailableCity: vi.fn(async (slug: string) => cities.some((city) => city.slug === slug)),
+  };
+});
 
 const { deleteListingAction, finalizeListingAction, saveListingAction, updateListingStatusAction } =
   await import("./actions");
@@ -90,6 +96,16 @@ describe("saveListingAction", () => {
     supabase!.from.mockReturnValueOnce(queryBuilder({ data: null }));
     const result = await saveListingAction(null, formData({ ...fields, intent: "draft" }));
     expect(result).toMatchObject({ fieldErrors: { category: "Catégorie invalide." } });
+  });
+
+  it("refuse une ville qui n'est pas proposée", async () => {
+    supabase!.from.mockReturnValueOnce(queryBuilder({ data: { id: CATEGORY_ID } }));
+    const result = await saveListingAction(
+      null,
+      formData({ ...fields, city: "paris", intent: "draft" }),
+    );
+    expect(result).toMatchObject({ fieldErrors: { city: "Ville invalide." } });
+    expect(supabase!.from).toHaveBeenCalledTimes(1);
   });
 
   it("limite la mise à jour aux annonces du vendeur connecté", async () => {

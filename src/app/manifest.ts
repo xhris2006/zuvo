@@ -1,14 +1,17 @@
 import type { MetadataRoute } from "next";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
+import { defaultLocale, getDictionary } from "@/i18n";
 
+/** Manifeste statique (application installée) : langue par défaut du site. */
 export default function manifest(): MetadataRoute.Manifest {
+  const t = getDictionary(defaultLocale);
   return {
     id: "/",
-    name: `${siteConfig.name} — ${siteConfig.tagline}`,
+    name: `${siteConfig.name} — ${t.site.tagline}`,
     short_name: siteConfig.name,
-    description: siteConfig.description,
-    lang: siteConfig.defaultLocale,
+    description: t.site.description,
+    lang: defaultLocale,
     dir: "ltr",
     start_url: "/",
     scope: "/",
@@ -28,9 +31,9 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     shortcuts: [
-      { name: "Vendre un article", url: routes.sell },
-      { name: "Messages", url: routes.messages },
-      { name: "Explorer", url: routes.explore },
+      { name: t.pages.shortcutSell, url: routes.sell },
+      { name: t.pages.shortcutMessages, url: routes.messages },
+      { name: t.pages.shortcutExplore, url: routes.explore },
     ],
   };
 }

@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { vm } from "@/lib/forms/validation";
 import { listingLimits } from "@/config/limits";
-import { citySlugs } from "@/config/locations";
+import { CITY_SLUG_PATTERN } from "@/features/locations/names";
 import { listingConditions } from "./constants";
 
 const optionalText = z
@@ -16,12 +17,12 @@ const priceSchema = z
     const digits = value.replace(/[\s  .]/g, "");
     if (!digits) return null;
     if (!/^\d+$/.test(digits)) {
-      context.addIssue({ code: "custom", message: "Indiquez un prix en chiffres, sans centimes." });
+      context.addIssue({ code: "custom", message: vm("priceDigits") });
       return z.NEVER;
     }
     const price = Number(digits);
     if (price > listingLimits.priceMax) {
-      context.addIssue({ code: "custom", message: "Prix trop élevé." });
+      context.addIssue({ code: "custom", message: vm("priceTooHigh") });
       return z.NEVER;
     }
     return price;
@@ -32,36 +33,39 @@ export const listingFieldsSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(listingLimits.titleMin, `Au moins ${listingLimits.titleMin} caractères.`)
-    .max(listingLimits.titleMax, `${listingLimits.titleMax} caractères au maximum.`),
+    .min(listingLimits.titleMin, vm("minChars", listingLimits.titleMin))
+    .max(listingLimits.titleMax, vm("maxChars", listingLimits.titleMax)),
   description: z
     .string()
     .trim()
-    .max(listingLimits.descriptionMax, `${listingLimits.descriptionMax} caractères au maximum.`),
+    .max(listingLimits.descriptionMax, vm("maxChars", listingLimits.descriptionMax)),
   category: optionalText.pipe(
     z
       .string()
-      .regex(/^[a-z0-9-]{1,60}$/, "Catégorie invalide.")
+      .regex(/^[a-z0-9-]{1,60}$/, vm("categoryInvalid"))
       .nullable(),
   ),
-  condition: optionalText.pipe(z.enum(listingConditions, { error: "État invalide." }).nullable()),
+  condition: optionalText.pipe(
+    z.enum(listingConditions, { error: vm("conditionInvalid") }).nullable(),
+  ),
   price: priceSchema,
-  city: optionalText.pipe(z.enum(citySlugs, { error: "Ville invalide." }).nullable()),
+  // Format seulement : la ville doit en plus être proposée (vérifié par l'action serveur).
+  city: optionalText.pipe(z.string().regex(CITY_SLUG_PATTERN, vm("cityInvalid")).nullable()),
 });
 
 export type ListingFields = z.infer<typeof listingFieldsSchema>;
 export type ListingField = keyof ListingFields;
 
-/** Erreurs empêchant la publication (champs manquants). */
+/** Erreurs empêchant la publication (champs manquants), sous forme de codes `vm`. */
 export function publicationErrors(fields: ListingFields): Partial<Record<ListingField, string>> {
   const errors: Partial<Record<ListingField, string>> = {};
   if (fields.description.length < listingLimits.descriptionMin) {
-    errors.description = `Décrivez l'article en au moins ${listingLimits.descriptionMin} caractères.`;
+    errors.description = vm("descriptionMin", listingLimits.descriptionMin);
   }
-  if (!fields.category) errors.category = "Choisissez une catégorie.";
-  if (!fields.condition) errors.condition = "Indiquez l'état de l'article.";
-  if (fields.price === null) errors.price = "Indiquez un prix.";
-  if (!fields.city) errors.city = "Indiquez la ville.";
+  if (!fields.category) errors.category = vm("categoryRequired");
+  if (!fields.condition) errors.condition = vm("conditionRequired");
+  if (fields.price === null) errors.price = vm("priceRequired");
+  if (!fields.city) errors.city = vm("cityRequired");
   return errors;
 }
 

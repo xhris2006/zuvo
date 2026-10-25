@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Variante « dark: » liée au thème choisi (attribut data-theme sur <html>). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Design tokens Zuvo.
  * Bleu (primaire), blanc cassé froid (fond), texte bleu nuit, gris bleutés.
@@ -42,13 +45,65 @@
   --warning-soft: #fbf0dc;
   --danger: #b3261e;
   --danger-soft: #fbe9e7;
+  /* Fond plein (boutons, pastilles) toujours lisible en texte blanc. */
+  --danger-solid: #b3261e;
   --info: #0e6e8c;
   --info-soft: #e0f2f7;
 
   --radius: 0.75rem;
 
+  /* Teinte des fonds de marque (bienvenue, connexion). */
+  --hero-tint: #e4eefe;
+
   /* Hauteur de la barre de navigation mobile (hors zone de sécurité). */
   --bottom-nav-height: 4rem;
+}
+
+/*
+ * Mode sombre, choisi dans les paramètres (cookie lu côté serveur, donc sans
+ * flash au chargement). Contrastes vérifiés (WCAG AA) : texte principal 15:1,
+ * texte secondaire 7:1, primaire sur fond 6,8:1, texte sur primaire 6,8:1.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #0b1220;
+  --foreground: #e6ebf3;
+
+  --card: #121a2b;
+  --card-foreground: #e6ebf3;
+  --popover: #172135;
+  --popover-foreground: #e6ebf3;
+
+  --primary: #6b9bf5;
+  --primary-hover: #8ab0f7;
+  --primary-foreground: #071226;
+
+  --secondary: #1c2f57;
+  --secondary-hover: #243a69;
+  --secondary-foreground: #c3d6fd;
+
+  --muted: #1a2335;
+  --muted-foreground: #9ba7bc;
+
+  --accent: #16233f;
+  --accent-foreground: #c3d6fd;
+
+  --border: #263249;
+  --input: #6c7a93;
+  --ring: #6b9bf5;
+
+  --success: #4cc38a;
+  --success-soft: #10291e;
+  --warning: #f0b453;
+  --warning-soft: #2e2210;
+  --danger: #f2877f;
+  --danger-soft: #35171a;
+  --danger-solid: #c53a32;
+  --info: #5cc4e0;
+  --info-soft: #0f2a33;
+
+  --hero-tint: #10203f;
 }
 
 @theme inline {
@@ -77,6 +132,7 @@
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-danger-solid: var(--danger-solid);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
 
@@ -182,9 +238,46 @@
   }
 }
 
-/* Écrans immersifs (conversation) : pas de pied de page sous la zone de saisie. */
-body:has([data-immersive]) [data-site-footer] {
+/* Pages autonomes (bienvenue) : ni en-tête ni barre de navigation. */
+body:has([data-standalone]) :is([data-site-header], [data-bottom-nav], [data-sidebar]) {
   display: none;
+}
+body:has([data-standalone]) main,
+body:has([data-standalone]) [data-shell] {
+  padding: 0;
+}
+
+/* Panneau de marque des écrans de connexion et d'inscription. */
+.auth-hero {
+  background-color: var(--color-brand-700);
+  background-image:
+    radial-gradient(circle at 88% 8%, rgb(255 255 255 / 0.14), transparent 42%),
+    radial-gradient(circle at 8% 100%, rgb(147 184 250 / 0.22), transparent 45%),
+    linear-gradient(
+      150deg,
+      var(--color-brand-600) 0%,
+      var(--color-brand-800) 62%,
+      var(--color-brand-950) 100%
+    );
+}
+
+@keyframes float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Fond de la page de bienvenue : teinte de marque qui se fond dans le fond. */
+.welcome-backdrop {
+  background-image: linear-gradient(to bottom, var(--hero-tint), var(--background) 70%);
 }
 
 /*
@@ -194,6 +287,7 @@ body:has([data-immersive]) [data-site-footer] {
  */
 @media (width < 48rem) {
   body:has([data-immersive]) [data-site-header],
+  body:has([data-immersive]) [data-site-banner],
   body:has([data-immersive]) [data-bottom-nav],
   body:has([data-hide-bottom-nav]) [data-bottom-nav] {
     display: none;
@@ -225,15 +319,18 @@ body:has([data-immersive]) [data-site-footer] {
     280ms cubic-bezier(0.2, 0.8, 0.2, 1) both page-rise;
 }
 ::view-transition-group(site-header),
+::view-transition-group(site-sidebar),
 ::view-transition-group(bottom-nav) {
   animation: none;
   z-index: 100;
 }
 ::view-transition-old(site-header),
+::view-transition-old(site-sidebar),
 ::view-transition-old(bottom-nav) {
   display: none;
 }
 ::view-transition-new(site-header),
+::view-transition-new(site-sidebar),
 ::view-transition-new(bottom-nav) {
   animation: none;
 }

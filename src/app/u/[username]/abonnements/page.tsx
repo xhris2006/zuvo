@@ -10,6 +10,7 @@ import { ProfileList } from "@/features/profiles/components/profile-list";
 import { getFollowList, getProfileByUsername } from "@/features/profiles/queries";
 import { USERNAME_PATTERN } from "@/features/profiles/username";
 import { parsePageParam } from "@/lib/pagination";
+import { getT } from "@/i18n/server";
 
 type Props = PageProps<"/u/[username]/abonnements">;
 
@@ -21,9 +22,9 @@ async function load(props: Props) {
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const profile = await load(props);
+  const [profile, t] = await Promise.all([load(props), getT()]);
   return {
-    title: profile ? `Abonnements de ${profile.display_name}` : "Profil introuvable",
+    title: profile ? t.profilePages.followingOf(profile.display_name) : t.profilePages.notFound,
     robots: { index: false },
   };
 }
@@ -31,6 +32,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function Page(props: Props) {
   const profile = await load(props);
   if (!profile) notFound();
+  const t = await getT();
   const page = parsePageParam((await props.searchParams).page);
   const list = await getFollowList(profile.id, "following", page);
   const base = followingHref(profile.username);
@@ -38,7 +40,7 @@ export default async function Page(props: Props) {
   return (
     <div className="container-page flex max-w-2xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
-        title="Abonnements"
+        title={t.profilePages.followingTitle}
         description={
           <Link href={publicProfileHref(profile.username)} className="hover:underline">
             {profile.display_name} (@{profile.username})
@@ -55,7 +57,7 @@ export default async function Page(props: Props) {
           />
         </>
       ) : (
-        <EmptyState icon={Users} title="Aucun abonnement pour le moment" />
+        <EmptyState icon={Users} title={t.profilePages.noFollowing} />
       )}
     </div>
   );

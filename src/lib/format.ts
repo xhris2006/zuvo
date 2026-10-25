@@ -1,52 +1,12 @@
 import { siteConfig } from "@/config/site";
 
-const priceFormatter = new Intl.NumberFormat(siteConfig.intlLocale, {
-  style: "currency",
-  currency: siteConfig.currency,
-  maximumFractionDigits: 0,
-});
-
-/** Formate un montant entier en XAF, par exemple « 15 000 FCFA ». */
-export function formatPrice(amount: number): string {
-  return withVisibleSpaces(priceFormatter.format(amount));
-}
-
 /**
  * Intl sépare les milliers par une espace fine insécable (U+202F), absente de
  * certaines polices : on utilise une espace insécable classique (U+00A0).
  */
 function withVisibleSpaces(value: string): string {
-  return value.replace(/ /g, " ");
+  return value.replace(/\u202f/g, "\u00a0");
 }
-
-const dateFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: siteConfig.timeZone,
-});
-
-export function formatDate(date: Date | string): string {
-  return dateFormatter.format(typeof date === "string" ? new Date(date) : date);
-}
-
-const dateTimeFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: siteConfig.timeZone,
-});
-
-/** « 18 oct. 2026, 14:05 » (heure du Cameroun). */
-export function formatDateTime(date: Date | string): string {
-  return dateTimeFormatter.format(typeof date === "string" ? new Date(date) : date);
-}
-
-const relativeFormatter = new Intl.RelativeTimeFormat(siteConfig.intlLocale, {
-  numeric: "auto",
-});
 
 const relativeUnits: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["year", 365 * 24 * 60 * 60],
@@ -57,35 +17,81 @@ const relativeUnits: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["minute", 60],
 ];
 
-/** « il y a 3 heures », « hier »… Les durées inférieures à une minute renvoient « à l'instant ». */
-export function formatRelativeTime(date: Date | string, now: Date = new Date()): string {
-  const target = typeof date === "string" ? new Date(date) : date;
-  const elapsedSeconds = Math.round((target.getTime() - now.getTime()) / 1000);
-  for (const [unit, secondsInUnit] of relativeUnits) {
-    if (Math.abs(elapsedSeconds) >= secondsInUnit) {
-      return relativeFormatter.format(Math.round(elapsedSeconds / secondsInUnit), unit);
-    }
-  }
-  return "à l'instant";
+function toDate(date: Date | string): Date {
+  return typeof date === "string" ? new Date(date) : date;
 }
 
-const monthYearFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
-  month: "long",
-  year: "numeric",
-  timeZone: siteConfig.timeZone,
-});
+/**
+ * Fonctions de formatage (prix en XAF, dates à l'heure du Cameroun, durées
+ * relatives) pour une langue. Chaque dictionnaire en expose un jeu (`t.format`).
+ *
+ * @param intlLocale Locale Intl, par exemple « fr-CM » ou « en-CM ».
+ * @param justNow Texte des durées inférieures à une minute.
+ */
+export function createFormatters(intlLocale: string, justNow: string) {
+  const priceFormatter = new Intl.NumberFormat(intlLocale, {
+    style: "currency",
+    currency: siteConfig.currency,
+    maximumFractionDigits: 0,
+  });
+  const dateFormatter = new Intl.DateTimeFormat(intlLocale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: siteConfig.timeZone,
+  });
+  const dayMonthFormatter = new Intl.DateTimeFormat(intlLocale, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+  const dateTimeFormatter = new Intl.DateTimeFormat(intlLocale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: siteConfig.timeZone,
+  });
+  const relativeFormatter = new Intl.RelativeTimeFormat(intlLocale, { numeric: "auto" });
+  const monthYearFormatter = new Intl.DateTimeFormat(intlLocale, {
+    month: "long",
+    year: "numeric",
+    timeZone: siteConfig.timeZone,
+  });
+  const compactFormatter = new Intl.NumberFormat(intlLocale, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  });
+  const numberFormatter = new Intl.NumberFormat(intlLocale);
 
-/** « octobre 2026 ». */
-export function formatMonthYear(date: Date | string): string {
-  return monthYearFormatter.format(typeof date === "string" ? new Date(date) : date);
+  return {
+    /** Montant entier en XAF, par exemple « 15 000 FCFA ». */
+    price: (amount: number) => withVisibleSpaces(priceFormatter.format(amount)),
+    /** « 18 octobre 2026 ». */
+    date: (date: Date | string) => dateFormatter.format(toDate(date)),
+    /** « 25 oct. » pour un jour calendaire au format AAAA-MM-JJ (sans décalage horaire). */
+    dayMonth: (day: string) => dayMonthFormatter.format(new Date(`${day}T12:00:00Z`)),
+    /** « 18 oct. 2026, 14:05 » (heure du Cameroun). */
+    dateTime: (date: Date | string) => dateTimeFormatter.format(toDate(date)),
+    /** « il y a 3 heures », « hier »… ; moins d'une minute : `justNow`. */
+    relativeTime: (date: Date | string, now: Date = new Date()) => {
+      const elapsedSeconds = Math.round((toDate(date).getTime() - now.getTime()) / 1000);
+      for (const [unit, secondsInUnit] of relativeUnits) {
+        if (Math.abs(elapsedSeconds) >= secondsInUnit) {
+          return relativeFormatter.format(Math.round(elapsedSeconds / secondsInUnit), unit);
+        }
+      }
+      return justNow;
+    },
+    /** « octobre 2026 ». */
+    monthYear: (date: Date | string) => monthYearFormatter.format(toDate(date)),
+    /** Nombre court : 1 200 → « 1,2 k ». */
+    count: (value: number) =>
+      value < 1000 ? String(value) : withVisibleSpaces(compactFormatter.format(value)),
+    /** Nombre entier avec séparateur de milliers. */
+    number: (value: number) => withVisibleSpaces(numberFormatter.format(value)),
+  };
 }
 
-const compactFormatter = new Intl.NumberFormat(siteConfig.intlLocale, {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
-/** Nombre court : 1 200 → « 1,2 k ». */
-export function formatCount(value: number): string {
-  return value < 1000 ? String(value) : withVisibleSpaces(compactFormatter.format(value));
-}
+export type Formatters = ReturnType<typeof createFormatters>;

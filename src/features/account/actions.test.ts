@@ -80,7 +80,7 @@ describe("deleteAccountAction", () => {
   });
 
   it("supprime le compte de la session puis ses fichiers, et déconnecte", async () => {
-    await expectRedirect(submit(" @Awa_237 "), "/?compte=supprime");
+    await expectRedirect(submit(" @Awa_237 "), "/bienvenue?compte=supprime");
     expect(admin!.auth.admin.deleteUser).toHaveBeenCalledWith(USER_ID);
     expect(admin!.buckets.avatars!.remove).toHaveBeenCalledWith([`${USER_ID}/avatar.webp`]);
     expect(admin!.buckets["listing-images"]!.remove).toHaveBeenCalledWith([

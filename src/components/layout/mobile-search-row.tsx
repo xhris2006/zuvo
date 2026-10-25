@@ -5,7 +5,7 @@ import { routes } from "@/config/routes";
 import { SearchForm } from "./search-form";
 
 /** Pages de navigation où la recherche reste visible en haut de l'écran sur mobile. */
-const browsePaths: string[] = [routes.home, routes.explore, routes.feed, routes.favorites];
+const browsePaths: string[] = [routes.home, routes.explore, routes.feed];
 
 export function MobileSearchRow() {
   const pathname = usePathname();

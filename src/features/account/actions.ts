@@ -9,6 +9,7 @@ import { type FormState, formText } from "@/lib/forms/form-state";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listUserFiles, removeUserFiles } from "./storage-cleanup";
+import { getT } from "@/i18n/server";
 
 export type DeleteAccountField = "confirmation";
 
@@ -22,11 +23,10 @@ export async function deleteAccountAction(
   _previous: FormState<DeleteAccountField>,
   formData: FormData,
 ): Promise<FormState<DeleteAccountField>> {
+  const texts = (await getT()).accountActions;
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) {
-    return { status: "error", message: "Votre session a expiré. Reconnectez-vous." };
-  }
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -37,7 +37,7 @@ export async function deleteAccountAction(
   if (!profile || confirmation !== profile.username) {
     return {
       status: "error",
-      fieldErrors: { confirmation: "Saisissez exactement votre nom d'utilisateur pour confirmer." },
+      fieldErrors: { confirmation: texts.confirmMismatch },
     };
   }
 
@@ -45,8 +45,7 @@ export async function deleteAccountAction(
   if (!admin) {
     return {
       status: "error",
-      message:
-        "La suppression automatique n'est pas encore activée sur ce service. Contactez-nous depuis la page Aide pour demander la suppression de votre compte.",
+      message: texts.notEnabled,
     };
   }
 
@@ -54,7 +53,7 @@ export async function deleteAccountAction(
   const files = await listUserFiles(admin, user.id);
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) {
-    return { status: "error", message: "La suppression a échoué. Veuillez réessayer." };
+    return { status: "error", message: texts.failed };
   }
   if (!(await removeUserFiles(admin, files))) {
     // Aucun identifiant ni chemin dans les journaux.
@@ -64,5 +63,5 @@ export async function deleteAccountAction(
   // Le compte n'existe plus : on efface simplement les cookies de session.
   await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
   revalidatePath("/", "layout");
-  redirect(`${routes.home}?compte=supprime` as Route);
+  redirect(`${routes.welcome}?compte=supprime` as Route);
 }

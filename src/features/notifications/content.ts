@@ -2,7 +2,7 @@ import type { Route } from "next";
 import { publicProfileHref, routes } from "@/config/routes";
 import { listingHref } from "@/features/listings/links";
 import { conversationHref } from "@/features/messaging/links";
-import { type Dictionary, getDictionary } from "@/i18n";
+import type { Dictionary } from "@/i18n";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type NotificationType = Database["public"]["Enums"]["notification_type"];
@@ -27,7 +27,7 @@ function shorten(value: string, max = TITLE_MAX): string {
 /** Titre et texte d'une notification (page Notifications et notifications push). */
 export function describeNotification(
   subject: Pick<NotificationSubject, "type" | "actorName" | "listingTitle" | "note">,
-  t: Dictionary = getDictionary(),
+  t: Pick<Dictionary, "notifications">,
 ): { title: string; body: string } {
   const copy = t.notifications;
   const actor = subject.actorName ? shorten(subject.actorName, 40) : copy.someone;
@@ -52,6 +52,11 @@ export function describeNotification(
       return { title, body: copy.bodies.listing_removed(listing ?? copy.unavailableListing) };
     case "moderation_warning":
       return { title, body: copy.bodies.moderation_warning(subject.note ?? null) };
+    case "support_reply":
+      return {
+        title,
+        body: copy.bodies.support_reply(subject.note ? shorten(subject.note) : null),
+      };
   }
 }
 
@@ -70,5 +75,7 @@ export function notificationHref(
       return subject.listingId ? listingHref(subject.listingId) : routes.notifications;
     case "moderation_warning":
       return routes.notifications;
+    case "support_reply":
+      return routes.support;
   }
 }

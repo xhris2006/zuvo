@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { citySlugs } from "@/config/locations";
+import { vm } from "@/lib/forms/validation";
+import { CITY_SLUG_PATTERN } from "@/features/locations/names";
 import { displayNameSchema, usernameSchema } from "@/features/auth/schemas";
 import { normalizePhone } from "./phone";
 
@@ -13,10 +14,11 @@ export const profileSchema = z.object({
   bio: z
     .string()
     .trim()
-    .max(BIO_MAX_LENGTH, `${BIO_MAX_LENGTH} caractères au maximum.`)
+    .max(BIO_MAX_LENGTH, vm("maxChars", BIO_MAX_LENGTH))
     .transform((value) => value || null),
   city: z
-    .union([z.literal(""), z.enum(citySlugs, { error: "Ville invalide." })])
+    // Format seulement : la ville doit en plus être proposée (vérifié par l'action serveur).
+    .union([z.literal(""), z.string().regex(CITY_SLUG_PATTERN, vm("cityInvalid"))])
     .transform((value) => value || null),
   /** Chemin du nouvel avatar ("" = aucun changement, "-" = supprimer la photo). */
   avatarPath: z.string().max(200),
@@ -40,7 +42,7 @@ export const privateContactSchema = z.object({
       if (!normalized) {
         context.addIssue({
           code: "custom",
-          message: "Numéro invalide. Exemple : 6 90 00 00 00 ou +237 6 90 00 00 00.",
+          message: vm("phoneInvalid"),
         });
         return z.NEVER;
       }

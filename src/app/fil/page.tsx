@@ -17,11 +17,12 @@ import {
 } from "@/features/listings/components/listing-view";
 import { getFeedListings } from "@/features/listings/feed";
 import { parsePageParam } from "@/lib/pagination";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Mon fil",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.feedPage.title, robots: { index: false } };
+}
 
 /** Adresse du fil pour une page et un mode d'affichage (le fil par défaut). */
 function feedHref(page: number, view: ListingView) {
@@ -35,15 +36,16 @@ function feedHref(page: number, view: ListingView) {
 async function Feed({ page, view }: { page: number; view: ListingView }) {
   const user = await getCurrentUser();
   const feed = user ? await getFeedListings({ followerId: user.id, page }) : null;
+  const t = await getT();
   if (!feed || feed.items.length === 0) {
     return (
       <EmptyState
         icon={Rss}
-        title="Votre fil est vide"
-        description="Suivez des vendeurs pour voir ici leurs nouvelles annonces."
+        title={t.feedPage.emptyTitle}
+        description={t.feedPage.emptyBody}
         action={
           <Button asChild>
-            <Link href={routes.explore}>Découvrir des annonces</Link>
+            <Link href={routes.explore}>{t.feedPage.discover}</Link>
           </Button>
         }
       />
@@ -69,11 +71,12 @@ export default async function FeedPage(props: PageProps<"/fil">) {
   const searchParams = await props.searchParams;
   const page = parsePageParam(searchParams.page);
   const view = parseListingView(searchParams.vue);
+  const t = await getT();
   return (
     <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
-        title="Mon fil"
-        description="Les dernières annonces des vendeurs que vous suivez."
+        title={t.feedPage.title}
+        description={t.feedPage.description}
         inlineActions
         actions={<ListingViewToggle current={view} hrefFor={(value) => feedHref(page, value)} />}
       />

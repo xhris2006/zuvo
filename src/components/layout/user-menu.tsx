@@ -1,6 +1,15 @@
 "use client";
 
-import { Heart, LogOut, Pencil, Rss, Settings, ShieldCheck, UserRound } from "lucide-react";
+import {
+  Heart,
+  LifeBuoy,
+  LogOut,
+  Pencil,
+  Rss,
+  Settings,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -14,6 +23,7 @@ import {
 import { routes } from "@/config/routes";
 import { signOutAction } from "@/features/auth/actions";
 import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
+import { useT } from "@/i18n/client";
 
 type UserMenuProps = {
   displayName: string;
@@ -24,11 +34,12 @@ type UserMenuProps = {
 };
 
 export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: UserMenuProps) {
+  const t = useT();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className="rounded-full outline-offset-2"
-        aria-label={`Menu du compte de ${displayName}`}
+        aria-label={t.userMenu.label(displayName)}
       >
         <Avatar name={displayName} src={avatarUrl} size="md" />
       </DropdownMenuTrigger>
@@ -41,38 +52,44 @@ export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: 
         <DropdownMenuItem asChild>
           <Link href={routes.profile}>
             <UserRound aria-hidden="true" />
-            Mon profil
+            {t.userMenu.profile}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={routes.feed}>
             <Rss aria-hidden="true" />
-            Mon fil
+            {t.userMenu.feed}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={routes.favorites}>
+          <Link href={routes.profileFavorites}>
             <Heart aria-hidden="true" />
-            Mes favoris
+            {t.userMenu.favorites}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={routes.editProfile}>
             <Pencil aria-hidden="true" />
-            Modifier le profil
+            {t.userMenu.editProfile}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={routes.settings}>
             <Settings aria-hidden="true" />
-            Paramètres
+            {t.userMenu.settings}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.help}>
+            <LifeBuoy aria-hidden="true" />
+            {t.userMenu.help}
           </Link>
         </DropdownMenuItem>
         {isAdmin ? (
           <DropdownMenuItem asChild>
             <Link href={routes.admin}>
               <ShieldCheck aria-hidden="true" />
-              Administration
+              {t.userMenu.admin}
             </Link>
           </DropdownMenuItem>
         ) : null}
@@ -83,7 +100,7 @@ export function UserMenu({ displayName, username, avatarUrl, isAdmin = false }: 
           <DropdownMenuItem asChild onSelect={(event) => event.preventDefault()}>
             <button type="submit" className="w-full">
               <LogOut aria-hidden="true" />
-              Se déconnecter
+              {t.userMenu.signOut}
             </button>
           </DropdownMenuItem>
         </form>

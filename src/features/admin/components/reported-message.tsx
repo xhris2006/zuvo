@@ -3,7 +3,7 @@
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/format";
+import { useT } from "@/i18n/client";
 import { type ReportedMessage as Message, viewReportedMessageAction } from "../actions";
 
 /** Message signalé, affiché à la demande (chaque consultation est journalisée). */
@@ -12,6 +12,7 @@ export function ReportedMessage({ reportId }: { reportId: string }) {
     { kind: "idle" } | { kind: "loaded"; message: Message | null } | { kind: "error"; text: string }
   >({ kind: "idle" });
   const [loading, setLoading] = useState(false);
+  const t = useT();
 
   if (state.kind === "loaded") {
     return state.message ? (
@@ -20,22 +21,22 @@ export function ReportedMessage({ reportId }: { reportId: string }) {
           // eslint-disable-next-line @next/next/no-img-element -- photo privée (lien signé de 5 minutes)
           <img
             src={state.message.photoUrl}
-            alt="Photo du message signalé"
+            alt={t.adminUi.reportedMessage.photoAlt}
             className="mb-2 max-h-64 rounded-md object-contain"
           />
         ) : null}
         {state.message.body ? (
           <p className="break-words whitespace-pre-wrap">{state.message.body}</p>
         ) : state.message.photoUrl ? null : (
-          <p className="text-muted-foreground">(photo indisponible)</p>
+          <p className="text-muted-foreground">{t.adminUi.reportedMessage.photoUnavailable}</p>
         )}
         <footer className="mt-1 text-xs text-muted-foreground">
-          @{state.message.senderUsername ?? "compte supprimé"} ·{" "}
-          {formatDate(state.message.createdAt)}
+          @{state.message.senderUsername ?? t.adminUi.reportedMessage.deletedAccount} ·{" "}
+          {t.format.date(state.message.createdAt)}
         </footer>
       </blockquote>
     ) : (
-      <p className="text-sm text-muted-foreground">Ce message a été supprimé.</p>
+      <p className="text-sm text-muted-foreground">{t.adminUi.reportedMessage.deleted}</p>
     );
   }
 
@@ -58,11 +59,9 @@ export function ReportedMessage({ reportId }: { reportId: string }) {
         }}
       >
         <Eye aria-hidden="true" />
-        Afficher le message
+        {t.adminUi.reportedMessage.show}
       </Button>
-      <p className="text-xs text-muted-foreground">
-        Les messages sont privés : chaque consultation est enregistrée dans le journal.
-      </p>
+      <p className="text-xs text-muted-foreground">{t.adminUi.reportedMessage.privacyNote}</p>
       {state.kind === "error" ? (
         <p className="text-sm text-danger" role="alert">
           {state.text}

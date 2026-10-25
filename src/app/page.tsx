@@ -1,151 +1,55 @@
-import {
-  BadgePercent,
-  HandCoins,
-  MessagesSquare,
-  PackageOpen,
-  Plus,
-  ShieldCheck,
-} from "lucide-react";
+import { PackageOpen, Plus, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { SectionHeader } from "@/components/layout/section-header";
-import { JsonLd } from "@/components/seo/json-ld";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
-import { siteConfig } from "@/config/site";
-import { CategoryList } from "@/features/categories/components/category-list";
-import { defaultCategories } from "@/features/categories/data";
 import { getCurrentUser } from "@/features/auth/session";
-import { GuestWelcome } from "@/features/home/components/guest-welcome";
 import { FeedResults } from "@/features/listings/components/feed-results";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { ListingViewToggle, parseListingView } from "@/features/listings/components/listing-view";
 import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
-import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
+import { getFollowedFeed } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
-import { getDictionary } from "@/i18n";
-import { getSiteUrl } from "@/lib/env";
+import { getT } from "@/i18n/server";
 
 /**
  * Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage.
- * Les membres connectés reçoivent les annonces récentes avec leur vendeur (fil).
+ * Annonces récentes avec leur vendeur (fil) et nouveautés des profils suivis.
  */
-async function loadHomeListings(userId: string | null): Promise<{
-  recent: ListingCardData[];
-  recentFeed: FeedListingData[] | null;
+async function loadHomeListings(userId: string): Promise<{
+  recent: FeedListingData[];
   followed: ListingCardData[];
 }> {
   try {
-    const [recent, recentFeed, feed] = await Promise.all([
-      userId ? Promise.resolve(null) : getRecentListings(12),
-      userId ? getFeedListings({ pageSize: 12 }) : Promise.resolve(null),
-      userId ? getFollowedFeed(userId, 1) : Promise.resolve(null),
+    const [recent, followed] = await Promise.all([
+      getFeedListings({ pageSize: 12 }),
+      getFollowedFeed(userId, 1),
     ]);
-    return {
-      recent: recent ?? recentFeed?.items ?? [],
-      recentFeed: recentFeed?.items ?? null,
-      followed: feed?.items.slice(0, 8) ?? [],
-    };
+    return { recent: recent.items, followed: followed.items.slice(0, 8) };
   } catch {
-    return { recent: [], recentFeed: null, followed: [] };
+    return { recent: [], followed: [] };
   }
 }
 
-/** Raccourci de mise en vente pour les membres connectés. */
-function SellCard() {
-  const t = getDictionary();
-  return (
-    <section aria-labelledby="sell-card-title" className="container-page">
-      <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 px-4 py-4 text-white shadow-raised sm:px-6 sm:py-5">
-        <div className="min-w-0 flex-1">
-          <h2 id="sell-card-title" className="font-semibold sm:text-lg">
-            {t.home.sellCardTitle}
-          </h2>
-          <p className="text-sm text-brand-100">{t.home.sellCardBody}</p>
-        </div>
-        <Button
-          asChild
-          variant="secondary"
-          className="bg-white text-brand-800 shadow-card hover:bg-brand-50"
-        >
-          <Link href={routes.sell}>
-            <Plus aria-hidden="true" />
-            {t.home.sellCardCta}
-          </Link>
-        </Button>
-      </div>
-    </section>
-  );
-}
-
+/** Accueil des membres connectés ; les visiteurs sont dirigés vers la page de bienvenue. */
 export default async function HomePage(props: PageProps<"/">) {
-  const t = getDictionary();
-  const searchParams = await props.searchParams;
-  const accountDeleted = searchParams.compte === "supprime";
-  const view = parseListingView(searchParams.vue);
+  const t = await getT();
   const user = await getCurrentUser().catch(() => null);
-  const { recent, recentFeed, followed } = await loadHomeListings(user?.id ?? null);
-  const values = [
-    { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
-    { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
-    { icon: MessagesSquare, title: t.home.values.directTitle, body: t.home.values.directBody },
-  ];
-
-  const siteUrl = getSiteUrl();
+  if (!user) redirect(routes.welcome);
+  const view = parseListingView((await props.searchParams).vue);
+  const { recent, followed } = await loadHomeListings(user.id);
 
   return (
-    <div
-      className={
-        user ? "flex flex-col gap-9 pt-4 sm:gap-14 sm:pt-8" : "flex flex-col gap-9 sm:gap-16"
-      }
-    >
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: siteConfig.name,
-          description: siteConfig.description,
-          url: siteUrl,
-          inLanguage: siteConfig.intlLocale,
-          potentialAction: {
-            "@type": "SearchAction",
-            target: {
-              "@type": "EntryPoint",
-              urlTemplate: `${siteUrl}${routes.explore}?q={search_term_string}`,
-            },
-            "query-input": "required name=search_term_string",
-          },
-        }}
-      />
-      {accountDeleted ? (
-        <div className="container-page pt-4">
-          <Alert variant="success" title="Compte supprimé" role="status">
-            Votre compte et vos annonces ont été supprimés. Merci d&apos;avoir utilisé{" "}
-            {siteConfig.name}.
-          </Alert>
-        </div>
-      ) : null}
-
-      {user ? (
-        <>
-          <h1 className="sr-only">{t.nav.home}</h1>
-          <SellCard />
-        </>
-      ) : (
-        <GuestWelcome listings={recent} />
-      )}
-
-      <section aria-labelledby="categories-title" className="container-page">
-        <SectionHeader id="categories-title" title={t.home.categoriesTitle} href={routes.explore} />
-        <CategoryList categories={defaultCategories} />
-      </section>
+    <div className="flex flex-col gap-8 pt-4 sm:gap-12 sm:pt-8">
+      <h1 className="sr-only">{t.nav.home}</h1>
 
       {followed.length > 0 ? (
         <section aria-labelledby="feed-title" className="container-page">
           <SectionHeader id="feed-title" title={t.home.followedTitle} href={routes.feed} />
-          <ListingResults listings={followed.slice(0, 8)} layout="carousel" />
+          <ListingResults listings={followed} layout="carousel" />
         </section>
       ) : null}
 
@@ -157,18 +61,14 @@ export default async function HomePage(props: PageProps<"/">) {
             href={recent.length > 0 ? routes.explore : undefined}
             className="mb-0 min-w-0 flex-1 sm:mb-0"
           />
-          {recentFeed && recentFeed.length > 0 ? (
+          {recent.length > 0 ? (
             <ListingViewToggle
               current={view}
               hrefFor={(value) => (value === "grille" ? "/?vue=grille" : routes.home) as Route}
             />
           ) : null}
         </div>
-        {recentFeed && recentFeed.length > 0 && view === "fil" ? (
-          <FeedResults listings={recentFeed} />
-        ) : recent.length > 0 ? (
-          <ListingResults listings={recent} priorityCount={4} />
-        ) : (
+        {recent.length === 0 ? (
           <EmptyState
             icon={PackageOpen}
             headingLevel="h3"
@@ -183,24 +83,11 @@ export default async function HomePage(props: PageProps<"/">) {
               </Button>
             }
           />
+        ) : view === "fil" ? (
+          <FeedResults listings={recent} />
+        ) : (
+          <ListingResults listings={recent} priorityCount={4} />
         )}
-      </section>
-
-      <section aria-labelledby="values-title" className="container-page">
-        <SectionHeader id="values-title" title={t.home.valueTitle} />
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-card sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {values.map(({ icon: Icon, title, body }) => (
-            <li key={title} className="flex gap-4 p-4 sm:flex-col sm:gap-0 sm:p-6">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground sm:mb-4">
-                <Icon className="size-5" aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold">{title}</h3>
-                <p className="mt-0.5 text-sm text-muted-foreground">{body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
       </section>
 
       <section className="container-page">

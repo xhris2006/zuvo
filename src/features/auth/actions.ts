@@ -6,25 +6,23 @@ import { redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import { getSiteUrl } from "@/lib/env";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { getT } from "@/i18n/server";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authErrorMessage } from "./errors";
 import { safeRedirectPath } from "./redirect";
 import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "./schemas";
 import { getCurrentUser } from "./session";
 
-const NOT_CONFIGURED = "L'authentification n'est pas encore disponible.";
-
 /**
  * Erreur à signaler à l'utilisateur pour les demandes d'e-mail (renvoi,
  * réinitialisation) : limite d'envoi ou service indisponible. Les autres
  * erreurs ne sont pas affichées, pour ne pas révéler si un compte existe.
  */
-function emailRequestError(error: { code?: string; status?: number } | null) {
+function emailRequestError(t: ServerDictionary, error: { code?: string; status?: number } | null) {
   if (!error) return null;
-  if (error.status === 429) return authErrorMessage(error);
-  if (!error.status || error.status >= 500) {
-    return "Le service est momentanément indisponible. Réessayez dans quelques instants.";
-  }
+  if (error.status === 429) return authErrorMessage(t.authErrors, error);
+  if (!error.status || error.status >= 500) return t.authErrors.serviceUnavailable;
   return null;
 }
 
@@ -42,18 +40,24 @@ export async function signInAction(
   _previous: FormState<SignInField>,
   formData: FormData,
 ): Promise<FormState<SignInField>> {
+  const t = await getT();
   const values = { email: formText(formData, "email") };
   const parsed = signInSchema.safeParse({ ...values, password: formText(formData, "password") });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { status: "error", message: NOT_CONFIGURED, values };
+  if (!supabase) return { status: "error", message: t.authErrors.notConfigured, values };
 
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    return { status: "error", message: authErrorMessage(error), code: error.code, values };
+    return {
+      status: "error",
+      message: authErrorMessage(t.authErrors, error),
+      code: error.code,
+      values,
+    };
   }
 
   revalidatePath("/", "layout");
@@ -69,6 +73,7 @@ export async function signUpAction(
   _previous: FormState<SignUpField>,
   formData: FormData,
 ): Promise<FormState<SignUpField>> {
+  const t = await getT();
   const values = {
     username: formText(formData, "username"),
     displayName: formText(formData, "displayName"),
@@ -80,11 +85,11 @@ export async function signUpAction(
     acceptTerms: formText(formData, "acceptTerms"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { status: "error", message: NOT_CONFIGURED, values };
+  if (!supabase) return { status: "error", message: t.authErrors.notConfigured, values };
 
   const { username, displayName, email, password } = parsed.data;
   const { data: available } = await supabase.rpc("is_username_available", {
@@ -93,7 +98,7 @@ export async function signUpAction(
   if (available === false) {
     return {
       status: "error",
-      fieldErrors: { username: "Ce nom d'utilisateur est déjà pris." },
+      fieldErrors: { username: t.authErrors.usernameTaken },
       values,
     };
   }
@@ -102,7 +107,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      emailRedirectTo: callbackUrl(routes.profile),
+      emailRedirectTo: callbackUrl(routes.home),
       data: { username, display_name: displayName },
     },
   });
@@ -112,14 +117,14 @@ export async function signUpAction(
     if (error.code === "user_already_exists" || error.code === "email_exists") {
       redirect(routes.signUpCheckEmail);
     }
-    return { status: "error", message: authErrorMessage(error), values };
+    return { status: "error", message: authErrorMessage(t.authErrors, error), values };
   }
 
   // Session immédiate uniquement si la confirmation d'e-mail est désactivée
   // (développement local). En production, l'e-mail doit être vérifié.
   if (data.session) {
     revalidatePath("/", "layout");
-    redirect(routes.profile);
+    redirect(routes.home);
   }
   redirect(routes.signUpCheckEmail);
 }
@@ -131,25 +136,22 @@ export async function resendConfirmationAction(
   _previous: FormState<"email">,
   formData: FormData,
 ): Promise<FormState<"email">> {
+  const t = await getT();
   const parsed = forgotPasswordSchema.safeParse({ email: formText(formData, "email") });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error) };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t) };
   }
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { status: "error", message: NOT_CONFIGURED };
+  if (!supabase) return { status: "error", message: t.authErrors.notConfigured };
 
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
-    options: { emailRedirectTo: callbackUrl(routes.profile) },
+    options: { emailRedirectTo: callbackUrl(routes.home) },
   });
-  const resendError = emailRequestError(error);
+  const resendError = emailRequestError(t, error);
   if (resendError) return { status: "error", message: resendError };
-  return {
-    status: "success",
-    message:
-      "Si un compte en attente de confirmation correspond à cette adresse, un nouvel e-mail vient d'être envoyé.",
-  };
+  return { status: "success", message: t.authErrors.resendSent };
 }
 
 // -----------------------------------------------------------------------------
@@ -159,25 +161,22 @@ export async function forgotPasswordAction(
   _previous: FormState<"email">,
   formData: FormData,
 ): Promise<FormState<"email">> {
+  const t = await getT();
   const values = { email: formText(formData, "email") };
   const parsed = forgotPasswordSchema.safeParse(values);
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { status: "error", message: NOT_CONFIGURED, values };
+  if (!supabase) return { status: "error", message: t.authErrors.notConfigured, values };
 
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: callbackUrl(routes.resetPassword),
   });
-  const requestError = emailRequestError(error);
+  const requestError = emailRequestError(t, error);
   if (requestError) return { status: "error", message: requestError, values };
   // Même réponse que le compte existe ou non.
-  return {
-    status: "success",
-    message:
-      "Si un compte correspond à cette adresse, vous allez recevoir un e-mail contenant un lien de réinitialisation.",
-  };
+  return { status: "success", message: t.authErrors.resetSent };
 }
 
 type ResetPasswordField = "password" | "confirmPassword";
@@ -186,23 +185,22 @@ export async function updatePasswordAction(
   _previous: FormState<ResetPasswordField>,
   formData: FormData,
 ): Promise<FormState<ResetPasswordField>> {
+  const t = await getT();
   const parsed = resetPasswordSchema.safeParse({
     password: formText(formData, "password"),
     confirmPassword: formText(formData, "confirmPassword"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error) };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t) };
   }
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) {
-    return { status: "error", message: "Votre session a expiré. Reconnectez-vous." };
-  }
+  if (!supabase || !user) return { status: "error", message: t.authErrors.sessionExpired };
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-  if (error) return { status: "error", message: authErrorMessage(error) };
-  return { status: "success", message: "Votre mot de passe a été modifié." };
+  if (error) return { status: "error", message: authErrorMessage(t.authErrors, error) };
+  return { status: "success", message: t.authErrors.passwordChanged };
 }
 
 // -----------------------------------------------------------------------------
@@ -219,7 +217,7 @@ export async function signOutAction(formData?: FormData) {
     await supabase.auth.signOut({ scope: "local" });
   }
   revalidatePath("/", "layout");
-  redirect(routes.home);
+  redirect(routes.welcome);
 }
 
 export async function signInWithGoogleAction(formData: FormData) {
@@ -273,6 +271,6 @@ export async function verifyEmailLinkAction(formData: FormData) {
   if (error) redirect(invalidLink);
 
   revalidatePath("/", "layout");
-  const fallback = type === "recovery" ? routes.resetPassword : routes.profile;
+  const fallback = type === "recovery" ? routes.resetPassword : routes.home;
   redirect(safeRedirectPath(formText(formData, "next"), fallback));
 }

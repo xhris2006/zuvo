@@ -2,7 +2,7 @@ import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { signInHref } from "../links";
 
 type AuthRequiredProps = {
@@ -12,8 +12,8 @@ type AuthRequiredProps = {
 };
 
 /** Invitation à se connecter affichée sur les pages réservées aux membres. */
-export function AuthRequired({ returnTo, description }: AuthRequiredProps) {
-  const t = getDictionary();
+export async function AuthRequired({ returnTo, description }: AuthRequiredProps) {
+  const t = await getT();
   return (
     <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl border border-border bg-card px-6 py-10 text-center shadow-card">
       <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground">

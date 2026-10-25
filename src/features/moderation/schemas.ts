@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vm } from "@/lib/forms/validation";
 import { Constants } from "@/lib/supabase/database.types";
 
 export const REPORT_DETAILS_MAX = 1000;
@@ -17,19 +18,19 @@ export const reasonsByTarget: Record<ReportTargetType, ReportReason[]> = {
 export const reportSchema = z
   .object({
     targetType: z.enum(Constants.public.Enums.report_target_type),
-    targetId: z.uuid("Élément introuvable."),
-    reason: z.enum(Constants.public.Enums.report_reason, "Choisissez un motif."),
+    targetId: z.uuid(vm("itemNotFound")),
+    reason: z.enum(Constants.public.Enums.report_reason, vm("reasonRequired")),
     details: z
       .string()
       .trim()
-      .max(REPORT_DETAILS_MAX, `${REPORT_DETAILS_MAX} caractères au maximum.`)
+      .max(REPORT_DETAILS_MAX, vm("maxChars", REPORT_DETAILS_MAX))
       .transform((value) => value || null),
   })
   .refine((value) => reasonsByTarget[value.targetType].includes(value.reason), {
     path: ["reason"],
-    message: "Choisissez un motif.",
+    message: vm("reasonRequired"),
   })
   .refine((value) => value.reason !== "other" || value.details, {
     path: ["details"],
-    message: "Précisez le motif du signalement.",
+    message: vm("reportDetailsRequired"),
   });

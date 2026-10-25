@@ -4,6 +4,7 @@ import { Check, Copy, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 
 type KeyPair = { publicKey: string; privateKey: string };
 
@@ -36,6 +37,7 @@ function CopyField({
   value: string;
   hint: string;
 }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex flex-col gap-1.5">
@@ -62,7 +64,7 @@ function CopyField({
           }}
         >
           {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-          {copied ? "Copié" : "Copier"}
+          {copied ? t.adminUi.vapid.copied : t.adminUi.vapid.copy}
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">{hint}</p>
@@ -71,15 +73,15 @@ function CopyField({
 }
 
 export function VapidKeyGenerator({ keysAlreadySet }: { keysAlreadySet: boolean }) {
+  const t = useT();
   const [keys, setKeys] = useState<KeyPair | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
       {keysAlreadySet ? (
-        <Alert variant="warning" title="Des clés sont déjà configurées">
-          En changer obligera chaque utilisateur à réactiver les notifications sur ses appareils. Ne
-          le faites que si les clés actuelles sont incorrectes.
+        <Alert variant="warning" title={t.adminUi.vapid.alreadySetTitle}>
+          {t.adminUi.vapid.alreadySetBody}
         </Alert>
       ) : null}
       <Button
@@ -91,12 +93,12 @@ export function VapidKeyGenerator({ keysAlreadySet }: { keysAlreadySet: boolean 
           try {
             setKeys(await generateVapidKeys());
           } catch {
-            setError("Ce navigateur ne permet pas de générer les clés. Essayez avec Chrome.");
+            setError(t.adminUi.vapid.unsupported);
           }
         }}
       >
         <KeyRound aria-hidden="true" />
-        Générer une paire de clés VAPID
+        {t.adminUi.vapid.generate}
       </Button>
       {error ? (
         <p className="text-sm text-danger" role="alert">
@@ -105,22 +107,18 @@ export function VapidKeyGenerator({ keysAlreadySet }: { keysAlreadySet: boolean 
       ) : null}
       {keys ? (
         <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
-          <p className="text-sm text-muted-foreground">
-            Clés générées dans ce navigateur uniquement : elles ne sont ni envoyées ni enregistrées.
-            Copiez-les maintenant dans Vercel. Ne communiquez jamais la clé privée à qui que ce
-            soit.
-          </p>
+          <p className="text-sm text-muted-foreground">{t.adminUi.vapid.generatedNote}</p>
           <CopyField
             id="vapid-public"
             label="NEXT_PUBLIC_VAPID_PUBLIC_KEY"
             value={keys.publicKey}
-            hint="Clé publique : peut être exposée au navigateur."
+            hint={t.adminUi.vapid.publicHint}
           />
           <CopyField
             id="vapid-private"
             label="VAPID_PRIVATE_KEY"
             value={keys.privateKey}
-            hint="Clé privée : à cocher « Sensitive » dans Vercel. Ne la partagez avec personne."
+            hint={t.adminUi.vapid.privateHint}
           />
         </div>
       ) : null}

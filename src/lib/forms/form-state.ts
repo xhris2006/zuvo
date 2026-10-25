@@ -1,4 +1,6 @@
 import type { z } from "zod";
+import type { Dictionary } from "@/i18n";
+import { translateValidation } from "./validation";
 
 /** État renvoyé par une action serveur de formulaire (useActionState). */
 export type FormState<Field extends string = string> = {
@@ -14,15 +16,16 @@ export type FormState<Field extends string = string> = {
 
 export const idleFormState: FormState = { status: "idle" };
 
-/** Première erreur de chaque champ, au format attendu par les formulaires. */
+/** Première erreur de chaque champ, traduite, au format attendu par les formulaires. */
 export function fieldErrorsFrom<Field extends string>(
   error: z.ZodError,
+  t: Pick<Dictionary, "validation">,
 ): Partial<Record<Field, string>> {
   const result: Partial<Record<Field, string>> = {};
   for (const issue of error.issues) {
     const key = issue.path[0];
     if (typeof key === "string" && !(key in result)) {
-      result[key as Field] = issue.message;
+      result[key as Field] = translateValidation(issue.message, t.validation);
     }
   }
   return result;

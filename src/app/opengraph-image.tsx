@@ -1,8 +1,11 @@
 import { ImageResponse } from "next/og";
 import { siteConfig } from "@/config/site";
-import { getDictionary } from "@/i18n";
+import { defaultLocale, getDictionary } from "@/i18n";
 
-export const alt = `${siteConfig.name} — ${siteConfig.tagline}`;
+/** Les robots des réseaux sociaux n'ont pas de préférence de langue : langue par défaut. */
+const t = getDictionary(defaultLocale);
+
+export const alt = `${siteConfig.name} — ${t.site.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -39,11 +42,9 @@ export default function OpengraphImage() {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <span style={{ fontSize: 60, fontWeight: 700, lineHeight: 1.1, maxWidth: 900 }}>
-          {getDictionary().home.heroTitle}
+          {t.home.heroTitle}
         </span>
-        <span style={{ fontSize: 30, opacity: 0.9 }}>
-          Vente entre particuliers au Cameroun · Publication gratuite · Sans commission
-        </span>
+        <span style={{ fontSize: 30, opacity: 0.9 }}>{t.site.ogSubtitle}</span>
       </div>
     </div>,
     size,

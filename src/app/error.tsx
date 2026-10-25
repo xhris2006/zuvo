@@ -4,7 +4,7 @@ import { TriangleAlert } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 
 export default function ErrorPage({
   error,
@@ -13,7 +13,7 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const t = getDictionary();
+  const t = useT();
 
   useEffect(() => {
     // Seul l'identifiant (digest) est utile pour retrouver l'erreur dans les

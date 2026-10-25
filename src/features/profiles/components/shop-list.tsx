@@ -1,19 +1,22 @@
 import { ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
-import { getCity } from "@/config/locations";
 import { publicProfileHref } from "@/config/routes";
-import { getDictionary } from "@/i18n";
+import { cityNameFrom } from "@/features/locations/names";
+import { getCityNames } from "@/features/locations/queries";
+import { getT } from "@/i18n/server";
 import { avatarUrl } from "../avatar-url";
 import type { ShopSummary } from "../shops";
+import { VerifiedBadge } from "./verified-badge";
 
 /** Résultats de recherche de boutiques : photo, nom, pseudo, ville et annonces en vente. */
-export function ShopList({ shops }: { shops: ShopSummary[] }) {
-  const t = getDictionary();
+export async function ShopList({ shops }: { shops: ShopSummary[] }) {
+  const t = await getT();
+  const cityNames = await getCityNames();
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {shops.map((shop) => {
-        const city = shop.city ? (getCity(shop.city)?.name ?? shop.city) : null;
+        const city = cityNameFrom(shop.city, cityNames);
         return (
           <li key={shop.id}>
             <Link
@@ -27,7 +30,10 @@ export function ShopList({ shops }: { shops: ShopSummary[] }) {
                 className="size-14"
               />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate font-semibold">{shop.displayName}</span>
+                <span className="flex min-w-0 items-center gap-1">
+                  <span className="truncate font-semibold">{shop.displayName}</span>
+                  {shop.verified ? <VerifiedBadge variant="icon" /> : null}
+                </span>
                 <span className="truncate text-sm text-muted-foreground">@{shop.username}</span>
                 <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 font-semibold text-secondary-foreground">

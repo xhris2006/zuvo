@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { getT } from "@/i18n/server";
 import { signInWithGoogleAction } from "../actions";
 import type { AuthSettings } from "../settings";
 
@@ -26,13 +27,19 @@ function GoogleIcon() {
  * Bouton « Continuer avec Google », affiché uniquement si le fournisseur est
  * activé dans Supabase. En développement, une explication remplace le bouton.
  */
-export function GoogleSignIn({ settings, next }: { settings: AuthSettings | null; next?: string }) {
+export async function GoogleSignIn({
+  settings,
+  next,
+}: {
+  settings: AuthSettings | null;
+  next?: string;
+}) {
+  const t = await getT();
   if (!settings?.googleEnabled) {
     if (process.env.NODE_ENV === "production") return null;
     return (
       <p className="rounded-lg bg-muted px-3 py-2 text-center text-xs text-muted-foreground">
-        Développement : la connexion Google apparaîtra ici une fois le fournisseur Google activé
-        dans Supabase (voir docs/supabase.md).
+        {t.authForms.googleDev}
       </p>
     );
   }
@@ -43,12 +50,12 @@ export function GoogleSignIn({ settings, next }: { settings: AuthSettings | null
         <input type="hidden" name="next" value={next ?? ""} />
         <Button type="submit" variant="outline" className="w-full">
           <GoogleIcon />
-          Continuer avec Google
+          {t.authForms.google}
         </Button>
       </form>
       <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
         <span className="h-px flex-1 bg-border" />
-        ou
+        {t.authForms.or}
         <span className="h-px flex-1 bg-border" />
       </div>
     </>

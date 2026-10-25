@@ -1,16 +1,17 @@
-import { Bell, Heart, MessageCircle, Plus } from "lucide-react";
+import { Bell, CircleHelp, MessageCircle, Plus } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { isCurrentUserAdmin } from "@/features/admin/queries";
+import { isCurrentUserStaff } from "@/features/admin/queries";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { DesktopNav } from "./desktop-nav";
+import { HideOnScrollHeader } from "./hide-on-scroll-header";
 import { Logo } from "./logo";
 import { MobileSearchRow } from "./mobile-search-row";
 import { SearchForm } from "./search-form";
@@ -46,22 +47,32 @@ function IconLink({
 }
 
 export async function SiteHeader() {
-  const t = getDictionary();
+  const t = await getT();
   const profile = await getCurrentProfile();
-  const isAdmin = profile ? await isCurrentUserAdmin() : false;
+  // Lien « Administration » pour toute l'équipe (administrateurs et modérateurs).
+  const isAdmin = profile ? await isCurrentUserStaff() : false;
 
   return (
-    <header
+    <HideOnScrollHeader
       data-site-header
       style={{ viewTransitionName: "site-header" }}
-      className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+      className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:hidden"
     >
       <div className="container-page flex h-14 items-center gap-3 md:h-16 lg:gap-6">
+        {/* Mobile : logo centré entre deux colonnes de même largeur. */}
+        <div className="flex flex-1 md:hidden">
+          {profile ? null : (
+            <IconLink href={routes.help} label={t.nav.help} className="-ml-2">
+              <CircleHelp className="size-5" aria-hidden="true" />
+            </IconLink>
+          )}
+        </div>
+
         <Logo className="shrink-0" />
 
         <SearchForm id="header-search" className="hidden max-w-xl md:block" />
 
-        <div className="ml-auto flex items-center gap-1 lg:gap-2">
+        <div className="flex flex-1 items-center justify-end gap-1 md:ml-auto md:flex-none lg:gap-2">
           <DesktopNav />
           <IconLink
             href={routes.messages}
@@ -71,10 +82,12 @@ export async function SiteHeader() {
           >
             <MessageCircle className="size-5" aria-hidden="true" />
           </IconLink>
-          <IconLink href={routes.favorites} label={t.nav.favorites}>
-            <Heart className="size-5" aria-hidden="true" />
-          </IconLink>
-          <IconLink href={routes.notifications} label={t.nav.notifications} unread="notifications">
+          <IconLink
+            href={routes.notifications}
+            label={t.nav.notifications}
+            unread="notifications"
+            className="max-md:-mr-2"
+          >
             <Bell className="size-5" aria-hidden="true" />
           </IconLink>
           <Button asChild className="ml-1 hidden md:inline-flex">
@@ -103,6 +116,6 @@ export async function SiteHeader() {
       <Suspense>
         <MobileSearchRow />
       </Suspense>
-    </header>
+    </HideOnScrollHeader>
   );
 }

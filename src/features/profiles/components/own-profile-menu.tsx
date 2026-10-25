@@ -1,6 +1,6 @@
 "use client";
 
-import { EllipsisVertical, Eye, LifeBuoy, Pencil, Settings } from "lucide-react";
+import { EllipsisVertical, Eye, LifeBuoy, LogOut, Pencil, Rss, Settings } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -10,15 +10,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { publicProfileHref, routes } from "@/config/routes";
-import { getDictionary } from "@/i18n";
+import { signOutAction } from "@/features/auth/actions";
+import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
+import { useT } from "@/i18n/client";
 
 type OwnProfileMenuProps = {
   username: string;
 };
 
-/** Menu « trois points » de « Mon profil » : paramètres et raccourcis du compte. */
+/** Menu « trois points » de « Mon profil » : paramètres, raccourcis du compte et déconnexion. */
 export function OwnProfileMenu({ username }: OwnProfileMenuProps) {
-  const t = getDictionary();
+  const t = useT();
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
@@ -46,6 +48,12 @@ export function OwnProfileMenu({ username }: OwnProfileMenuProps) {
             {t.profile.viewPublicProfile}
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.feed}>
+            <Rss aria-hidden="true" />
+            {t.profile.feed}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={routes.help}>
@@ -53,6 +61,20 @@ export function OwnProfileMenu({ username }: OwnProfileMenuProps) {
             {t.profile.help}
           </Link>
         </DropdownMenuItem>
+        <form action={signOutAction}>
+          <PushEndpointField />
+          {/* Le menu reste ouvert pendant l'envoi pour ne pas démonter le formulaire. */}
+          <DropdownMenuItem
+            asChild
+            onSelect={(event) => event.preventDefault()}
+            className="text-danger"
+          >
+            <button type="submit" className="w-full">
+              <LogOut aria-hidden="true" />
+              {t.profile.signOut}
+            </button>
+          </DropdownMenuItem>
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );

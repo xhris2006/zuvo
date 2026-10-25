@@ -1,10 +1,11 @@
 import "server-only";
 import { cache } from "react";
-import { defaultCategories } from "@/features/categories/data";
+import { defaultCategories, localizedCategoryName } from "@/features/categories/data";
 import type { SearchFilters } from "@/features/search/schema";
 import { buildPrefixTsQuery } from "@/features/search/text-query";
 import type { Database } from "@/lib/supabase/database.types";
 import { searchLimits } from "@/config/limits";
+import { getT } from "@/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listingImageUrl } from "./image-url";
 import type { ListingCardData } from "./types";
@@ -34,6 +35,11 @@ function sortImages<T extends ImageRow>(images: T[]): T[] {
   return [...images].sort((a, b) => a.sort_order - b.sort_order);
 }
 
+/** Adresses de toutes les photos d'une annonce, photo principale en premier. */
+export function listingImageUrls(images: ImageRow[]): string[] {
+  return sortImages(images).flatMap((image) => listingImageUrl(image.storage_path) ?? []);
+}
+
 export function toListingCard(row: CardRow): ListingCardData {
   const main = sortImages(row.images)[0];
   return {
@@ -53,18 +59,36 @@ export function toListingCard(row: CardRow): ListingCardData {
 // -----------------------------------------------------------------------------
 export type Category = { id: string | null; slug: string; name: string };
 
-/** Catégories actives (base de données, ou liste initiale si non configurée). */
+/**
+ * Catégories actives (base de données, ou liste initiale si non configurée),
+ * nommées dans la langue de l'utilisateur.
+ */
 export const getCategories = cache(async (): Promise<Category[]> => {
+  const { categoryNames } = await getT();
+  const localize = <T extends { slug: string; name: string }>(category: T) => ({
+    ...category,
+    name: localizedCategoryName(categoryNames, category),
+  });
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return defaultCategories.map((category) => ({ ...category, id: null }));
+  if (!supabase) return defaultCategories.map((category) => localize({ ...category, id: null }));
   const { data, error } = await supabase
     .from("categories")
     .select("id, slug, name")
     .eq("is_active", true)
     .order("sort_order");
   if (error) throw new ListingQueryError();
-  return data;
+  return data.map(localize);
 });
+
+/** Liste initiale des catégories, nommées dans la langue de l'utilisateur (repli hors ligne). */
+export async function getDefaultCategories(): Promise<Category[]> {
+  const { categoryNames } = await getT();
+  return defaultCategories.map((category) => ({
+    ...category,
+    id: null,
+    name: localizedCategoryName(categoryNames, category),
+  }));
+}
 
 // -----------------------------------------------------------------------------
 // Listes d'annonces
@@ -123,7 +147,7 @@ const DETAIL_COLUMNS = `
   id, seller_id, title, description, price, condition, city, status, removed_at,
   removed_reason, created_at, updated_at, published_at,
   category:categories(id, slug, name),
-  seller:profiles!seller_id(id, username, display_name, avatar_path, city, created_at),
+  seller:profiles!seller_id(id, username, display_name, avatar_path, city, created_at, verified_at),
   images:listing_images(id, storage_path, sort_order)
 `;
 

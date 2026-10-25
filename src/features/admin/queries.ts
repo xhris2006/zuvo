@@ -4,7 +4,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { getCurrentUser, requireUser } from "@/features/auth/session";
 import type { ReportStatus, ReportTargetType } from "@/features/moderation/schemas";
-import type { Database } from "@/lib/supabase/database.types";
+import { Constants, type Database } from "@/lib/supabase/database.types";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -16,29 +16,47 @@ class AdminQueryError extends Error {
   }
 }
 
+export type StaffRole = "admin" | "moderator";
+
 /**
- * Rôle administrateur de l'utilisateur connecté, lu en base (table
- * user_roles, RLS). Sert uniquement à l'affichage : chaque action est
- * revérifiée par la base de données.
+ * Rôle de l'utilisateur connecté dans l'équipe (administrateur ou
+ * modérateur), lu en base (table user_roles, RLS). Sert uniquement à
+ * l'affichage : chaque action est revérifiée par la base de données.
  */
-export const isCurrentUserAdmin = cache(async (): Promise<boolean> => {
+export const getCurrentStaffRole = cache(async (): Promise<StaffRole | null> => {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
-  if (!user || !supabase) return false;
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-  return !error && Boolean(data);
+  if (!user || !supabase) return null;
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+  if (error || !data) return null;
+  const roles = data.map((row) => row.role);
+  if (roles.includes("admin")) return "admin";
+  return roles.includes("moderator") ? "moderator" : null;
 });
 
-/** Page réservée à l'administration : 404 pour tout autre utilisateur. */
+/** Administrateur (droits complets : catégories, rôles, configuration…). */
+export const isCurrentUserAdmin = cache(
+  async (): Promise<boolean> => (await getCurrentStaffRole()) === "admin",
+);
+
+/** Membre de l'équipe de modération (administrateur ou modérateur). */
+export const isCurrentUserStaff = cache(
+  async (): Promise<boolean> => (await getCurrentStaffRole()) !== null,
+);
+
+/** Page réservée aux administrateurs : 404 pour tout autre utilisateur. */
 export async function requireAdmin(returnTo: string) {
   const session = await requireUser(returnTo);
   if (!(await isCurrentUserAdmin())) notFound();
   return session;
+}
+
+/** Page ouverte à l'équipe de modération : 404 pour tout autre utilisateur. */
+export async function requireStaff(returnTo: string) {
+  const session = await requireUser(returnTo);
+  const role = await getCurrentStaffRole();
+  if (!role) notFound();
+  return { ...session, role };
 }
 
 const statsSchema = z.object({
@@ -82,6 +100,7 @@ type UserTarget = {
   username: string;
   displayName: string;
   suspendedAt: string | null;
+  suspendedUntil: string | null;
 };
 
 type MessageTarget = { kind: "message"; id: string };
@@ -137,7 +156,7 @@ export async function getAdminReports(
     userIds.length
       ? supabase
           .from("profiles")
-          .select("id, username, display_name, suspended_at")
+          .select("id, username, display_name, suspended_at, suspended_until")
           .in("id", userIds)
       : Promise.resolve({ data: [] }),
   ]);
@@ -170,6 +189,7 @@ export async function getAdminReports(
             username: user.username,
             displayName: user.display_name,
             suspendedAt: user.suspended_at,
+            suspendedUntil: user.suspended_until,
           }
         : null;
     } else {
@@ -206,6 +226,9 @@ export type AdminUser = {
   city: string | null;
   createdAt: string;
   suspendedAt: string | null;
+  suspendedUntil: string | null;
+  /** Membre de l'équipe (aucune action de modération possible sur lui). */
+  role: StaffRole | null;
 };
 
 /** Recherche par nom d'utilisateur ou nom affiché (comptes suspendus inclus). */
@@ -220,10 +243,15 @@ export async function searchUsersForAdmin(
 
   let request = supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_path, city, created_at, suspended_at", {
-      count: "exact",
-    });
-  if (onlySuspended) request = request.not("suspended_at", "is", null);
+    .select(
+      "id, username, display_name, avatar_path, city, created_at, suspended_at, suspended_until",
+      { count: "exact" },
+    );
+  if (onlySuspended) {
+    request = request
+      .not("suspended_at", "is", null)
+      .or(`suspended_until.is.null,suspended_until.gt.${new Date().toISOString()}`);
+  }
   // Caractères spéciaux de PostgREST et des motifs LIKE retirés de la saisie.
   const term = query.replace(/[%_,.()*\\:"']/g, " ").trim();
   if (term) request = request.or(`username.ilike.%${term}%,display_name.ilike.%${term}%`);
@@ -233,8 +261,13 @@ export async function searchUsersForAdmin(
     .order("created_at", { ascending: false })
     .range(from, from + pageSize - 1);
   if (error && error.code !== "PGRST103") throw new AdminQueryError();
+  const rows = data ?? [];
+  const roles = await rolesOf(
+    supabase,
+    rows.map((row) => row.id),
+  );
   return {
-    items: (data ?? []).map((row) => ({
+    items: rows.map((row) => ({
       id: row.id,
       username: row.username,
       displayName: row.display_name,
@@ -242,10 +275,26 @@ export async function searchUsersForAdmin(
       city: row.city,
       createdAt: row.created_at,
       suspendedAt: row.suspended_at,
+      suspendedUntil: row.suspended_until,
+      role: roles.get(row.id) ?? null,
     })),
     total: count ?? 0,
     pageSize,
   };
+}
+
+/** Rôles dans l'équipe d'une liste d'utilisateurs (RLS : lisibles par l'équipe). */
+async function rolesOf(
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
+  userIds: string[],
+): Promise<Map<string, StaffRole>> {
+  const roles = new Map<string, StaffRole>();
+  if (userIds.length === 0) return roles;
+  const { data } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
+  for (const row of data ?? []) {
+    if (row.role === "admin" || !roles.has(row.user_id)) roles.set(row.user_id, row.role);
+  }
+  return roles;
 }
 
 const overviewSchema = z.object({
@@ -264,9 +313,12 @@ const overviewSchema = z.object({
 export type AdminUserOverview = z.infer<typeof overviewSchema>;
 
 export type AdminUserDetail = {
-  profile: AdminUser & { bio: string | null };
+  profile: AdminUser & { bio: string | null; verifiedAt: string | null };
   isAdmin: boolean;
-  /** Compte de connexion (lu en service_role) ; null si la clé serveur manque. */
+  /**
+   * Compte de connexion (lu en service_role, administrateurs uniquement) ;
+   * null si la clé serveur manque ou pour un modérateur.
+   */
   account: { email: string | null; lastSignInAt: string | null; confirmed: boolean } | null;
   overview: AdminUserOverview;
   listings: {
@@ -308,7 +360,9 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
   const [{ data: profile, error }, overview, { data: listings }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_path, bio, city, created_at, suspended_at")
+      .select(
+        "id, username, display_name, avatar_path, bio, city, created_at, suspended_at, suspended_until, verified_at",
+      )
       .eq("id", userId)
       .maybeSingle(),
     supabase.rpc("admin_get_user_overview", { p_user_id: userId }),
@@ -343,21 +397,14 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
       .limit(30),
   ]);
 
-  // Rôle et adresse e-mail : tables non exposées à l'API, lues en service_role.
-  const admin = createSupabaseAdminClient();
-  let isAdmin = false;
+  // Rôle : lisible par l'équipe (RLS). Adresse e-mail : table non exposée à
+  // l'API, lue en service_role et montrée aux seuls administrateurs.
+  const role = (await rolesOf(supabase, [userId])).get(userId) ?? null;
+  const isAdmin = role === "admin";
   let account: AdminUserDetail["account"] = null;
+  const admin = (await isCurrentUserAdmin()) ? createSupabaseAdminClient() : null;
   if (admin) {
-    const [{ data: role }, { data: authUser }] = await Promise.all([
-      admin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle(),
-      admin.auth.admin.getUserById(userId),
-    ]);
-    isAdmin = Boolean(role);
+    const { data: authUser } = await admin.auth.admin.getUserById(userId);
     if (authUser?.user) {
       account = {
         email: authUser.user.email ?? null,
@@ -377,6 +424,9 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
       city: profile.city,
       createdAt: profile.created_at,
       suspendedAt: profile.suspended_at,
+      suspendedUntil: profile.suspended_until,
+      verifiedAt: profile.verified_at,
+      role,
     },
     isAdmin,
     account,
@@ -421,19 +471,82 @@ export type ModerationLogEntry = {
   admin: { username: string; displayName: string } | null;
 };
 
+export type ModerationLogFilters = {
+  action: ModerationActionType | null;
+  targetType: ReportTargetType | null;
+  /** Nom d'utilisateur du membre de l'équipe. */
+  admin: string | null;
+  /** Jours au format AAAA-MM-JJ (heure du Cameroun). */
+  from: string | null;
+  to: string | null;
+};
+
+type ModerationActionType = Database["public"]["Enums"]["moderation_action_type"];
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Filtres du journal lus dans l'URL (valeurs invalides ignorées). */
+export function parseModerationLogFilters(
+  raw: Record<string, string | string[] | undefined>,
+): ModerationLogFilters {
+  const first = (key: string) => {
+    const value = raw[key];
+    const text = (Array.isArray(value) ? value[0] : value)?.trim();
+    return text ? text : null;
+  };
+  const action = first("action");
+  const target = first("cible");
+  const admin = first("membre")?.replace(/^@/, "").toLowerCase() ?? null;
+  const from = first("du");
+  const to = first("au");
+  return {
+    action: Constants.public.Enums.moderation_action_type.find((value) => value === action) ?? null,
+    targetType: Constants.public.Enums.report_target_type.find((value) => value === target) ?? null,
+    admin: admin && /^[a-z0-9_]{1,30}$/.test(admin) ? admin : null,
+    from: from && DAY.test(from) ? from : null,
+    to: to && DAY.test(to) ? to : null,
+  };
+}
+
+const noFilters: ModerationLogFilters = {
+  action: null,
+  targetType: null,
+  admin: null,
+  from: null,
+  to: null,
+};
+
 export async function getModerationLog(
   page: number,
+  filters: ModerationLogFilters = noFilters,
 ): Promise<{ items: ModerationLogEntry[]; total: number; pageSize: number }> {
   const pageSize = ADMIN_PAGE_SIZE * 2;
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new AdminQueryError();
-  const from = (page - 1) * pageSize;
-  const { data, error, count } = await supabase
+
+  let query = supabase
     .from("moderation_actions")
     .select(
       "id, action, target_type, target_id, note, created_at, admin:profiles!moderation_actions_admin_id_fkey(username, display_name)",
       { count: "exact" },
-    )
+    );
+  if (filters.action) query = query.eq("action", filters.action);
+  if (filters.targetType) query = query.eq("target_type", filters.targetType);
+  // Jours entiers à l'heure du Cameroun (UTC+1).
+  if (filters.from) query = query.gte("created_at", `${filters.from}T00:00:00+01:00`);
+  if (filters.to) query = query.lte("created_at", `${filters.to}T23:59:59.999+01:00`);
+  if (filters.admin) {
+    const { data: member } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", filters.admin)
+      .maybeSingle();
+    if (!member) return { items: [], total: 0, pageSize };
+    query = query.eq("admin_id", member.id);
+  }
+
+  const from = (page - 1) * pageSize;
+  const { data, error, count } = await query
     .order("created_at", { ascending: false })
     .range(from, from + pageSize - 1);
   if (error && error.code !== "PGRST103") throw new AdminQueryError();

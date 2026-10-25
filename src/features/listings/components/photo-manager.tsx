@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ImagePlus, Loader2, Star, X } from "lucide-react
 import { useId, useRef } from "react";
 import { listingLimits } from "@/config/limits";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 export type EditorImage =
   | { key: string; kind: "existing"; id: string; url: string }
@@ -35,6 +36,7 @@ export function PhotoManager({
   onAddFiles,
   onChange,
 }: PhotoManagerProps) {
+  const t = useT();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const remaining = listingLimits.maxImages - images.length - processing;
@@ -42,14 +44,13 @@ export function PhotoManager({
   return (
     <fieldset className="flex flex-col gap-3" aria-describedby={`${inputId}-help`}>
       <legend className="text-base font-semibold tracking-tight">
-        Photos{" "}
+        {t.photoManager.legend}{" "}
         <span className="font-normal text-muted-foreground">
           ({images.length}/{listingLimits.maxImages})
         </span>
       </legend>
       <p id={`${inputId}-help`} className="text-xs text-muted-foreground">
-        La première photo est la photo principale. Les photos sont recadrées et allégées
-        automatiquement ; leurs métadonnées (dont la position) sont supprimées.
+        {t.photoManager.help}
       </p>
       <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
         {images.map((image, index) => (
@@ -58,17 +59,21 @@ export function PhotoManager({
             className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- aperçus locaux (blob:) */}
-            <img src={image.url} alt={`Photo ${index + 1}`} className="size-full object-cover" />
+            <img
+              src={image.url}
+              alt={t.photoManager.photo(index + 1)}
+              className="size-full object-cover"
+            />
             {index === 0 ? (
               <span className="absolute top-1.5 left-1.5 rounded-full bg-primary px-2 py-0.5 text-[0.6875rem] font-semibold text-primary-foreground">
-                Principale
+                {t.photoManager.main}
               </span>
             ) : null}
             <button
               type="button"
               onClick={() => onChange(images.filter((item) => item.key !== image.key))}
               className="absolute top-1.5 right-1.5 inline-flex size-7 items-center justify-center rounded-full bg-foreground/70 text-background hover:bg-foreground"
-              aria-label={`Retirer la photo ${index + 1}`}
+              aria-label={t.photoManager.remove(index + 1)}
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -78,7 +83,7 @@ export function PhotoManager({
                 disabled={index === 0}
                 onClick={() => onChange(move(images, index, index - 1))}
                 className="inline-flex size-7 items-center justify-center rounded-full bg-card/90 text-foreground shadow-card disabled:opacity-0"
-                aria-label={`Déplacer la photo ${index + 1} vers la gauche`}
+                aria-label={t.photoManager.moveLeft(index + 1)}
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
               </button>
@@ -87,7 +92,7 @@ export function PhotoManager({
                   type="button"
                   onClick={() => onChange(move(images, index, 0))}
                   className="inline-flex size-7 items-center justify-center rounded-full bg-card/90 text-foreground shadow-card"
-                  aria-label={`Définir la photo ${index + 1} comme principale`}
+                  aria-label={t.photoManager.makeMain(index + 1)}
                 >
                   <Star className="size-4" aria-hidden="true" />
                 </button>
@@ -97,7 +102,7 @@ export function PhotoManager({
                 disabled={index === images.length - 1}
                 onClick={() => onChange(move(images, index, index + 1))}
                 className="inline-flex size-7 items-center justify-center rounded-full bg-card/90 text-foreground shadow-card disabled:opacity-0"
-                aria-label={`Déplacer la photo ${index + 1} vers la droite`}
+                aria-label={t.photoManager.moveRight(index + 1)}
               >
                 <ArrowRight className="size-4" aria-hidden="true" />
               </button>
@@ -111,7 +116,7 @@ export function PhotoManager({
           >
             <Loader2
               className="size-5 animate-spin text-muted-foreground"
-              aria-label="Traitement"
+              aria-label={t.photoManager.processing}
             />
           </li>
         ))}
@@ -125,7 +130,7 @@ export function PhotoManager({
               )}
             >
               <ImagePlus className="size-6" aria-hidden="true" />
-              Ajouter
+              {t.photoManager.add}
             </label>
             <input
               ref={inputRef}

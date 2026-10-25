@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const publicPages = [
   "/",
+  "/bienvenue",
   "/explorer",
   "/vendre",
   "/messages",
@@ -39,17 +40,72 @@ test.describe("pages publiques", () => {
   }
 });
 
-test("la page d'accueil présente l'offre et les catégories", async ({ page }) => {
+test("les visiteurs arrivent sur la page de bienvenue, sans en-tête ni navigation", async ({
+  page,
+}) => {
   await page.goto("/");
+  await expect(page).toHaveURL(/\/bienvenue$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Donnez une seconde vie à vos affaires" }),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Catégories" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveAttribute(
+    "href",
+    "/inscription",
+  );
+  await expect(page.getByRole("link", { name: "J'ai déjà un compte" })).toHaveAttribute(
+    "href",
+    "/connexion",
+  );
+  await expect(page.locator("[data-site-header]")).toBeHidden();
+  await expect(page.locator("[data-bottom-nav]")).toBeHidden();
   await expect(page).toHaveTitle(/Zuvo/);
 });
 
+test("les catégories sont présentées dans Explorer", async ({ page }) => {
+  await page.goto("/explorer");
+  await expect(page.getByRole("heading", { name: "Catégories" })).toBeVisible();
+});
+
+test("le thème sombre mémorisé s'applique dès le rendu serveur", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await context.addCookies([{ name: "zuvo-theme", value: "dark", url: baseURL }]);
+  await page.goto("/aide");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("la langue anglaise mémorisée s'applique dès le rendu serveur", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await context.addCookies([{ name: "zuvo-locale", value: "en", url: baseURL }]);
+  await page.goto("/aide");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("heading", { level: 1, name: "Help and contact" })).toBeVisible();
+});
+
+test("la bascule FR / EN de la page de bienvenue change la langue", async ({ page }) => {
+  await page.goto("/bienvenue");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await page.getByRole("button", { name: "English" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Give your things a second life" }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("button", { name: "English" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  // Le choix est mémorisé : il s'applique aux pages suivantes.
+  await page.goto("/connexion");
+  await expect(page.getByRole("heading", { level: 1, name: "Sign in" })).toBeVisible();
+});
+
 test("la navigation mobile n'apparaît que sur petit écran", async ({ page, isMobile }) => {
-  await page.goto("/");
+  await page.goto("/aide");
   const bottomNav = page.locator("nav.fixed");
   if (isMobile) {
     await expect(bottomNav).toBeVisible();
@@ -64,9 +120,10 @@ test("la navigation mobile n'apparaît que sur petit écran", async ({ page, isM
   }
 });
 
-test("la recherche de l'en-tête mène à Explorer avec la requête", async ({ page, isMobile }) => {
-  await page.goto("/");
-  const search = page.locator(isMobile ? "#header-search-mobile" : "#header-search");
+test("la recherche mène à Explorer avec la requête", async ({ page, isMobile }) => {
+  await page.goto("/explorer");
+  // Mobile : champ sous l'en-tête ; ordinateur : champ de la barre latérale.
+  const search = page.locator(isMobile ? "#header-search-mobile" : "#sidebar-search");
   await search.fill("robe wax");
   await search.press("Enter");
   await expect(page).toHaveURL(/\/explorer\?q=robe\+wax/);

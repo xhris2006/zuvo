@@ -24,6 +24,8 @@ créer via l'API.
 | `listing_favorited`     | annonce ajoutée aux favoris (une par utilisateur, annonce et jour) | « Activité de mes annonces »                                      |
 | `followed_user_listing` | première publication d'une annonce d'un profil suivi               | « Nouvelles annonces des profils suivis » (désactivée par défaut) |
 | `listing_removed`       | annonce retirée par la modération                                  | toujours envoyée                                                  |
+| `moderation_warning`    | avertissement de la modération                                     | toujours envoyée                                                  |
+| `support_reply`         | réponse de l'équipe à une demande d'assistance ou une contestation | toujours envoyée                                                  |
 
 Aucune notification n'est créée entre deux utilisateurs qui se sont bloqués.
 Les notifications de message servent à l'envoi push : elles n'apparaissent pas
@@ -74,6 +76,11 @@ utilisaient un ; s'il a été créé, il peut être supprimé : la route
   les notifications (l'application le détecte et les réabonne au clic).
 - Limites connues : pas de gestion de `pushsubscriptionchange` (l'abonnement
   expiré est supprimé au premier échec et l'utilisateur le réactive).
+- Langue : le texte des notifications push est rédigé en français (langue par
+  défaut), car la langue choisie sur chaque appareil n'est pas connue au moment
+  de l'envoi. Les notifications affichées dans l'application suivent, elles, la
+  langue de l'appareil. Envoyer le push dans la langue de chaque appareil
+  demanderait d'enregistrer cette langue avec l'abonnement (nouvelle migration).
 
 ## 2. Configuration (à faire par le propriétaire du projet)
 

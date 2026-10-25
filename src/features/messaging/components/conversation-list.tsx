@@ -5,16 +5,24 @@ import { Avatar } from "@/components/ui/avatar";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { listingImageUrl } from "@/features/listings/image-url";
 import { cn } from "@/lib/utils";
-import { formatInboxTime } from "../format";
+import { createMessageFormatters } from "../format";
 import { conversationHref } from "../links";
 import type { ConversationSummary } from "../queries";
+import { intlLocales } from "@/i18n";
+import { getLocale, getT } from "@/i18n/server";
 
 /** Liste des conversations : pleine largeur sur mobile, carte sur grand écran. */
-export function ConversationList({ conversations }: { conversations: ConversationSummary[] }) {
+export async function ConversationList({
+  conversations,
+}: {
+  conversations: ConversationSummary[];
+}) {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
+  const formats = createMessageFormatters(intlLocales[locale], t.messaging);
   return (
     <ul className="-mx-4 border-y border-border bg-card sm:mx-0 sm:overflow-hidden sm:rounded-2xl sm:border sm:shadow-card">
       {conversations.map((conversation) => {
-        const name = conversation.other_display_name ?? "Utilisateur supprimé";
+        const name = conversation.other_display_name ?? t.messaging.deletedUser;
         const image = conversation.listing_image_path
           ? listingImageUrl(conversation.listing_image_path)
           : null;
@@ -62,11 +70,11 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                       unread ? "font-semibold text-primary" : "text-muted-foreground",
                     )}
                   >
-                    {formatInboxTime(conversation.last_message_at)}
+                    {formats.inboxTime(conversation.last_message_at)}
                   </span>
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {conversation.listing_title ?? "Annonce indisponible"}
+                  {conversation.listing_title ?? t.messaging.listingUnavailable}
                 </span>
                 <span className="mt-0.5 flex items-center gap-2">
                   <span
@@ -77,7 +85,7 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                   >
                     {conversation.last_message_body || conversation.last_message_has_photo ? (
                       <>
-                        {conversation.last_message_is_mine ? "Vous : " : ""}
+                        {conversation.last_message_is_mine ? t.messaging.you : ""}
                         {conversation.last_message_body ? (
                           conversation.last_message_body
                         ) : (
@@ -86,18 +94,18 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                               className="mr-1 inline size-3.5 align-[-2px]"
                               aria-hidden="true"
                             />
-                            Photo
+                            {t.messaging.photo}
                           </>
                         )}
                       </>
                     ) : (
-                      "Aucun message pour le moment"
+                      t.messaging.noMessageYet
                     )}
                   </span>
                   {unread ? (
                     <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[0.6875rem] font-bold text-primary-foreground">
                       {conversation.unread_count > 9 ? "9+" : conversation.unread_count}
-                      <span className="sr-only"> messages non lus</span>
+                      <span className="sr-only">{t.messaging.unreadSuffix}</span>
                     </span>
                   ) : null}
                 </span>

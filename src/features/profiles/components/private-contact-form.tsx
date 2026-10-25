@@ -9,8 +9,10 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import type { FormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { updatePrivateContactAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 export function PrivateContactForm({ phone }: { phone: string | null }) {
+  const t = useT();
   const initialState: FormState = { status: "idle", values: { phone: phone ?? "" } };
   const [state, formAction, pending] = useActionState(updatePrivateContactAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -20,14 +22,13 @@ export function PrivateContactForm({ phone }: { phone: string | null }) {
     <form ref={formRef} action={formAction} className="flex flex-col gap-4" noValidate>
       <p className="flex items-start gap-2 text-sm text-muted-foreground">
         <LockKeyhole className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        Votre numéro reste privé : il n&apos;est jamais affiché sur votre profil ni sur vos
-        annonces. Vous seul décidez de le communiquer à un acheteur.
+        {t.profileForms.phonePrivate}
       </p>
       <FormMessage state={state} />
       <Field
         id="phone"
-        label="Téléphone (facultatif)"
-        hint="Exemple : 6 90 00 00 00"
+        label={t.profileForms.phone}
+        hint={t.profileForms.phoneHint}
         error={state.fieldErrors?.phone}
       >
         {(control) => (
@@ -44,7 +45,7 @@ export function PrivateContactForm({ phone }: { phone: string | null }) {
         )}
       </Field>
       <SubmitButton pending={pending} variant="outline" className="self-start">
-        Enregistrer le numéro
+        {t.profileForms.savePhone}
       </SubmitButton>
     </form>
   );

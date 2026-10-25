@@ -4,21 +4,23 @@ import { routes } from "@/config/routes";
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { AuthUnavailable } from "@/features/auth/components/auth-unavailable";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
+import { getT } from "@/i18n/server";
 import { isSupabaseConfigured } from "@/lib/env";
 
-export const metadata: Metadata = {
-  title: "Mot de passe oublié",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.authPages.forgotTitle, robots: { index: false } };
+}
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = await getT();
   return (
     <AuthCard
-      title="Mot de passe oublié"
-      description="Indiquez votre adresse e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe."
+      title={t.authPages.forgotTitle}
+      description={t.authPages.forgotDescription}
       footer={
         <Link href={routes.signIn} className="font-semibold text-primary hover:text-primary-hover">
-          Retour à la connexion
+          {t.authPages.backToSignIn}
         </Link>
       }
     >

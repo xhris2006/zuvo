@@ -8,8 +8,10 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { idleFormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { forgotPasswordAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 export function ForgotPasswordForm() {
+  const t = useT();
   const [state, formAction, pending] = useActionState(forgotPasswordAction, idleFormState);
   const formRef = useRef<HTMLFormElement>(null);
   useFocusFirstError(formRef, state);
@@ -18,7 +20,7 @@ export function ForgotPasswordForm() {
       <FormMessage state={state} />
       {state.status === "success" ? null : (
         <>
-          <Field id="email" label="Adresse e-mail" error={state.fieldErrors?.email}>
+          <Field id="email" label={t.authForms.email} error={state.fieldErrors?.email}>
             {(control) => (
               <Input
                 {...control}
@@ -32,7 +34,7 @@ export function ForgotPasswordForm() {
             )}
           </Field>
           <SubmitButton pending={pending} className="w-full">
-            Envoyer le lien
+            {t.authForms.sendLink}
           </SubmitButton>
         </>
       )}

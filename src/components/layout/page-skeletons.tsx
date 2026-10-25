@@ -1,10 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListingGridSkeleton } from "@/features/listings/components/listing-grid";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
 /** Squelette générique : titre puis blocs de contenu. */
-export function PageSkeleton() {
-  const t = getDictionary();
+export async function PageSkeleton() {
+  const t = await getT();
   return (
     <div
       role="status"
@@ -19,8 +19,8 @@ export function PageSkeleton() {
 }
 
 /** Liste de lignes (messages, notifications). */
-export function ListSkeleton({ rows = 6 }: { rows?: number }) {
-  const t = getDictionary();
+export async function ListSkeleton({ rows = 6 }: { rows?: number }) {
+  const t = await getT();
   return (
     <div
       role="status"
@@ -44,8 +44,8 @@ export function ListSkeleton({ rows = 6 }: { rows?: number }) {
 }
 
 /** En-tête de profil puis grille d'annonces. */
-export function ProfileSkeleton() {
-  const t = getDictionary();
+export async function ProfileSkeleton() {
+  const t = await getT();
   return (
     <div
       role="status"
@@ -66,8 +66,8 @@ export function ProfileSkeleton() {
 }
 
 /** Grille d'annonces sous un titre (favoris, fil). */
-export function GridPageSkeleton() {
-  const t = getDictionary();
+export async function GridPageSkeleton() {
+  const t = await getT();
   return (
     <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <Skeleton className="h-8 w-40" />

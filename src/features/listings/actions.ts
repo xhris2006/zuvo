@@ -6,7 +6,11 @@ import { redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { isAvailableCity } from "@/features/locations/queries";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
+import { getT } from "@/i18n/server";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
+import { translateValidation, vm } from "@/lib/forms/validation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LISTING_IMAGE_BUCKET } from "./image-url";
 import { listingHref } from "./links";
@@ -20,27 +24,23 @@ import {
 } from "./schemas";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SESSION_EXPIRED = "Votre session a expiré. Reconnectez-vous.";
-const GENERIC_ERROR = "L'enregistrement a échoué. Veuillez réessayer.";
 
 type DbError = { code?: string; message?: string } | null;
 
 /** Traduit les erreurs de la base liées aux annonces. */
-function listingErrorMessage(error: DbError): string {
+function listingErrorMessage(t: ServerDictionary, error: DbError): string {
+  const texts = t.listingActions;
   const message = error?.message ?? "";
-  if (error?.code === "PT429")
-    return "Vous avez publié beaucoup d'annonces récemment. Réessayez demain.";
-  if (error?.code === "42501") return "Votre compte ne permet pas de modifier cette annonce.";
-  if (message.includes("listing_requires_image")) return "Ajoutez au moins une photo.";
-  if (message.includes("listing_image_limit_reached")) return "8 photos au maximum.";
-  if (message.includes("listing_removed_by_moderation")) {
-    return "Cette annonce a été retirée par la modération et ne peut pas être remise en ligne.";
-  }
-  if (message.includes("listing_cannot_return_to_draft")) {
-    return "Une annonce publiée ne peut pas redevenir un brouillon.";
-  }
-  if (error?.code === "23514") return "Certaines informations sont incomplètes ou invalides.";
-  return GENERIC_ERROR;
+  if (error?.code === "PT429") return texts.rateLimited;
+  if (error?.code === "42501") return texts.forbidden;
+  if (message.includes("listing_requires_image")) return texts.requiresImage;
+  if (message.includes("listing_image_limit_reached")) return texts.imageLimit;
+  if (message.includes("listing_removed_by_moderation")) return texts.removedByModeration;
+  if (message.includes("listing_cannot_return_to_draft")) return texts.cannotReturnToDraft;
+  if (message.includes("listing_banned_word")) return texts.bannedWord;
+  if (message.includes("new_account_publication_limit")) return texts.newAccountLimit;
+  if (error?.code === "23514") return texts.invalidData;
+  return texts.generic;
 }
 
 function revalidateListing(listingId: string) {
@@ -70,6 +70,7 @@ export async function saveListingAction(
   listingId: string | null,
   formData: FormData,
 ): Promise<SaveListingResult> {
+  const t = await getT();
   const parsed = listingFieldsSchema.safeParse({
     title: formText(formData, "title"),
     description: formText(formData, "description"),
@@ -79,26 +80,29 @@ export async function saveListingAction(
     city: formText(formData, "city"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom<ListingField>(parsed.error) };
+    return { status: "error", fieldErrors: fieldErrorsFrom<ListingField>(parsed.error, t) };
   }
   const fields = parsed.data;
 
   if (formText(formData, "intent") === "publish") {
-    const missing = publicationErrors(fields);
-    if (Object.keys(missing).length > 0) {
+    const missing = Object.entries(publicationErrors(fields)).map(([field, code]) => [
+      field,
+      translateValidation(code, t.validation),
+    ]);
+    if (missing.length > 0) {
       return {
         status: "error",
-        message: "Complétez les champs indiqués pour publier l'annonce.",
-        fieldErrors: missing,
+        message: t.listingActions.completeToPublish,
+        fieldErrors: Object.fromEntries(missing),
       };
     }
   }
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: t.listingActions.sessionExpired };
   if (listingId !== null && !UUID.test(listingId)) {
-    return { status: "error", message: "Annonce introuvable." };
+    return { status: "error", message: t.listingActions.notFound };
   }
 
   let categoryId: string | null = null;
@@ -109,8 +113,19 @@ export async function saveListingAction(
       .eq("slug", fields.category)
       .eq("is_active", true)
       .maybeSingle();
-    if (!category) return { status: "error", fieldErrors: { category: "Catégorie invalide." } };
+    if (!category) {
+      return {
+        status: "error",
+        fieldErrors: { category: translateValidation(vm("categoryInvalid"), t.validation) },
+      };
+    }
     categoryId = category.id;
+  }
+  if (fields.city && !(await isAvailableCity(fields.city))) {
+    return {
+      status: "error",
+      fieldErrors: { city: translateValidation(vm("cityInvalid"), t.validation) },
+    };
   }
 
   const values = {
@@ -124,7 +139,7 @@ export async function saveListingAction(
 
   if (listingId === null) {
     const { data, error } = await supabase.from("listings").insert(values).select("id").single();
-    if (error || !data) return { status: "error", message: listingErrorMessage(error) };
+    if (error || !data) return { status: "error", message: listingErrorMessage(t, error) };
     return { status: "saved", listingId: data.id };
   }
 
@@ -135,8 +150,8 @@ export async function saveListingAction(
     .eq("seller_id", user.id)
     .select("id")
     .maybeSingle();
-  if (error) return { status: "error", message: listingErrorMessage(error) };
-  if (!data) return { status: "error", message: "Annonce introuvable." };
+  if (error) return { status: "error", message: listingErrorMessage(t, error) };
+  if (!data) return { status: "error", message: t.listingActions.notFound };
   return { status: "saved", listingId };
 }
 
@@ -151,19 +166,20 @@ export async function finalizeListingAction(input: {
   images: ListingImageInput[];
   publish: boolean;
 }): Promise<FinalizeListingResult> {
+  const t = await getT();
   const { listingId, publish } = input;
   const images = listingImagesSchema.safeParse(input.images);
   if (!UUID.test(listingId) || !images.success) {
-    return { status: "error", message: "Photos invalides." };
+    return { status: "error", message: t.listingActions.invalidPhotos };
   }
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: t.listingActions.sessionExpired };
 
   const folder = `${user.id}/${listingId}/`;
   if (images.data.some((image) => "path" in image && !image.path.startsWith(folder))) {
-    return { status: "error", message: "Photos invalides." };
+    return { status: "error", message: t.listingActions.invalidPhotos };
   }
 
   const { data: listing } = await supabase
@@ -172,16 +188,16 @@ export async function finalizeListingAction(input: {
     .eq("id", listingId)
     .eq("seller_id", user.id)
     .maybeSingle();
-  if (!listing) return { status: "error", message: "Annonce introuvable." };
+  if (!listing) return { status: "error", message: t.listingActions.notFound };
   if ((publish || listing.status !== "draft") && images.data.length === 0) {
-    return { status: "error", message: "Ajoutez au moins une photo." };
+    return { status: "error", message: t.listingActions.requiresImage };
   }
 
   const { data: removed, error } = await supabase.rpc("sync_listing_images", {
     p_listing_id: listingId,
     p_images: images.data,
   });
-  if (error) return { status: "error", message: listingErrorMessage(error) };
+  if (error) return { status: "error", message: listingErrorMessage(t, error) };
 
   // Suppression des fichiers retirés (sans bloquer en cas d'échec).
   if (removed && removed.length > 0) {
@@ -193,7 +209,7 @@ export async function finalizeListingAction(input: {
       .from("listings")
       .update({ status: "active" })
       .eq("id", listingId);
-    if (publishError) return { status: "error", message: listingErrorMessage(publishError) };
+    if (publishError) return { status: "error", message: listingErrorMessage(t, publishError) };
     schedulePushDispatch({ type: "followed_user_listing", actorId: user.id, listingId });
   }
 
@@ -210,13 +226,14 @@ export async function updateListingStatusAction(
   _previous: ListingActionState,
   formData: FormData,
 ): Promise<ListingActionState> {
+  const t = await getT();
   const listingId = formText(formData, "listingId");
   const status = sellerStatusSchema.safeParse(formText(formData, "status"));
-  if (!UUID.test(listingId) || !status.success) return { message: "Action invalide." };
+  if (!UUID.test(listingId) || !status.success) return { message: t.listingActions.invalidAction };
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { message: SESSION_EXPIRED };
+  if (!supabase || !user) return { message: t.listingActions.sessionExpired };
 
   const { data, error } = await supabase
     .from("listings")
@@ -225,8 +242,8 @@ export async function updateListingStatusAction(
     .eq("seller_id", user.id)
     .select("id")
     .maybeSingle();
-  if (error) return { message: listingErrorMessage(error) };
-  if (!data) return { message: "Annonce introuvable." };
+  if (error) return { message: listingErrorMessage(t, error) };
+  if (!data) return { message: t.listingActions.notFound };
 
   revalidateListing(listingId);
   return {};
@@ -236,12 +253,13 @@ export async function deleteListingAction(
   _previous: ListingActionState,
   formData: FormData,
 ): Promise<ListingActionState> {
+  const t = await getT();
   const listingId = formText(formData, "listingId");
-  if (!UUID.test(listingId)) return { message: "Annonce introuvable." };
+  if (!UUID.test(listingId)) return { message: t.listingActions.notFound };
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { message: SESSION_EXPIRED };
+  if (!supabase || !user) return { message: t.listingActions.sessionExpired };
 
   const { data: images } = await supabase
     .from("listing_images")
@@ -255,12 +273,9 @@ export async function deleteListingAction(
     .eq("seller_id", user.id)
     .select("id")
     .maybeSingle();
-  if (error) return { message: listingErrorMessage(error) };
+  if (error) return { message: listingErrorMessage(t, error) };
   if (!data) {
-    return {
-      message:
-        "Cette annonce ne peut pas être supprimée (introuvable ou retirée par la modération).",
-    };
+    return { message: t.listingActions.cannotDelete };
   }
 
   const paths = (images ?? []).map((image) => image.storage_path);

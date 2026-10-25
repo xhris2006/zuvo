@@ -7,40 +7,26 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import type { FormState } from "@/lib/forms/form-state";
 import { type PreferenceField, updateNotificationPreferencesAction } from "../actions";
 import type { NotificationPreferences } from "../queries";
-
-const options: Array<{ name: PreferenceField; label: string; hint: string }> = [
-  {
-    name: "new_message",
-    label: "Nouveaux messages",
-    hint: "Quand un acheteur ou un vendeur vous écrit.",
-  },
-  {
-    name: "new_follower",
-    label: "Nouveaux abonnés",
-    hint: "Quand quelqu'un suit votre profil.",
-  },
-  {
-    name: "listing_activity",
-    label: "Activité de mes annonces",
-    hint: "Quand une de vos annonces est ajoutée aux favoris.",
-  },
-  {
-    name: "followed_user_listing",
-    label: "Nouvelles annonces des profils suivis",
-    hint: "Quand un vendeur que vous suivez publie une annonce.",
-  },
-];
+import { useT } from "@/i18n/client";
 
 const idle: FormState<PreferenceField> = { status: "idle" };
 
 export function PreferencesForm({ preferences }: { preferences: NotificationPreferences }) {
+  const t = useT();
+  const copy = t.preferences;
+  const options: Array<{ name: PreferenceField; label: string; hint: string }> = [
+    { name: "new_message", label: copy.newMessage, hint: copy.newMessageHint },
+    { name: "new_follower", label: copy.newFollower, hint: copy.newFollowerHint },
+    { name: "listing_activity", label: copy.listingActivity, hint: copy.listingActivityHint },
+    { name: "followed_user_listing", label: copy.followedListing, hint: copy.followedListingHint },
+  ];
   const [state, formAction, pending] = useActionState(updateNotificationPreferencesAction, idle);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <fieldset className="flex flex-col gap-3">
-        <legend className="sr-only">Me prévenir pour</legend>
+        <legend className="sr-only">{copy.legend}</legend>
         {options.map((option) => (
           <label key={option.name} className="flex cursor-pointer items-start gap-3">
             <Checkbox
@@ -58,11 +44,9 @@ export function PreferencesForm({ preferences }: { preferences: NotificationPref
           </label>
         ))}
       </fieldset>
-      <p className="text-xs text-muted-foreground">
-        Les retraits d&apos;annonce par la modération vous sont toujours signalés.
-      </p>
+      <p className="text-xs text-muted-foreground">{copy.alwaysRemoval}</p>
       <SubmitButton pending={pending} className="self-start">
-        Enregistrer
+        {copy.save}
       </SubmitButton>
     </form>
   );

@@ -3,71 +3,60 @@ import Link from "next/link";
 import { DocumentPage } from "@/components/layout/document-page";
 import { routes } from "@/config/routes";
 import { formatSupportPhone, siteConfig } from "@/config/site";
+import { getLocale, getT } from "@/i18n/server";
+import { HelpEn, HelpFr } from "./content";
 import { publicEnv } from "@/lib/env";
 
-export const metadata: Metadata = {
-  title: "Aide et contact",
-  description: `Questions fréquentes et contact de l'assistance ${siteConfig.name}.`,
-  alternates: { canonical: routes.help },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t.infoPages.helpTitle,
+    description: t.infoPages.helpDescription(siteConfig.name),
+    alternates: { canonical: routes.help },
+  };
+}
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
+  const Content = locale === "en" ? HelpEn : HelpFr;
   const name = siteConfig.name;
   const contactEmail = publicEnv.NEXT_PUBLIC_CONTACT_EMAIL;
+  const values = [
+    { title: t.home.values.freeTitle, body: t.home.values.freeBody },
+    { title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
+    { title: t.home.values.directTitle, body: t.home.values.directBody },
+  ];
+  const links = [
+    { href: routes.terms, label: t.footer.terms },
+    { href: routes.privacy, label: t.footer.privacy },
+    { href: routes.safety, label: t.footer.safety },
+    { href: routes.reportsInfo, label: t.footer.reports },
+  ];
 
   return (
-    <DocumentPage
-      title="Aide et contact"
-      intro={`Les réponses aux questions les plus fréquentes sur ${name}.`}
-    >
-      <h2>Questions fréquentes</h2>
+    <DocumentPage title={t.infoPages.helpTitle} intro={t.infoPages.helpIntro(name)}>
+      <h2>{t.home.valueTitle}</h2>
+      <ul>
+        {values.map((value) => (
+          <li key={value.title}>
+            <strong>{value.title}.</strong> {value.body}
+          </li>
+        ))}
+      </ul>
 
-      <h3>Est-ce vraiment gratuit ?</h3>
-      <p>
-        Oui. La publication d&apos;annonces est gratuite, sans commission sur les ventes et sans
-        abonnement obligatoire.
-      </p>
+      <Content name={name} phone={formatSupportPhone()} contactEmail={contactEmail} />
 
-      <h3>Comment vendre un article ?</h3>
-      <p>
-        Créez un compte, puis touchez <Link href={routes.sell}>Vendre</Link>. Ajoutez jusqu&apos;à 8
-        photos, un titre, une description, le prix en FCFA, la catégorie, l&apos;état et votre
-        ville.
-      </p>
-
-      <h3>Comment contacter un vendeur ?</h3>
-      <p>
-        Depuis la page d&apos;une annonce, utilisez le bouton de contact pour ouvrir une
-        conversation dans la messagerie. Votre numéro de téléphone n&apos;est jamais partagé
-        automatiquement.
-      </p>
-
-      <h3>Comment se passent le paiement et la livraison ?</h3>
-      <p>
-        {name} ne gère pas encore le paiement ni la livraison : l&apos;acheteur et le vendeur
-        s&apos;entendent directement. Suivez nos{" "}
-        <Link href={routes.safety}>conseils de sécurité</Link>, en particulier : ne payez jamais un
-        article avant de l&apos;avoir vu.
-      </p>
-
-      <h3>Comment signaler un problème ?</h3>
-      <p>
-        Utilisez l&apos;option « Signaler » sur l&apos;annonce, le message ou le profil concerné.
-        Plus de détails dans <Link href={routes.reportsInfo}>Signalements et blocage</Link>.
-      </p>
-
-      <h2>Nous contacter</h2>
-      <p>
-        Assistance par téléphone :{" "}
-        <a href={`tel:${siteConfig.supportPhone}`}>{formatSupportPhone()}</a>.
-      </p>
-      {contactEmail ? (
-        <p>
-          Par e-mail : <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
-        </p>
-      ) : null}
-      <p>
-        Ne communiquez jamais votre mot de passe ni un code reçu par SMS, même à l&apos;assistance.
+      <h2>{t.footer.legal}</h2>
+      <ul>
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link href={link.href}>{link.label}</Link>
+          </li>
+        ))}
+      </ul>
+      <p>{t.footer.about}</p>
+      <p className="text-sm text-muted-foreground">
+        © {new Date().getFullYear()} {name}. {t.footer.rights}
       </p>
     </DocumentPage>
   );

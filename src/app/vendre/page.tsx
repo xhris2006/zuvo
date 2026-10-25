@@ -6,16 +6,17 @@ import { requireUser } from "@/features/auth/session";
 import { ListingEditor } from "@/features/listings/components/listing-editor";
 import { getCategories } from "@/features/listings/queries";
 import { getProfileById } from "@/features/profiles/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getCities } from "@/features/locations/queries";
 
-export const metadata: Metadata = {
-  title: "Vendre un article",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.sellPage.metaTitle, robots: { index: false } };
+}
 
 export default async function SellPage() {
-  const t = getDictionary();
+  const t = await getT();
   if (!isSupabaseConfigured()) {
     return (
       <div className="container-page flex flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
@@ -26,20 +27,24 @@ export default async function SellPage() {
   }
 
   const { user } = await requireUser(routes.sell);
-  const [categories, profile] = await Promise.all([getCategories(), getProfileById(user.id)]);
+  const [categories, profile, cities] = await Promise.all([
+    getCategories(),
+    getProfileById(user.id),
+    getCities(),
+  ]);
 
   return (
     <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
         title={t.pages.sellTitle}
-        description={
-          <span className="hidden sm:inline">
-            Gratuit et sans commission. Des photos nettes et une description honnête font vendre
-            plus vite.
-          </span>
-        }
+        description={<span className="hidden sm:inline">{t.sellPage.description}</span>}
       />
-      <ListingEditor userId={user.id} categories={categories} defaultCity={profile?.city} />
+      <ListingEditor
+        userId={user.id}
+        categories={categories}
+        cities={cities}
+        defaultCity={profile?.city}
+      />
     </div>
   );
 }

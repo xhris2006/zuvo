@@ -28,7 +28,14 @@ export function computeTargetSize(
   };
 }
 
-export class ImageProcessingError extends Error {}
+export type ImageProcessingErrorCode = "unsupported" | "processingFailed" | "tooLarge";
+
+/** Erreur de traitement d'image ; `code` est traduit à l'affichage (t.images). */
+export class ImageProcessingError extends Error {
+  constructor(readonly code: ImageProcessingErrorCode) {
+    super(code);
+  }
+}
 
 /**
  * Redimensionne et réencode une image dans le navigateur (WebP si possible,
@@ -42,7 +49,7 @@ export async function resizeImage(
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   } catch {
-    throw new ImageProcessingError("Format d'image non pris en charge.");
+    throw new ImageProcessingError("unsupported");
   }
 
   const { width, height, crop } = computeTargetSize(
@@ -55,7 +62,7 @@ export async function resizeImage(
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
-  if (!context) throw new ImageProcessingError("Traitement de l'image impossible.");
+  if (!context) throw new ImageProcessingError("processingFailed");
   context.drawImage(bitmap, crop.sx, crop.sy, crop.sWidth, crop.sHeight, 0, 0, width, height);
   bitmap.close();
 
@@ -67,6 +74,6 @@ export async function resizeImage(
   const webp = await toBlob("image/webp");
   if (webp && webp.type === "image/webp") return webp;
   const jpeg = await toBlob("image/jpeg");
-  if (!jpeg) throw new ImageProcessingError("Traitement de l'image impossible.");
+  if (!jpeg) throw new ImageProcessingError("processingFailed");
   return jpeg;
 }

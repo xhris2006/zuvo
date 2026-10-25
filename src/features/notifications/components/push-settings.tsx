@@ -7,18 +7,10 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
-import { formatRelativeTime } from "@/lib/format";
 import { sendTestPushAction } from "../actions";
 import type { LastPushResult } from "../queries";
 import { usePushDevice } from "../use-push-device";
-
-const lastPushLabels: Record<string, string> = {
-  sent: "envoyée à vos appareils",
-  no_device: "aucun appareil n'était activé à ce moment-là",
-  disabled: "les notifications push étaient désactivées",
-  failed: "refusée par le service de notifications : désactivez puis réactivez ci-dessous",
-  skipped: "non envoyée (déjà lue)",
-};
+import { useT } from "@/i18n/client";
 
 type Feedback = { variant: "success" | "danger"; text: string } | null;
 
@@ -31,6 +23,7 @@ type PushSettingsProps = {
 
 /** Activation des notifications push sur cet appareil (page Paramètres). */
 export function PushSettings({ lastPush = null, isAdmin = false }: PushSettingsProps) {
+  const t = useT();
   const { status, busy, enable: enableDevice, disable: disableDevice } = usePushDevice();
   const [testing, setTesting] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -39,16 +32,14 @@ export function PushSettings({ lastPush = null, isAdmin = false }: PushSettingsP
     setFeedback(null);
     const error = await enableDevice();
     setFeedback(
-      error
-        ? { variant: "danger", text: error }
-        : { variant: "success", text: "Notifications activées sur cet appareil." },
+      error ? { variant: "danger", text: error } : { variant: "success", text: t.push.enabled },
     );
   }
 
   async function disable() {
     setFeedback(null);
     await disableDevice();
-    setFeedback({ variant: "success", text: "Notifications désactivées sur cet appareil." });
+    setFeedback({ variant: "success", text: t.push.disabled });
   }
 
   async function test() {
@@ -58,10 +49,7 @@ export function PushSettings({ lastPush = null, isAdmin = false }: PushSettingsP
     setTesting(false);
     setFeedback(
       result.status === "ok"
-        ? {
-            variant: "success",
-            text: "Notification de test envoyée : elle doit apparaître dans quelques secondes.",
-          }
+        ? { variant: "success", text: t.push.testSent }
         : { variant: "danger", text: result.message },
     );
   }
@@ -69,77 +57,69 @@ export function PushSettings({ lastPush = null, isAdmin = false }: PushSettingsP
   return (
     <div className="flex flex-col gap-4" aria-busy={status === "checking"}>
       {status === "checking" ? (
-        <p className="text-sm text-muted-foreground">Vérification de cet appareil…</p>
+        <p className="text-sm text-muted-foreground">{t.push.checking}</p>
       ) : null}
       {status === "not_configured" ? (
         isAdmin ? (
-          <Alert variant="warning" title="Configuration incomplète">
-            La clé publique VAPID n&apos;est pas présente dans ce déploiement. Suivez les étapes de{" "}
+          <Alert variant="warning" title={t.push.incompleteTitle}>
+            {t.push.incompleteBefore}{" "}
             <Link href={routes.adminConfig} className="font-semibold underline">
-              Administration → Configuration
+              {t.push.incompleteLink}
             </Link>{" "}
-            puis redéployez le site.
+            {t.push.incompleteAfter}
           </Alert>
         ) : (
-          <Alert variant="info" title="Bientôt disponible">
-            Les notifications push ne sont pas encore activées sur {siteConfig.name}. Vous retrouvez
-            toutes vos notifications sur la page Notifications.
+          <Alert variant="info" title={t.push.soonTitle}>
+            {t.push.soonBody(siteConfig.name)}
           </Alert>
         )
       ) : null}
       {status === "unsupported" ? (
-        <Alert variant="warning" title="Navigateur non compatible">
-          Ce navigateur ne prend pas en charge les notifications push. Essayez avec une version
-          récente de Chrome, Firefox, Edge ou Safari.
+        <Alert variant="warning" title={t.push.unsupportedTitle}>
+          {t.push.unsupportedBody}
         </Alert>
       ) : null}
       {status === "ios_install" ? (
-        <Alert variant="info" title="Sur iPhone et iPad">
-          Ajoutez d&apos;abord le site à votre écran d&apos;accueil (bouton Partager, puis « Sur
-          l&apos;écran d&apos;accueil »), ouvrez-le depuis l&apos;icône, puis revenez ici. iOS 16.4
-          ou plus récent est nécessaire.
+        <Alert variant="info" title={t.push.iosTitle}>
+          {t.push.iosBody}
         </Alert>
       ) : null}
       {status === "denied" ? (
-        <Alert variant="warning" title="Notifications bloquées">
-          Vous avez refusé les notifications pour ce site. Autorisez-les dans les réglages de votre
-          navigateur, puis rechargez la page.
+        <Alert variant="warning" title={t.push.deniedTitle}>
+          {t.push.deniedBody}
         </Alert>
       ) : null}
 
       {status === "off" ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            Recevez une alerte sur cet appareil pour les nouveaux messages et l&apos;activité de vos
-            annonces, même quand le site est fermé.
-          </p>
+          <p className="text-sm text-muted-foreground">{t.push.offBody}</p>
           <Button onClick={() => void enable()} loading={busy} className="shrink-0">
             <BellRing aria-hidden="true" />
-            Activer
+            {t.push.enable}
           </Button>
         </div>
       ) : null}
 
       {status === "on" ? (
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-success">
-            Notifications push activées sur cet appareil.
-          </p>
+          <p className="text-sm font-medium text-success">{t.push.onBody}</p>
           {lastPush ? (
             <p className="text-sm text-muted-foreground">
-              Dernière notification : {formatRelativeTime(lastPush.pushedAt)},{" "}
-              {(lastPush.status && lastPushLabels[lastPush.status]) ?? "résultat inconnu"}
+              {t.push.lastPush(
+                t.format.relativeTime(lastPush.pushedAt),
+                (lastPush.status && t.push.lastPushLabels[lastPush.status]) ?? t.push.unknownResult,
+              )}
               {lastPush.status === "failed" && lastPush.detail ? ` (${lastPush.detail})` : ""}.
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => void test()} loading={testing} disabled={busy}>
               <Send aria-hidden="true" />
-              Envoyer un test
+              {t.push.sendTest}
             </Button>
             <Button variant="ghost" onClick={() => void disable()} disabled={busy}>
               <BellOff aria-hidden="true" />
-              Désactiver sur cet appareil
+              {t.push.disableHere}
             </Button>
           </div>
         </div>

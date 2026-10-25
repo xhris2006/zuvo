@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vm } from "@/lib/forms/validation";
 import {
   isReservedUsername,
   normalizeUsername,
@@ -13,17 +14,17 @@ export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(1, "Indiquez votre adresse e-mail.")
-  .max(254, "Adresse e-mail trop longue.")
-  .pipe(z.email("Adresse e-mail invalide."));
+  .min(1, vm("emailRequired"))
+  .max(254, vm("emailTooLong"))
+  .pipe(z.email(vm("emailInvalid")));
 
 /** Mot de passe d'un nouveau compte ou d'une réinitialisation. */
 export const newPasswordSchema = z
   .string()
-  .min(PASSWORD_MIN_LENGTH, `Au moins ${PASSWORD_MIN_LENGTH} caractères.`)
-  .max(PASSWORD_MAX_LENGTH, `${PASSWORD_MAX_LENGTH} caractères au maximum.`)
-  .regex(/[A-Za-z]/, "Le mot de passe doit contenir au moins une lettre.")
-  .regex(/\d/, "Le mot de passe doit contenir au moins un chiffre.");
+  .min(PASSWORD_MIN_LENGTH, vm("minChars", PASSWORD_MIN_LENGTH))
+  .max(PASSWORD_MAX_LENGTH, vm("maxChars", PASSWORD_MAX_LENGTH))
+  .regex(/[A-Za-z]/, vm("passwordLetter"))
+  .regex(/\d/, vm("passwordDigit"));
 
 export const usernameSchema = z
   .string()
@@ -31,22 +32,22 @@ export const usernameSchema = z
   .pipe(
     z
       .string()
-      .min(3, "Au moins 3 caractères.")
-      .max(30, "30 caractères au maximum.")
-      .regex(USERNAME_PATTERN, "Lettres minuscules, chiffres et _ uniquement.")
-      .refine((value) => !isReservedUsername(value), "Ce nom d'utilisateur est réservé."),
+      .min(3, vm("minChars", 3))
+      .max(30, vm("maxChars", 30))
+      .regex(USERNAME_PATTERN, vm("usernamePattern"))
+      .refine((value) => !isReservedUsername(value), vm("usernameReserved")),
   );
 
 export const displayNameSchema = z
   .string()
   .trim()
-  .min(1, "Indiquez votre nom.")
-  .max(50, "50 caractères au maximum.");
+  .min(1, vm("nameRequired"))
+  .max(50, vm("maxChars", 50));
 
 export const signInSchema = z.object({
   email: emailSchema,
   // Aucune règle de complexité à la connexion : ne rien révéler de la politique.
-  password: z.string().min(1, "Indiquez votre mot de passe.").max(PASSWORD_MAX_LENGTH),
+  password: z.string().min(1, vm("passwordRequired")).max(PASSWORD_MAX_LENGTH),
 });
 
 export const signUpSchema = z.object({
@@ -55,7 +56,7 @@ export const signUpSchema = z.object({
   email: emailSchema,
   password: newPasswordSchema,
   acceptTerms: z.literal("on", {
-    error: "Vous devez accepter les conditions d'utilisation.",
+    error: vm("termsRequired"),
   }),
 });
 
@@ -67,6 +68,6 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Les deux mots de passe ne correspondent pas.",
+    message: vm("passwordMismatch"),
     path: ["confirmPassword"],
   });

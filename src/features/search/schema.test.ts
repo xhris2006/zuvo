@@ -41,7 +41,7 @@ describe("parseSearchParams", () => {
   it("ignores invalid values individually instead of failing", () => {
     const filters = parseSearchParams({
       q: "chaussures",
-      city: "paris",
+      city: "Paris !",
       condition: "broken",
       minPrice: "-5",
       maxPrice: "abc",

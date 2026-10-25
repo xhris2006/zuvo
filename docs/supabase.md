@@ -94,7 +94,10 @@ Dans **Authentication** :
   et ne peut pas être consommé par un robot qui précharge les liens des e-mails.
   Avec les modèles par défaut de Supabase, la confirmation passe par
   `/auth/callback` et ne fonctionne que dans le navigateur où l'inscription a
-  été faite.
+  été faite. Ces modèles sont en français : Supabase n'envoie qu'une version
+  par modèle, quelle que soit la langue choisie dans l'application. Pour les
+  utilisateurs anglophones, vous pouvez ajouter une traduction anglaise sous le
+  texte français dans chaque modèle.
 - **URL Configuration → Redirect URLs** doit contenir les adresses
   `…/auth/callback` du site (couvertes par `https://votre-domaine/**`).
 
@@ -138,24 +141,49 @@ décrites dans [`notifications.md`](notifications.md).
 Renseignez-les dans `.env.local` (développement) et dans **Vercel → Settings →
 Environment Variables** (production et prévisualisation).
 
-### 1.6 Désigner un administrateur
+### 1.6 Désigner le premier administrateur
 
-Le rôle administrateur ne peut être attribué que depuis l'éditeur SQL (ou avec
-la clé secrète), jamais depuis l'application :
+Le **premier** administrateur se désigne depuis l'éditeur SQL (aucun compte ne
+peut encore le faire depuis l'application) :
 
 ```sql
 insert into public.user_roles (user_id, role)
 select id, 'admin' from auth.users where email = 'adresse@exemple.com';
 ```
 
-Pour le retirer : `delete from public.user_roles where user_id = '<uuid>';`
+Ensuite, les administrateurs nomment ou retirent les autres membres de l'équipe
+depuis **Administration → Équipe** (ou la fiche d'un utilisateur). Cette
+attribution passe par la fonction `admin_set_role`, qui vérifie en base que
+l'appelant est administrateur, refuse toute modification de son propre rôle
+et inscrit chaque changement au journal. La table `user_roles` reste sans
+aucun droit d'écriture via l'API : un rôle envoyé par le navigateur n'est
+jamais pris en compte.
 
-L'espace `/admin` (tableau de bord, signalements, utilisateurs, journal)
-n'apparaît qu'aux administrateurs ; les autres reçoivent une page 404. Chaque
-action passe par une fonction `admin_*` qui vérifie elle-même le rôle en base et
-s'inscrit dans `moderation_actions` (journal non modifiable). Les messages
-privés ne sont jamais lisibles par l'administration, sauf le message précis
-visé par un signalement, et chaque consultation est journalisée.
+Deux rôles existent :
+
+| Rôle        | Accès                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------- |
+| `admin`     | Tout l'espace `/admin`, dont l'équipe, les catégories, les villes, le message global et la configuration |
+| `moderator` | Tableau de bord, signalements, annonces, utilisateurs (sans adresse e-mail) et journal de modération     |
+
+L'espace `/admin` renvoie une page 404 à tout autre utilisateur. Chaque action
+passe par une fonction `admin_*` qui vérifie elle-même le rôle en base et
+s'inscrit dans `moderation_actions` (journal non modifiable) ; les
+modifications des catégories, des villes et du message global sont inscrites
+dans `admin_activity` (journal de configuration). Personne ne peut agir sur
+son propre compte ni sur un membre de l'équipe. Les messages privés ne sont
+jamais lisibles par l'administration, sauf le message précis visé par un
+signalement, et chaque consultation est journalisée.
+
+### 1.7 Appliquer une nouvelle migration avec l'éditeur SQL
+
+Exécutez chaque nouveau fichier **dans l'ordre des noms**, un par un. Un
+fichier qui ajoute une valeur à un type énuméré (`*_types.sql`, `ALTER TYPE …
+ADD VALUE`) doit être exécuté **seul et en premier** : la valeur n'est
+utilisable qu'une fois sa transaction terminée. Les autres fichiers sont
+encadrés par `begin` / `commit` et peuvent être réexécutés sans effet de bord.
+Vérifiez ensuite la version dans **Administration → Configuration**
+(`select public.app_schema_version();`).
 
 ---
 
@@ -165,7 +193,7 @@ visé par un signalement, et chaque consultation est journalisée.
 | -------------------------- | -------------------------------------------------------------------- |
 | `profiles`                 | Profil public (nom d'utilisateur, nom affiché, avatar, bio, ville)   |
 | `profile_private`          | Coordonnées privées (téléphone), visibles par leur seul propriétaire |
-| `user_roles`               | Rôles (`admin`), attribués uniquement en SQL                         |
+| `user_roles`               | Rôles (`admin`, `moderator`), attribués par `admin_set_role`         |
 | `notification_preferences` | Préférences de notification                                          |
 | `categories`               | Catégories (15 catégories initiales, hiérarchie possible)            |
 | `listings`                 | Annonces : prix entier en XAF, état, ville, statut                   |
@@ -178,7 +206,13 @@ visé par un signalement, et chaque consultation est journalisée.
 | `notifications`            | Notifications internes                                               |
 | `push_subscriptions`       | Abonnements Web Push par navigateur                                  |
 | `reports`                  | Signalements (annonce, utilisateur, message) et leur traitement      |
-| `moderation_actions`       | Journal des actions de modération (lecture réservée aux admins)      |
+| `moderation_actions`       | Journal des actions de modération (lecture réservée à l'équipe)      |
+| `admin_activity`           | Journal de configuration (catégories, villes, message global)        |
+| `cities`                   | Villes proposées (reprend la liste initiale de l'application)        |
+| `site_announcements`       | Message global : information ou maintenance, dates facultatives      |
+| `banned_words`             | Mots interdits dans les annonces (administrateurs)                   |
+| `app_settings`             | Réglages anti-spam (limite de publication des comptes récents)       |
+| `support_requests`         | Demandes d'assistance et contestations de retrait, avec la réponse   |
 
 ### Écarts justifiés par rapport au cahier des charges
 
@@ -188,8 +222,16 @@ visé par un signalement, et chaque consultation est journalisée.
 - **`profile_private`**, **`user_roles`**, **`notification_preferences`** :
   tables ajoutées, car RLS protège des lignes et non des colonnes ; les données
   privées et les rôles doivent donc vivre dans des tables distinctes.
-- **`profiles.suspended_at`**, **`listings.removed_at` / `removed_reason`** :
-  état de modération, modifiable uniquement par l'administration.
+- **`profiles.suspended_at` / `suspended_until`**, **`listings.removed_at` /
+  `removed_reason`** : état de modération, modifiable uniquement par l'équipe.
+  Une suspension temporaire cesse d'avoir effet à `suspended_until`, sans
+  tâche planifiée (`private.is_suspended` et les politiques RLS en tiennent
+  compte) ; `admin_lift_expired_suspensions` nettoie ensuite les colonnes et
+  l'inscrit au journal.
+- **`profiles.verified_at`** : badge « vendeur vérifié », attribué ou retiré
+  par un administrateur (`admin_set_seller_verification`, journalisé) après
+  une vérification faite hors de l'application. Voir
+  [§2 Badge vendeur vérifié](#badge-vendeur-vérifié).
 - **`country_code`** sur profils et annonces : prépare l'ouverture à d'autres pays.
 - **`listings.search_vector`** : colonne calculée pour la recherche plein texte
   en français, insensible aux accents (configuration `french_unaccent`).
@@ -222,6 +264,44 @@ atteindre ; les pièces jointes de messages sont conservées avec les
 conversations. La suppression est demandée depuis **Paramètres → Supprimer mon
 compte** (saisie du nom d'utilisateur) et utilise, côté serveur uniquement, la
 clé `SUPABASE_SERVICE_ROLE_KEY`. Testée dans `supabase/tests/account-deletion.test.ts`.
+
+### Badge vendeur vérifié
+
+Le badge signifie que l'équipe a contrôlé l'identité du vendeur (pièce
+d'identité présentée en agence, appel au numéro du compte…). Il est **manuel** :
+seul un administrateur l'attribue ou le retire, depuis la fiche de
+l'utilisateur, avec une note facultative inscrite au journal. Un compte
+suspendu ne peut pas le recevoir. Le badge apparaît sur le profil, la fiche
+vendeur d'une annonce, les cartes du fil et la liste des boutiques.
+
+**Option non mise en place : vérification du téléphone par SMS.** Elle
+nécessiterait un fournisseur SMS configuré dans Supabase Auth
+(**Authentication → Providers → Phone** : Twilio, MessageBird, Vonage ou
+Textlocal), avec un compte et des clés propres au projet, saisis uniquement
+dans le tableau de bord Supabase. Le flux serait : saisie du numéro dans les
+paramètres, envoi d'un code par `supabase.auth.updateUser({ phone })`,
+validation par `supabase.auth.verifyOtp({ phone, token, type: "phone_change" })`,
+puis lecture de `auth.users.phone_confirmed_at` par une fonction `private`
+(`SECURITY DEFINER`) pour proposer le badge à l'équipe. Un SMS confirme la
+possession d'un numéro, pas l'identité : il ne remplace pas la vérification
+manuelle. Les envois SMS sont payants : réglez leur plafond dans les limites
+d'authentification du projet Supabase avant toute ouverture.
+
+### Demandes d'assistance et contestations
+
+La page **Assistance** (`/assistance`, compte requis) permet d'écrire à
+l'équipe (`kind = contact`) ou de contester le retrait d'une de ses annonces
+(`kind = appeal`, lien « Contester ce retrait » sur l'annonce). La base
+impose l'auteur (`auth.uid()`), le statut initial et l'absence de réponse ;
+une contestation n'est acceptée que pour une annonce de l'auteur retirée par
+la modération, et une seule contestation ouverte par annonce. Un compte
+suspendu peut écrire (c'est son seul recours). Limite : 5 demandes par jour.
+
+L'équipe (administrateurs et modérateurs) traite les demandes dans
+**Administration → Assistance** : réponse (notification `support_reply` à
+l'auteur), clôture, et rétablissement de l'annonce contestée. Chaque réponse
+passe par `admin_answer_support_request` et s'inscrit au journal de
+modération. Un utilisateur ne voit que ses propres demandes.
 
 ### Index
 
@@ -288,17 +368,18 @@ sur les abonnements, favoris, messages non lus et notifications non lues.
 
 ### Codes d'erreur métier
 
-| Code / message                                         | Signification                                     |
-| ------------------------------------------------------ | ------------------------------------------------- |
-| `42501`                                                | Accès refusé (privilège ou politique RLS)         |
-| `23505`                                                | Doublon (nom d'utilisateur, favori, signalement…) |
-| `23514`                                                | Donnée invalide (contrainte de validation)        |
-| `PT429` `rate_limit_exceeded`                          | Limite anti-spam atteinte                         |
-| `P0001` `listing_requires_image`                       | Publication sans photo                            |
-| `P0001` `listing_cannot_return_to_draft`               | Retour en brouillon interdit                      |
-| `P0001` `listing_removed_by_moderation`                | Annonce retirée par la modération                 |
-| `P0001` `listing_image_limit_reached`                  | Plus de 8 photos                                  |
-| `P0002` `listing_not_found`, `report_target_not_found` | Cible introuvable ou inaccessible                 |
+| Code / message                                         | Signification                                      |
+| ------------------------------------------------------ | -------------------------------------------------- |
+| `42501`                                                | Accès refusé (privilège ou politique RLS)          |
+| `23505`                                                | Doublon (nom d'utilisateur, favori, signalement…)  |
+| `23514`                                                | Donnée invalide (contrainte de validation)         |
+| `PT429` `rate_limit_exceeded`                          | Limite anti-spam atteinte                          |
+| `P0001` `listing_requires_image`                       | Publication sans photo                             |
+| `P0001` `listing_cannot_return_to_draft`               | Retour en brouillon interdit                       |
+| `P0001` `listing_removed_by_moderation`                | Annonce retirée par la modération                  |
+| `P0001` `listing_image_limit_reached`                  | Plus de 8 photos                                   |
+| `P0002` `listing_not_found`, `report_target_not_found` | Cible introuvable ou inaccessible                  |
+| `P0002` `appeal_listing_not_found`                     | Contestation d'une annonce non retirée ou d'autrui |
 
 ---
 

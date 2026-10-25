@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { authErrorMessage, callbackErrorMessage, genericAuthError } from "./errors";
+import { getDictionary } from "@/i18n";
+import { translateValidation } from "@/lib/forms/validation";
+import { getServerDictionary } from "@/i18n/server-dictionaries";
+import { authErrorMessage, callbackErrorMessage } from "./errors";
 import { resetPasswordSchema, signInSchema, signUpSchema } from "./schemas";
+
+/** Message de validation traduit en français (les schémas produisent des codes). */
+const text = (message?: string) =>
+  message === undefined ? undefined : translateValidation(message, getDictionary("fr").validation);
 
 const validSignUp = {
   username: " @Awa_237 ",
@@ -33,12 +40,14 @@ describe("signUpSchema", () => {
   ])("refuse %s = %j", (field, value, message) => {
     const result = signUpSchema.safeParse({ ...validSignUp, [field]: value });
     expect(result.success).toBe(false);
-    expect(result.error?.issues.find((issue) => issue.path[0] === field)?.message).toBe(message);
+    expect(text(result.error?.issues.find((issue) => issue.path[0] === field)?.message)).toBe(
+      message,
+    );
   });
 
   it("exige l'acceptation des conditions", () => {
     const result = signUpSchema.safeParse({ ...validSignUp, acceptTerms: undefined });
-    expect(result.error?.issues[0]?.message).toBe(
+    expect(text(result.error?.issues[0]?.message)).toBe(
       "Vous devez accepter les conditions d'utilisation.",
     );
   });
@@ -62,17 +71,22 @@ describe("resetPasswordSchema", () => {
 
 describe("messages d'erreur", () => {
   it("traduisent les codes connus et masquent les autres", () => {
-    expect(authErrorMessage({ code: "invalid_credentials" })).toBe(
+    const texts = getServerDictionary("fr").authErrors;
+    expect(authErrorMessage(texts, { code: "invalid_credentials" })).toBe(
       "E-mail ou mot de passe incorrect.",
     );
-    expect(authErrorMessage({ code: "unexpected_failure" })).toBe(genericAuthError);
-    expect(authErrorMessage({ code: "toString" })).toBe(genericAuthError);
-    expect(authErrorMessage({ status: 429 })).toMatch(/Trop de tentatives/);
+    expect(authErrorMessage(texts, { code: "unexpected_failure" })).toBe(texts.generic);
+    expect(authErrorMessage(texts, { code: "toString" })).toBe(texts.generic);
+    expect(authErrorMessage(texts, { status: 429 })).toMatch(/Trop de tentatives/);
+    expect(authErrorMessage(getServerDictionary("en").authErrors, { status: 429 })).toMatch(
+      /Too many attempts/,
+    );
   });
 
   it("n'acceptent que les codes de rappel connus", () => {
-    expect(callbackErrorMessage("lien-invalide")).toMatch(/invalide/);
-    expect(callbackErrorMessage("<script>")).toBeNull();
-    expect(callbackErrorMessage("toString")).toBeNull();
+    const texts = getServerDictionary("fr").authErrors;
+    expect(callbackErrorMessage(texts, "lien-invalide")).toMatch(/invalide/);
+    expect(callbackErrorMessage(texts, "<script>")).toBeNull();
+    expect(callbackErrorMessage(texts, "toString")).toBeNull();
   });
 });

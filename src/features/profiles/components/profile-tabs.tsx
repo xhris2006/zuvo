@@ -1,8 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getDictionary } from "@/i18n";
-import { formatCount } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 export type ProfileTab = {
@@ -24,8 +23,8 @@ type ProfileTabsProps = {
  * Onglets d'un profil. L'onglet actif est le titre (h2) de la section, les
  * autres sont des liens vers leur page : aucun JavaScript nécessaire.
  */
-export function ProfileTabs({ tabs, labelledBy, trailing, className }: ProfileTabsProps) {
-  const t = getDictionary();
+export async function ProfileTabs({ tabs, labelledBy, trailing, className }: ProfileTabsProps) {
+  const t = await getT();
   const hasLinks = tabs.some((tab) => !tab.current);
   const list = (
     <ul className="flex min-w-0 items-end gap-5 sm:gap-6">
@@ -40,7 +39,7 @@ export function ProfileTabs({ tabs, labelledBy, trailing, className }: ProfileTa
                   tab.current ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
                 )}
               >
-                {formatCount(tab.count)}
+                {t.format.count(tab.count)}
               </span>
             ) : null}
           </>

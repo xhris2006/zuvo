@@ -13,17 +13,17 @@ import { markAllNotificationsReadAction } from "@/features/notifications/actions
 import { NotificationList } from "@/features/notifications/components/notification-list";
 import { PushPrompt } from "@/features/notifications/components/push-prompt";
 import { getNotifications } from "@/features/notifications/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
 
-export const metadata: Metadata = {
-  title: "Notifications",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.notificationsTitle, robots: { index: false } };
+}
 
 export default async function NotificationsPage(props: PageProps<"/notifications">) {
-  const t = getDictionary();
+  const t = await getT();
   if (!isSupabaseConfigured()) {
     return (
       <div className="container-page flex flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
@@ -47,16 +47,16 @@ export default async function NotificationsPage(props: PageProps<"/notifications
           <>
             {hasUnread ? (
               <form action={markAllNotificationsReadAction}>
-                <SubmitButton variant="outline" size="sm" title="Tout marquer comme lu">
+                <SubmitButton variant="outline" size="sm" title={t.pages.markAllRead}>
                   <CheckCheck aria-hidden="true" />
-                  <span className="sr-only sm:not-sr-only">Tout marquer comme lu</span>
+                  <span className="sr-only sm:not-sr-only">{t.pages.markAllRead}</span>
                 </SubmitButton>
               </form>
             ) : null}
             <Button asChild variant="ghost" size="sm">
-              <Link href={routes.settings} title="Préférences">
+              <Link href={routes.settings} title={t.pages.preferences}>
                 <Settings aria-hidden="true" />
-                <span className="sr-only sm:not-sr-only">Préférences</span>
+                <span className="sr-only sm:not-sr-only">{t.pages.preferences}</span>
               </Link>
             </Button>
           </>
@@ -79,8 +79,8 @@ export default async function NotificationsPage(props: PageProps<"/notifications
       ) : (
         <EmptyState
           icon={Bell}
-          title="Aucune notification"
-          description="Vous serez prévenu ici des nouveaux abonnés et de l'activité de vos annonces. Les messages ont leur propre boîte de réception."
+          title={t.pages.noNotificationsTitle}
+          description={t.pages.noNotificationsBody}
         />
       )}
     </div>

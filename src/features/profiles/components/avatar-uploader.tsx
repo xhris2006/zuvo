@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ImageProcessingError, resizeImage } from "@/lib/images/resize";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AVATAR_BUCKET } from "../avatar-url";
+import { useT } from "@/i18n/client";
 
 const MAX_INPUT_BYTES = 15 * 1024 * 1024;
 
@@ -23,6 +24,7 @@ type AvatarUploaderProps = {
  * n'est enregistré sur le profil qu'à la validation.
  */
 export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUploaderProps) {
+  const t = useT();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState(currentUrl);
@@ -33,16 +35,16 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
   async function handleFile(file: File) {
     setMessage(null);
     if (!file.type.startsWith("image/")) {
-      setMessage("Choisissez une image.");
+      setMessage(t.profileForms.chooseImage);
       return;
     }
     if (file.size > MAX_INPUT_BYTES) {
-      setMessage("Image trop volumineuse (15 Mo maximum).");
+      setMessage(t.profileForms.imageTooLarge);
       return;
     }
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      setMessage("Le stockage des photos n'est pas configuré.");
+      setMessage(t.profileForms.storageMissing);
       return;
     }
 
@@ -57,12 +59,12 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
       if (uploadError) throw uploadError;
       setAvatarPath(path);
       setPreview(URL.createObjectURL(blob));
-      setMessage("Photo prête : enregistrez le profil pour la conserver.");
+      setMessage(t.profileForms.photoReady);
     } catch (caught) {
       setMessage(
         caught instanceof ImageProcessingError
-          ? caught.message
-          : "L'envoi de la photo a échoué. Veuillez réessayer.",
+          ? t.images[caught.code]
+          : t.profileForms.uploadFailed,
       );
     } finally {
       setUploading(false);
@@ -73,7 +75,7 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
   function removePhoto() {
     setAvatarPath("-");
     setPreview(null);
-    setMessage("La photo sera retirée à l'enregistrement.");
+    setMessage(t.profileForms.photoWillBeRemoved);
   }
 
   return (
@@ -90,17 +92,17 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
             onClick={() => inputRef.current?.click()}
           >
             <Camera aria-hidden="true" />
-            {preview ? "Changer la photo" : "Ajouter une photo"}
+            {preview ? t.profileForms.changePhoto : t.profileForms.addPhoto}
           </Button>
           {preview ? (
             <Button type="button" variant="ghost" size="sm" onClick={removePhoto}>
               <Trash2 aria-hidden="true" />
-              Retirer
+              {t.profileForms.removePhoto}
             </Button>
           ) : null}
         </div>
         <label htmlFor={inputId} className="sr-only">
-          Photo de profil
+          {t.profileForms.profilePhoto}
         </label>
         <input
           ref={inputRef}
@@ -115,8 +117,7 @@ export function AvatarUploader({ userId, name, currentUrl, error }: AvatarUpload
           }}
         />
         <p className="text-xs text-muted-foreground" aria-live="polite">
-          {message ??
-            "Photo de la galerie ou de l'appareil photo, recadrée et allégée automatiquement."}
+          {message ?? t.profileForms.photoHint}
         </p>
         {error ? (
           <p className="text-xs font-medium text-danger" role="alert">

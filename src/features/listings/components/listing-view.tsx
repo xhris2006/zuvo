@@ -1,7 +1,7 @@
 import { LayoutGrid, LayoutList } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 export const listingViews = ["fil", "grille"] as const;
@@ -21,8 +21,8 @@ type ListingViewToggleProps = {
 };
 
 /** Bascule fil / grille : deux liens, utilisable sans JavaScript. */
-export function ListingViewToggle({ current, hrefFor, className }: ListingViewToggleProps) {
-  const t = getDictionary();
+export async function ListingViewToggle({ current, hrefFor, className }: ListingViewToggleProps) {
+  const t = await getT();
   const options = [
     { view: "fil", label: t.listing.viewFeed, icon: LayoutList },
     { view: "grille", label: t.listing.viewGrid, icon: LayoutGrid },

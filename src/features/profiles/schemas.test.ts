@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { getDictionary } from "@/i18n";
+import { translateValidation } from "@/lib/forms/validation";
 import { formatPhone, normalizePhone } from "./phone";
 import { isOwnAvatarPath, privateContactSchema, profileSchema } from "./schemas";
+
+/** Message de validation traduit en français (les schémas produisent des codes). */
+const text = (message?: string) =>
+  message === undefined ? undefined : translateValidation(message, getDictionary("fr").validation);
 
 describe("normalizePhone", () => {
   it.each([
@@ -33,7 +39,7 @@ describe("privateContactSchema", () => {
 
   it("explique le format attendu en cas d'erreur", () => {
     const result = privateContactSchema.safeParse({ phone: "123" });
-    expect(result.error?.issues[0]?.message).toMatch(/Numéro invalide/);
+    expect(text(result.error?.issues[0]?.message)).toMatch(/Numéro invalide/);
   });
 });
 
@@ -45,7 +51,7 @@ describe("profileSchema", () => {
   });
 
   it("refuse une ville inconnue et une bio trop longue", () => {
-    expect(profileSchema.safeParse({ ...base, city: "paris" }).success).toBe(false);
+    expect(profileSchema.safeParse({ ...base, city: "Paris !" }).success).toBe(false);
     expect(profileSchema.safeParse({ ...base, bio: "a".repeat(501) }).success).toBe(false);
   });
 });

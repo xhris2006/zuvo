@@ -3,9 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LinkPending } from "@/components/ui/link-pending";
-import { getCity } from "@/config/locations";
-import { getDictionary } from "@/i18n";
-import { formatPrice } from "@/lib/format";
+import { cityName } from "@/features/locations/queries";
+import { getT } from "@/i18n/server";
 import { listingHref } from "../links";
 import type { ListingCardData } from "../types";
 import { ListingStatusBadge } from "./listing-status-badge";
@@ -18,9 +17,9 @@ type ListingCardProps = {
   priority?: boolean;
 };
 
-export function ListingCard({ listing, action, priority = false }: ListingCardProps) {
-  const t = getDictionary();
-  const city = listing.citySlug ? (getCity(listing.citySlug)?.name ?? listing.citySlug) : null;
+export async function ListingCard({ listing, action, priority = false }: ListingCardProps) {
+  const t = await getT();
+  const city = await cityName(listing.citySlug);
   const showStatus = listing.status !== "active";
 
   return (
@@ -49,7 +48,7 @@ export function ListingCard({ listing, action, priority = false }: ListingCardPr
 
       <div className="flex flex-col gap-0.5 px-0.5">
         <p className="text-base font-bold tracking-tight">
-          {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+          {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
         </p>
         <h3 className="line-clamp-1 text-sm text-foreground">
           <Link

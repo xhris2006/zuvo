@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 import Form from "next/form";
 import { routes } from "@/config/routes";
 import { SHOP_QUERY_MAX } from "@/features/profiles/shop-search";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 type ShopSearchFormProps = {
@@ -11,8 +11,8 @@ type ShopSearchFormProps = {
 };
 
 /** Recherche de boutiques par nom ou pseudo (onglet « Boutiques » d'Explorer). */
-export function ShopSearchForm({ defaultValue, className }: ShopSearchFormProps) {
-  const t = getDictionary();
+export async function ShopSearchForm({ defaultValue, className }: ShopSearchFormProps) {
+  const t = await getT();
   return (
     <Form action={routes.explore} role="search" className={cn("relative w-full", className)}>
       <input type="hidden" name="type" value="boutiques" />

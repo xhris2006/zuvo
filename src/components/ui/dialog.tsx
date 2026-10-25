@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type { ComponentProps } from "react";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 export const Dialog = DialogPrimitive.Root;
@@ -13,12 +14,8 @@ type DialogContentProps = ComponentProps<typeof DialogPrimitive.Content> & {
   closeLabel?: string;
 };
 
-export function DialogContent({
-  className,
-  children,
-  closeLabel = "Fermer",
-  ...props
-}: DialogContentProps) {
+export function DialogContent({ className, children, closeLabel, ...props }: DialogContentProps) {
+  const t = useT();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-[2px] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
@@ -35,7 +32,7 @@ export function DialogContent({
         {children}
         <DialogPrimitive.Close
           className="absolute top-4 right-4 inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label={closeLabel}
+          aria-label={closeLabel ?? t.ui.close}
         >
           <X className="size-4" aria-hidden="true" />
         </DialogPrimitive.Close>

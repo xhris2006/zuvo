@@ -16,16 +16,20 @@ import {
 import { ModerationDialog } from "@/features/admin/components/moderation-dialog";
 import { ReportStatusForm } from "@/features/admin/components/report-status-form";
 import { ReportedMessage } from "@/features/admin/components/reported-message";
-import { type AdminReport, getAdminReports, requireAdmin } from "@/features/admin/queries";
+import { SuspensionFields } from "@/features/admin/components/suspension-fields";
+import { type AdminReport, getAdminReports, requireStaff } from "@/features/admin/queries";
+import { isSuspensionActive } from "@/features/admin/suspension";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
 import { listingHref } from "@/features/listings/links";
 import type { ReportStatus } from "@/features/moderation/schemas";
-import { getDictionary } from "@/i18n";
-import { formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { parsePageParam } from "@/lib/pagination";
 import { Constants } from "@/lib/supabase/database.types";
 
-export const metadata: Metadata = { title: "Signalements" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.reports };
+}
 
 const statuses = Constants.public.Enums.report_status;
 
@@ -37,10 +41,11 @@ function statusHref(status: ReportStatus, page = 1): Route {
   return (query ? `${routes.adminReports}?${query}` : routes.adminReports) as Route;
 }
 
-function Target({ report }: { report: AdminReport }) {
+async function Target({ report }: { report: AdminReport }) {
+  const t = await getT();
   const target = report.target;
   if (!target) {
-    return <p className="text-sm text-muted-foreground">Élément supprimé depuis le signalement.</p>;
+    return <p className="text-sm text-muted-foreground">{t.adminPages.reports.targetDeleted}</p>;
   }
   if (target.kind === "listing") {
     return (
@@ -54,11 +59,13 @@ function Target({ report }: { report: AdminReport }) {
             <ExternalLink className="size-3.5" aria-hidden="true" />
           </Link>
           <ListingStatusBadge status={target.status} />
-          {target.removedAt ? <Badge variant="danger">Retirée</Badge> : null}
+          {target.removedAt ? (
+            <Badge variant="danger">{t.adminPages.listings.removed}</Badge>
+          ) : null}
         </div>
         {target.seller ? (
           <p className="text-sm text-muted-foreground">
-            Vendeur :{" "}
+            {t.adminPages.listings.sellerLabel}{" "}
             <Link href={publicProfileHref(target.seller.username)} className="hover:underline">
               {target.seller.displayName} (@{target.seller.username})
             </Link>
@@ -69,7 +76,7 @@ function Target({ report }: { report: AdminReport }) {
             <input type="hidden" name="listingId" value={target.id} />
             <SubmitButton variant="outline" size="sm">
               <RotateCcw aria-hidden="true" />
-              Restaurer l&apos;annonce
+              {t.adminPages.reports.restoreListing}
             </SubmitButton>
           </form>
         ) : (
@@ -77,12 +84,12 @@ function Target({ report }: { report: AdminReport }) {
             trigger={
               <Button variant="destructive" size="sm" className="self-start">
                 <Ban aria-hidden="true" />
-                Retirer l&apos;annonce
+                {t.adminPages.reports.removeListing}
               </Button>
             }
-            title="Retirer cette annonce ?"
-            description="Elle sera masquée immédiatement et le vendeur sera prévenu avec le motif indiqué. Le signalement sera marqué comme traité."
-            confirmLabel="Retirer"
+            title={t.adminPages.reports.removeTitle}
+            description={t.adminPages.reports.removeDescription}
+            confirmLabel={t.adminPages.remove}
             action={removeListingAction}
             fields={{ listingId: target.id, reportId: report.id }}
           />
@@ -91,29 +98,32 @@ function Target({ report }: { report: AdminReport }) {
     );
   }
   if (target.kind === "user") {
+    const suspended = isSuspensionActive(target.suspendedAt, target.suspendedUntil);
     return (
       <div className="flex flex-col gap-3">
         <p className="flex flex-wrap items-center gap-2">
           <Link href={adminUserHref(target.id)} className="font-medium hover:underline">
             {target.displayName} (@{target.username})
           </Link>
-          {target.suspendedAt ? <Badge variant="danger">Suspendu</Badge> : null}
+          {suspended ? <Badge variant="danger">{t.adminPages.suspended}</Badge> : null}
         </p>
-        {target.suspendedAt ? null : (
+        {suspended ? null : (
           <ModerationDialog
             trigger={
               <Button variant="destructive" size="sm" className="self-start">
                 <UserX aria-hidden="true" />
-                Suspendre le compte
+                {t.adminPages.reports.suspendAccount}
               </Button>
             }
-            title={`Suspendre ${target.displayName} ?`}
-            description="Son profil et ses annonces seront masqués ; il ne pourra plus publier ni envoyer de messages. Le signalement sera marqué comme traité."
-            confirmLabel="Suspendre"
+            title={t.adminPages.suspendTitle(target.displayName)}
+            description={t.adminPages.reports.suspendDescription}
+            confirmLabel={t.adminPages.suspend}
             action={setUserSuspensionAction}
             fields={{ userId: target.id, suspended: "true", reportId: report.id }}
-            reasonLabel="Motif (consigné dans le journal)"
-          />
+            reasonLabel={t.adminUi.reasonForLog}
+          >
+            <SuspensionFields />
+          </ModerationDialog>
         )}
       </div>
     );
@@ -122,8 +132,8 @@ function Target({ report }: { report: AdminReport }) {
 }
 
 export default async function AdminReportsPage(props: PageProps<"/admin/signalements">) {
-  await requireAdmin(routes.adminReports);
-  const t = getDictionary();
+  await requireStaff(routes.adminReports);
+  const t = await getT();
   const searchParams = await props.searchParams;
   const requested = typeof searchParams.statut === "string" ? searchParams.statut : "pending";
   const status: ReportStatus = (statuses as readonly string[]).includes(requested)
@@ -134,8 +144,8 @@ export default async function AdminReportsPage(props: PageProps<"/admin/signalem
 
   return (
     <>
-      <PageHeader title="Signalements" />
-      <nav aria-label="Statut des signalements" className="flex flex-wrap gap-2">
+      <PageHeader title={t.adminUi.nav.reports} />
+      <nav aria-label={t.adminPages.reports.statusNav} className="flex flex-wrap gap-2">
         {statuses.map((value) => (
           <Button key={value} asChild size="sm" variant={value === status ? "secondary" : "ghost"}>
             <Link href={statusHref(value)} aria-current={value === status ? "page" : undefined}>
@@ -146,7 +156,7 @@ export default async function AdminReportsPage(props: PageProps<"/admin/signalem
       </nav>
 
       {reports.items.length === 0 ? (
-        <EmptyState icon={Flag} title="Aucun signalement dans cette catégorie" />
+        <EmptyState icon={Flag} title={t.adminPages.reports.empty} />
       ) : (
         <ul className="flex flex-col gap-4">
           {reports.items.map((report) => (
@@ -158,8 +168,8 @@ export default async function AdminReportsPage(props: PageProps<"/admin/signalem
                 <Badge variant="outline">{t.reports.targets[report.targetType]}</Badge>
                 <span className="font-semibold">{t.reports.reasons[report.reason]}</span>
                 <span className="text-muted-foreground">
-                  · {formatRelativeTime(report.createdAt)}
-                  {report.reporter ? ` · par @${report.reporter.username}` : ""}
+                  · {t.format.relativeTime(report.createdAt)}
+                  {report.reporter ? t.adminPages.by(report.reporter.username) : ""}
                 </span>
               </div>
               {report.details ? (
@@ -169,7 +179,9 @@ export default async function AdminReportsPage(props: PageProps<"/admin/signalem
               ) : null}
               <Target report={report} />
               {report.resolutionNote ? (
-                <p className="text-sm text-muted-foreground">Note : {report.resolutionNote}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t.adminPages.reports.note(report.resolutionNote)}
+                </p>
               ) : null}
               <ReportStatusForm reportId={report.id} status={report.status} />
             </li>

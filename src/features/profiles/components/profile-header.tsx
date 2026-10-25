@@ -3,11 +3,11 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
-import { getCity } from "@/config/locations";
 import { followersHref, followingHref } from "@/config/routes";
-import { getDictionary } from "@/i18n";
-import { formatCount, formatMonthYear } from "@/lib/format";
+import { cityName } from "@/features/locations/queries";
+import { getT } from "@/i18n/server";
 import { avatarUrl } from "../avatar-url";
+import { VerifiedBadge } from "./verified-badge";
 import type { ProfileStats, PublicProfile } from "../queries";
 
 type ProfileHeaderProps = {
@@ -23,9 +23,16 @@ type ProfileHeaderProps = {
   menu?: ReactNode;
 };
 
-export function ProfileHeader({ profile, stats, actions, avatar, back, menu }: ProfileHeaderProps) {
-  const t = getDictionary();
-  const city = profile.city ? (getCity(profile.city)?.name ?? profile.city) : null;
+export async function ProfileHeader({
+  profile,
+  stats,
+  actions,
+  avatar,
+  back,
+  menu,
+}: ProfileHeaderProps) {
+  const t = await getT();
+  const city = await cityName(profile.city);
   const items: { key: string; label: string; value: number; href?: Route }[] = [
     {
       key: "followers",
@@ -75,9 +82,12 @@ export function ProfileHeader({ profile, stats, actions, avatar, back, menu }: P
 
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-col">
-            <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
-              {profile.display_name}
-            </h1>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
+                {profile.display_name}
+              </h1>
+              {profile.verified_at ? <VerifiedBadge /> : null}
+            </div>
             <p className="truncate text-sm text-muted-foreground">@{profile.username}</p>
           </div>
           <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:text-sm">
@@ -89,7 +99,7 @@ export function ProfileHeader({ profile, stats, actions, avatar, back, menu }: P
             ) : null}
             <li className="flex items-center gap-1">
               <CalendarDays className="size-3.5 sm:size-4" aria-hidden="true" />
-              {t.profile.memberSince(formatMonthYear(profile.created_at))}
+              {t.profile.memberSince(t.format.monthYear(profile.created_at))}
             </li>
           </ul>
           {profile.bio ? (
@@ -114,7 +124,7 @@ export function ProfileHeader({ profile, stats, actions, avatar, back, menu }: P
                   item.label
                 )}
               </dt>
-              <dd className="text-lg leading-tight font-bold">{formatCount(item.value)}</dd>
+              <dd className="text-lg leading-tight font-bold">{t.format.count(item.value)}</dd>
             </div>
           ))}
         </dl>

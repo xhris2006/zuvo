@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
-import { getDictionary } from "@/i18n";
-import { formatDate } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
 type DocumentPageProps = {
   title: string;
@@ -13,14 +12,14 @@ type DocumentPageProps = {
   children: ReactNode;
 };
 
-export function DocumentPage({
+export async function DocumentPage({
   title,
   intro,
   updatedAt,
   draft = false,
   children,
 }: DocumentPageProps) {
-  const t = getDictionary();
+  const t = await getT();
   return (
     <article className="container-page max-w-3xl pt-6 sm:pt-12">
       <header className="flex flex-col gap-3 border-b border-border pb-6">
@@ -28,7 +27,7 @@ export function DocumentPage({
         {intro ? <p className="text-base text-muted-foreground sm:text-lg">{intro}</p> : null}
         {updatedAt ? (
           <p className="text-xs text-muted-foreground">
-            {t.legal.lastUpdated} : <time dateTime={updatedAt}>{formatDate(updatedAt)}</time>
+            {t.legal.lastUpdated} : <time dateTime={updatedAt}>{t.format.date(updatedAt)}</time>
           </p>
         ) : null}
       </header>
@@ -43,10 +42,11 @@ export function DocumentPage({
 }
 
 /** Mention visible d'un élément à compléter avant la mise en production. */
-export function ToComplete({ children }: { children: ReactNode }) {
+export async function ToComplete({ children }: { children: ReactNode }) {
+  const t = await getT();
   return (
     <mark className="rounded bg-warning-soft px-1 py-0.5 font-medium text-warning">
-      [À compléter : {children}]
+      [{t.legal.toComplete} : {children}]
     </mark>
   );
 }

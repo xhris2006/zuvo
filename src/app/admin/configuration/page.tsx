@@ -13,17 +13,20 @@ import {
   getPushServerStatus,
 } from "@/features/notifications/push/diagnostics";
 import { getAuthSettings } from "@/features/auth/settings";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
 import { getSiteUrl } from "@/lib/env";
 import { getSupabaseConfig } from "@/lib/supabase/config";
-import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Configuration" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.config };
+}
 
 type CheckState = "ok" | "error" | "warning";
 
-function Check({
+async function Check({
   state,
   label,
   children,
@@ -32,6 +35,7 @@ function Check({
   label: string;
   children?: ReactNode;
 }) {
+  const t = await getT();
   const Icon = state === "ok" ? CircleCheck : state === "error" ? CircleX : CircleAlert;
   return (
     <li className="flex gap-3 py-3 first:pt-0 last:pb-0">
@@ -44,7 +48,9 @@ function Check({
       />
       <div className="flex min-w-0 flex-col gap-0.5">
         <p className="text-sm font-medium">
-          <span className="sr-only">{state === "ok" ? "Valide : " : "À corriger : "}</span>
+          <span className="sr-only">
+            {state === "ok" ? t.adminPages.config.valid : t.adminPages.config.toFix}
+          </span>
           {label}
         </p>
         {children ? <div className="text-sm text-muted-foreground">{children}</div> : null}
@@ -57,26 +63,25 @@ function EnvName({ children }: { children: ReactNode }) {
   return <code className="rounded bg-muted px-1 py-0.5 text-xs text-foreground">{children}</code>;
 }
 
-const pushStatusLabels: Record<string, { label: string; state: CheckState }> = {
-  sent: { label: "Envoyée au téléphone", state: "ok" },
-  no_device: { label: "Aucun appareil activé", state: "warning" },
-  disabled: { label: "Push désactivé par le destinataire", state: "warning" },
-  failed: { label: "Refusée par le service push", state: "error" },
-  skipped: { label: "Ignorée (déjà lue ou auteur suspendu)", state: "warning" },
+const pushStatusStates: Record<string, CheckState> = {
+  sent: "ok",
+  no_device: "warning",
+  disabled: "warning",
+  failed: "error",
+  skipped: "warning",
 };
 
 /** Explication des refus du service push les plus courants. */
-function failureHint(detail: string | null): string | null {
-  if (detail === "HTTP 401" || detail === "HTTP 403") {
-    return "Les clés VAPID ont changé depuis l'activation sur cet appareil : le destinataire doit désactiver puis réactiver les notifications.";
-  }
-  if (detail === "HTTP 400") return "Requête refusée : vérifiez VAPID_SUBJECT et les clés VAPID.";
+function failureHint(t: ServerDictionary, detail: string | null): string | null {
+  if (detail === "HTTP 401" || detail === "HTTP 403") return t.adminPages.config.hintKeysChanged;
+  if (detail === "HTTP 400") return t.adminPages.config.hintBadRequest;
   return null;
 }
 
 export default async function AdminConfigurationPage() {
   await requireAdmin(routes.adminConfig);
-  const t = getDictionary();
+  const t = await getT();
+  const c = t.adminPages.config;
   const [status, activity, authSettings] = await Promise.all([
     getPushServerStatus(),
     getPushActivity(),
@@ -95,29 +100,23 @@ export default async function AdminConfigurationPage() {
 
   return (
     <>
-      <PageHeader
-        title="Configuration"
-        description="État des services nécessaires au site. Aucune clé n'est affichée ici."
-      />
+      <PageHeader title={t.adminUi.nav.config} description={c.description} />
 
       {status.invalidVariables.length > 0 ? (
         <Card className="border-danger/40">
           <CardHeader>
-            <CardTitle>Variables mal formées</CardTitle>
-            <CardDescription>
-              Ces variables sont définies dans Vercel mais leur valeur n&apos;a pas le format
-              attendu : elles sont ignorées tant qu&apos;elles ne sont pas corrigées.
-            </CardDescription>
+            <CardTitle>{c.invalidVariables}</CardTitle>
+            <CardDescription>{c.invalidVariablesDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-border">
               {status.invalidVariables.map((name) => (
                 <Check key={name} state="error" label={name}>
                   {name === "VAPID_SUBJECT"
-                    ? "Format attendu : mailto:contact@votre-domaine.cm (ou une adresse https://)."
+                    ? c.invalidSubject
                     : name === "VAPID_PRIVATE_KEY"
-                      ? "Collez la clé privée générée ci-dessous (43 caractères, sans espace)."
-                      : "Collez la clé secrète complète du projet Supabase."}
+                      ? c.invalidPrivateKey
+                      : c.invalidServiceKey}
                 </Check>
               ))}
             </ul>
@@ -127,42 +126,38 @@ export default async function AdminConfigurationPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Base de données</CardTitle>
+          <CardTitle>{c.database}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="divide-y divide-border">
-            <Check state={status.supabase ? "ok" : "error"} label="Supabase connecté" />
+            <Check state={status.supabase ? "ok" : "error"} label={c.supabaseConnected} />
             <Check
               state={status.schemaUpToDate ? "ok" : "error"}
-              label={
-                status.schemaUpToDate
-                  ? "Toutes les migrations sont appliquées"
-                  : "Des migrations ne sont pas appliquées"
-              }
+              label={status.schemaUpToDate ? c.migrationsApplied : c.migrationsMissing}
             >
               {status.schemaUpToDate ? null : (
                 <>
-                  Version de la base : {status.schemaVersion ?? "inconnue"} (attendue :{" "}
-                  {EXPECTED_SCHEMA_VERSION}). Appliquez les migrations manquantes avec{" "}
-                  <EnvName>npx supabase db push</EnvName> (voir docs/supabase.md).
+                  {c.schemaVersion(
+                    status.schemaVersion ?? c.schemaVersionUnknown,
+                    EXPECTED_SCHEMA_VERSION,
+                  )}{" "}
+                  <EnvName>npx supabase db push</EnvName> {c.seeDocs}
                 </>
               )}
             </Check>
             <Check
               state={status.serviceRoleWorks ? "ok" : status.serviceRoleKey ? "error" : "warning"}
-              label="Clé serveur Supabase (service_role)"
+              label={c.serviceKey}
             >
               {status.serviceRoleWorks ? (
-                "Présente et acceptée : notifications push et suppression de compte possibles."
+                c.serviceKeyOk
               ) : status.serviceRoleKey ? (
                 <>
-                  <EnvName>SUPABASE_SERVICE_ROLE_KEY</EnvName> est définie mais refusée par Supabase
-                  : copiez la clé secrète (sb_secret_… ou service_role) du bon projet.
+                  <EnvName>SUPABASE_SERVICE_ROLE_KEY</EnvName> {c.serviceKeyRejected}
                 </>
               ) : (
                 <>
-                  Ajoutez <EnvName>SUPABASE_SERVICE_ROLE_KEY</EnvName> dans Vercel (Supabase →
-                  Project Settings → API Keys → clé secrète).
+                  {c.serviceKeyAdd} <EnvName>SUPABASE_SERVICE_ROLE_KEY</EnvName> {c.serviceKeyWhere}
                 </>
               )}
             </Check>
@@ -172,11 +167,9 @@ export default async function AdminConfigurationPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Connexion avec Google</CardTitle>
+          <CardTitle>{c.google}</CardTitle>
           <CardDescription>
-            {authSettings?.googleEnabled
-              ? "Le bouton « Continuer avec Google » est affiché sur les pages de connexion et d'inscription."
-              : "Le bouton « Continuer avec Google » apparaîtra automatiquement (sous 5 minutes) dès que le fournisseur Google sera activé dans Supabase."}
+            {authSettings?.googleEnabled ? c.googleOnDescription : c.googleOffDescription}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
@@ -187,43 +180,36 @@ export default async function AdminConfigurationPage() {
               }
               label={
                 authSettings === null
-                  ? "Réglages de Supabase Auth illisibles"
+                  ? c.authUnreadable
                   : authSettings.googleEnabled
-                    ? "Fournisseur Google activé"
-                    : "Fournisseur Google non activé"
+                    ? c.googleOn
+                    : c.googleOff
               }
             />
           </ul>
           {authSettings?.googleEnabled ? null : (
             <div className="flex flex-col gap-3">
-              <h2 className="text-base font-semibold">Mise en place</h2>
+              <h2 className="text-base font-semibold">{c.setup}</h2>
               <ol className="ml-5 flex list-decimal flex-col gap-2 text-sm text-muted-foreground">
+                <li>{c.googleSteps.consent}</li>
                 <li>
-                  Google Cloud Console → APIs et services → Écran de consentement OAuth : type «
-                  Externe », nom de l&apos;application, e-mail d&apos;assistance.
-                </li>
-                <li>
-                  Identifiants → Créer des identifiants → ID client OAuth → « Application Web » :
+                  {c.googleSteps.credentials}
                   <ul className="mt-1 ml-4 flex list-disc flex-col gap-1">
                     <li>
-                      Origine JavaScript autorisée : <EnvName>{siteUrl}</EnvName>
+                      {c.googleSteps.origin} <EnvName>{siteUrl}</EnvName>
                     </li>
                     <li>
-                      URI de redirection autorisé :{" "}
+                      {c.googleSteps.redirect}{" "}
                       <EnvName>{`${supabaseUrl}/auth/v1/callback`}</EnvName>
                     </li>
                   </ul>
                 </li>
+                <li>{c.googleSteps.provider}</li>
                 <li>
-                  Supabase → Authentication → Sign In / Providers → Google : activez, puis collez
-                  l&apos;ID client et le code secret (ne les envoyez à personne).
+                  {c.googleSteps.urlConfigBefore} <EnvName>{siteUrl}</EnvName>{" "}
+                  {c.googleSteps.urlConfigMiddle} <EnvName>{`${siteUrl}/auth/callback`}</EnvName>.
                 </li>
-                <li>
-                  Supabase → Authentication → URL Configuration : Site URL{" "}
-                  <EnvName>{siteUrl}</EnvName> et, dans Redirect URLs,{" "}
-                  <EnvName>{`${siteUrl}/auth/callback`}</EnvName>.
-                </li>
-                <li>Revenez sur cette page : le point ci-dessus doit être vert.</li>
+                <li>{c.googleSteps.back}</li>
               </ol>
             </div>
           )}
@@ -232,53 +218,40 @@ export default async function AdminConfigurationPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Notifications push</CardTitle>
-          <CardDescription>
-            {pushReady
-              ? "Le serveur est prêt. Chaque utilisateur doit ensuite les activer sur son téléphone (Paramètres → Notifications push → Activer), puis tester l'envoi."
-              : "Incomplet : tant qu'un point est en rouge, aucune notification push ne part (les notifications restent visibles dans l'application)."}
-          </CardDescription>
+          <CardTitle>{c.push}</CardTitle>
+          <CardDescription>{pushReady ? c.pushReady : c.pushIncomplete}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
           <ul className="divide-y divide-border">
-            <Check state={status.vapidPublicKey ? "ok" : "error"} label="Clé publique VAPID">
+            <Check state={status.vapidPublicKey ? "ok" : "error"} label={c.vapidPublic}>
               <EnvName>NEXT_PUBLIC_VAPID_PUBLIC_KEY</EnvName>
             </Check>
-            <Check state={status.vapidPrivateKey ? "ok" : "error"} label="Clé privée VAPID">
+            <Check state={status.vapidPrivateKey ? "ok" : "error"} label={c.vapidPrivate}>
               <EnvName>VAPID_PRIVATE_KEY</EnvName>
             </Check>
             <Check
               state={status.vapidKeysMatch ? "ok" : "error"}
-              label={
-                status.vapidKeysMatch === false
-                  ? "Les deux clés VAPID ne vont pas ensemble"
-                  : "Les deux clés VAPID forment une paire"
-              }
+              label={status.vapidKeysMatch === false ? c.vapidMismatch : c.vapidMatch}
             >
-              {status.vapidKeysMatch === false
-                ? "Elles proviennent de deux générations différentes : regénérez une paire et remplacez les deux."
-                : null}
+              {status.vapidKeysMatch === false ? c.vapidMismatchHint : null}
             </Check>
-            <Check state={status.vapidSubject ? "ok" : "error"} label="Contact VAPID">
-              <EnvName>VAPID_SUBJECT</EnvName>, par exemple{" "}
-              <EnvName>mailto:contact@votre-domaine.cm</EnvName>
+            <Check state={status.vapidSubject ? "ok" : "error"} label={c.vapidSubject}>
+              <EnvName>VAPID_SUBJECT</EnvName>
+              {c.forExample} <EnvName>mailto:contact@votre-domaine.cm</EnvName>
             </Check>
           </ul>
 
           <div className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold">Mise en place</h2>
+            <h2 className="text-base font-semibold">{c.setup}</h2>
             <ol className="ml-5 flex list-decimal flex-col gap-1.5 text-sm text-muted-foreground">
-              <li>Générez une paire de clés ci-dessous (dans ce navigateur).</li>
+              <li>{c.pushSteps.generate}</li>
               <li>
-                Dans Vercel → Settings → Environment Variables, ajoutez les deux clés,{" "}
-                <EnvName>VAPID_SUBJECT</EnvName> et <EnvName>SUPABASE_SERVICE_ROLE_KEY</EnvName>.
+                {c.pushSteps.variablesBefore} <EnvName>VAPID_SUBJECT</EnvName> {c.pushSteps.and}{" "}
+                <EnvName>SUPABASE_SERVICE_ROLE_KEY</EnvName>.
               </li>
-              <li>Redéployez le site (Deployments → Redeploy).</li>
-              <li>Revenez sur cette page : tous les points doivent être verts.</li>
-              <li>
-                Sur chaque téléphone : Paramètres → Notifications push → Activer, puis « Envoyer un
-                test ».
-              </li>
+              <li>{c.pushSteps.redeploy}</li>
+              <li>{c.pushSteps.back}</li>
+              <li>{c.pushSteps.devices}</li>
             </ol>
           </div>
 
@@ -288,42 +261,35 @@ export default async function AdminConfigurationPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Derniers envois push</CardTitle>
-          <CardDescription>
-            Résultat des dernières notifications traitées, sans destinataire ni contenu.
-          </CardDescription>
+          <CardTitle>{c.recentPush}</CardTitle>
+          <CardDescription>{c.recentPushDescription}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {activity === null ? (
-            <p className="text-sm text-muted-foreground">
-              Indisponible : la clé serveur Supabase ou la dernière migration manque.
-            </p>
+            <p className="text-sm text-muted-foreground">{c.activityUnavailable}</p>
           ) : (
             <>
               {activity.pending > 0 ? (
                 <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning">
-                  {activity.pending === 1
-                    ? "1 notification des dernières 24 h n'a pas été traitée par l'envoi push"
-                    : `${activity.pending} notifications des dernières 24 h n'ont pas été traitées par l'envoi push`}
-                  {pushReady
-                    ? " (envoi en cours, ou notification antérieure à la configuration)."
-                    : " : la configuration ci-dessus est incomplète."}
+                  {c.pending(activity.pending)}
+                  {pushReady ? c.pendingReady : c.pendingIncomplete}
                 </p>
               ) : null}
               {activity.recent.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucun envoi pour le moment.</p>
+                <p className="text-sm text-muted-foreground">{c.noPush}</p>
               ) : (
                 <ul className="divide-y divide-border">
                   {activity.recent.map((item) => {
-                    const known = item.status ? pushStatusLabels[item.status] : undefined;
-                    const hint = item.status === "failed" ? failureHint(item.detail) : null;
+                    const state = item.status ? pushStatusStates[item.status] : undefined;
+                    const label = item.status ? c.pushStatuses[item.status] : undefined;
+                    const hint = item.status === "failed" ? failureHint(t, item.detail) : null;
                     return (
                       <Check
                         key={item.id}
-                        state={known?.state ?? "warning"}
-                        label={`${t.notifications.titles[item.type as NotificationType] ?? item.type} — ${known?.label ?? "Résultat inconnu"}`}
+                        state={state ?? "warning"}
+                        label={`${t.notifications.titles[item.type as NotificationType] ?? item.type} — ${label ?? c.unknownResult}`}
                       >
-                        {formatRelativeTime(item.pushedAt)}
+                        {t.format.relativeTime(item.pushedAt)}
                         {item.detail ? ` · ${item.detail}` : ""}
                         {hint ? <span className="block">{hint}</span> : null}
                       </Check>

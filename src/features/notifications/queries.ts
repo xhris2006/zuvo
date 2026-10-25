@@ -3,6 +3,7 @@ import { cache } from "react";
 import { getCurrentUser } from "@/features/auth/session";
 import { getUnreadMessagesCount } from "@/features/messaging/queries";
 import type { Database } from "@/lib/supabase/database.types";
+import { getT } from "@/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { type NotificationSubject, describeNotification, notificationHref } from "./content";
 
@@ -82,6 +83,7 @@ export async function getNotifications(page = 1): Promise<{
     .order("created_at", { ascending: false })
     .range(from, from + pageSize - 1);
   if (error && error.code !== "PGRST103") throw new NotificationsQueryError();
+  const t = await getT();
 
   const items = (data ?? []).map((row): NotificationItem => {
     const subject: NotificationSubject = {
@@ -95,7 +97,7 @@ export async function getNotifications(page = 1): Promise<{
     };
     return {
       ...subject,
-      ...describeNotification(subject),
+      ...describeNotification(subject, t),
       id: row.id,
       isRead: row.is_read,
       createdAt: row.created_at,

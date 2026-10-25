@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
+import { useT } from "@/i18n/client";
 
 type PhotoViewerProps = {
   /** Photo affichée ; null ferme la visionneuse. */
@@ -12,6 +13,7 @@ type PhotoViewerProps = {
 
 /** Photo en plein écran sur fond sombre (fermeture : bouton, Échap ou toucher le fond). */
 export function PhotoViewer({ src, alt, onClose }: PhotoViewerProps) {
+  const t = useT();
   return (
     <DialogPrimitive.Root open={src !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogPrimitive.Portal>
@@ -34,7 +36,7 @@ export function PhotoViewer({ src, alt, onClose }: PhotoViewerProps) {
           ) : null}
           <DialogPrimitive.Close
             className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 inline-flex size-11 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
-            aria-label="Fermer la photo"
+            aria-label={t.ui.closePhoto}
           >
             <X className="size-5" aria-hidden="true" />
           </DialogPrimitive.Close>

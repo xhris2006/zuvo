@@ -6,6 +6,7 @@ import {
   Plus,
   ShieldCheck,
 } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { SectionHeader } from "@/components/layout/section-header";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -18,25 +19,37 @@ import { CategoryList } from "@/features/categories/components/category-list";
 import { defaultCategories } from "@/features/categories/data";
 import { getCurrentUser } from "@/features/auth/session";
 import { GuestWelcome } from "@/features/home/components/guest-welcome";
+import { FeedResults } from "@/features/listings/components/feed-results";
 import { ListingResults } from "@/features/listings/components/listing-results";
+import { ListingViewToggle, parseListingView } from "@/features/listings/components/listing-view";
+import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
 import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
 
-/** Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage. */
+/**
+ * Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage.
+ * Les membres connectés reçoivent les annonces récentes avec leur vendeur (fil).
+ */
 async function loadHomeListings(userId: string | null): Promise<{
   recent: ListingCardData[];
+  recentFeed: FeedListingData[] | null;
   followed: ListingCardData[];
 }> {
   try {
-    const [recent, feed] = await Promise.all([
-      getRecentListings(12),
+    const [recent, recentFeed, feed] = await Promise.all([
+      userId ? Promise.resolve(null) : getRecentListings(12),
+      userId ? getFeedListings({ pageSize: 12 }) : Promise.resolve(null),
       userId ? getFollowedFeed(userId, 1) : Promise.resolve(null),
     ]);
-    return { recent, followed: feed?.items.slice(0, 8) ?? [] };
+    return {
+      recent: recent ?? recentFeed?.items ?? [],
+      recentFeed: recentFeed?.items ?? null,
+      followed: feed?.items.slice(0, 8) ?? [],
+    };
   } catch {
-    return { recent: [], followed: [] };
+    return { recent: [], recentFeed: null, followed: [] };
   }
 }
 
@@ -69,9 +82,11 @@ function SellCard() {
 
 export default async function HomePage(props: PageProps<"/">) {
   const t = getDictionary();
-  const accountDeleted = (await props.searchParams).compte === "supprime";
+  const searchParams = await props.searchParams;
+  const accountDeleted = searchParams.compte === "supprime";
+  const view = parseListingView(searchParams.vue);
   const user = await getCurrentUser().catch(() => null);
-  const { recent, followed } = await loadHomeListings(user?.id ?? null);
+  const { recent, recentFeed, followed } = await loadHomeListings(user?.id ?? null);
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
     { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
@@ -135,12 +150,23 @@ export default async function HomePage(props: PageProps<"/">) {
       ) : null}
 
       <section aria-labelledby="recent-title" className="container-page">
-        <SectionHeader
-          id="recent-title"
-          title={t.home.recentTitle}
-          href={recent.length > 0 ? routes.explore : undefined}
-        />
-        {recent.length > 0 ? (
+        <div className="mb-4 flex items-end gap-3 sm:mb-5">
+          <SectionHeader
+            id="recent-title"
+            title={t.home.recentTitle}
+            href={recent.length > 0 ? routes.explore : undefined}
+            className="mb-0 min-w-0 flex-1 sm:mb-0"
+          />
+          {recentFeed && recentFeed.length > 0 ? (
+            <ListingViewToggle
+              current={view}
+              hrefFor={(value) => (value === "grille" ? "/?vue=grille" : routes.home) as Route}
+            />
+          ) : null}
+        </div>
+        {recentFeed && recentFeed.length > 0 && view === "fil" ? (
+          <FeedResults listings={recentFeed} />
+        ) : recent.length > 0 ? (
           <ListingResults listings={recent} priorityCount={4} />
         ) : (
           <EmptyState

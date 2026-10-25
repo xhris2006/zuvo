@@ -118,6 +118,23 @@ export const fr = {
     unavailableTitle: "Annonces bientôt disponibles",
     unavailableBody:
       "La base de données n'est pas encore connectée. Les annonces publiées apparaîtront ici.",
+    tabsLabel: "Que recherchez-vous ?",
+    tabArticles: "Articles",
+    tabShops: "Boutiques",
+    shopsTitle: "Boutiques",
+    shopsDescription: "Trouvez un vendeur par son nom ou son pseudo et découvrez ses articles.",
+    shopsSearchLabel: "Rechercher une boutique",
+    shopsSearchPlaceholder: "Nom ou @pseudo",
+    shopsResultsFor: (query: string) => `Boutiques pour ${quote(query)}`,
+    shopsCount: (count: number) =>
+      count === 0 ? "Aucune boutique" : count === 1 ? "1 boutique" : `${count} boutiques`,
+    shopsEmptyTitle: "Aucune boutique trouvée",
+    shopsEmptyBody: "Vérifiez l'orthographe du nom ou du pseudo, ou essayez un autre mot.",
+    shopsNoneTitle: "Aucune boutique pour le moment",
+    shopsNoneBody: "Les vendeurs ayant des annonces en vente apparaîtront ici.",
+    shopsUnavailableTitle: "Boutiques momentanément indisponibles",
+    shopListings: (count: number) =>
+      count === 0 ? "Aucune annonce en vente" : count === 1 ? "1 annonce" : `${count} annonces`,
   },
   listing: {
     conditions,
@@ -127,6 +144,10 @@ export const fr = {
     favoriteRemove: "Retirer des favoris",
     photoAlt: (title: string) => `Photo de l'annonce « ${title} »`,
     noPhoto: "Pas de photo",
+    viewLabel: "Affichage des annonces",
+    viewFeed: "Affichage en fil",
+    viewGrid: "Affichage en grille",
+    sellerProfile: (name: string) => `Profil de ${name}`,
   },
   profile: {
     followers: (count: number) => (count > 1 ? "abonnés" : "abonné"),

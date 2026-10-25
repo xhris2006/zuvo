@@ -16,18 +16,19 @@ import { MESSAGES_PAGE_SIZE } from "@/features/messaging/schemas";
 import { UserActionsMenu } from "@/features/moderation/components/user-actions-menu";
 import { hasBlocked } from "@/features/moderation/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
-import { formatPrice } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Conversation",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.messagingPages.conversation, robots: { index: false } };
+}
 
 export default async function ConversationPage(props: PageProps<"/messages/[id]">) {
   const { id } = await props.params;
   const { user } = await requireUser(conversationHref(id));
   const conversation = await getConversation(id);
   if (!conversation) notFound();
+  const t = await getT();
 
   const isBuyer = conversation.buyer_id === user.id;
   const other = isBuyer ? conversation.seller : conversation.buyer;
@@ -37,16 +38,16 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
   const blockedByMe = other ? await hasBlocked(user.id, other.id) : false;
 
   const disabledReason = !other
-    ? "Cet utilisateur a supprimé son compte : vous ne pouvez plus lui écrire."
+    ? t.messagingPages.deletedAccount
     : blockedByMe
-      ? "Vous avez bloqué cet utilisateur. Débloquez-le pour lui écrire."
+      ? t.messagingPages.blocked
       : null;
 
   const listing = conversation.listing;
   const mainImage = listing
     ? [...listing.images].sort((a, b) => a.sort_order - b.sort_order)[0]
     : undefined;
-  const name = other?.display_name ?? "Utilisateur supprimé";
+  const name = other?.display_name ?? t.messaging.deletedUser;
 
   return (
     <div
@@ -58,7 +59,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
           <Link
             href={routes.messages}
             className="-ml-2 inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-muted"
-            aria-label="Retour aux messages"
+            aria-label={t.messagingPages.back}
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
           </Link>
@@ -74,7 +75,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
               )}
             </h1>
             <p className="truncate text-xs text-muted-foreground">
-              {isBuyer ? "Vendeur" : "Acheteur intéressé"}
+              {isBuyer ? t.messagingPages.seller : t.messagingPages.interestedBuyer}
             </p>
           </div>
           {other ? (
@@ -110,7 +111,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-medium">{listing.title}</span>
               <span className="text-sm font-bold">
-                {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+                {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
               </span>
             </span>
             {listing.status !== "active" ? <ListingStatusBadge status={listing.status} /> : null}
@@ -118,7 +119,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
           </Link>
         ) : (
           <p className="rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
-            L&apos;annonce liée à cette conversation n&apos;est plus disponible.
+            {t.messagingPages.listingGone}
           </p>
         )}
       </header>

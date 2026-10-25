@@ -76,6 +76,11 @@ utilisaient un ; s'il a été créé, il peut être supprimé : la route
   les notifications (l'application le détecte et les réabonne au clic).
 - Limites connues : pas de gestion de `pushsubscriptionchange` (l'abonnement
   expiré est supprimé au premier échec et l'utilisateur le réactive).
+- Langue : le texte des notifications push est rédigé en français (langue par
+  défaut), car la langue choisie sur chaque appareil n'est pas connue au moment
+  de l'envoi. Les notifications affichées dans l'application suivent, elles, la
+  langue de l'appareil. Envoyer le push dans la langue de chaque appareil
+  demanderait d'enregistrer cette langue avec l'abonnement (nouvelle migration).
 
 ## 2. Configuration (à faire par le propriétaire du projet)
 

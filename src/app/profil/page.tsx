@@ -19,14 +19,14 @@ import { OwnProfileMenu } from "@/features/profiles/components/own-profile-menu"
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
 
-export const metadata: Metadata = {
-  title: "Mon profil",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.profilePages.myProfile, robots: { index: false } };
+}
 
 export default async function ProfilePage(props: PageProps<"/profil">) {
   const searchParams = await props.searchParams;
@@ -51,7 +51,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
     getOwnListings(user.id),
     getFavoriteListings(user.id, favoritesPage),
   ]);
-  const t = getDictionary();
+  const t = await getT();
   const favoritesHref = (page: number) =>
     (page > 1
       ? `${routes.profileFavorites}&page=${page}`
@@ -78,13 +78,13 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
             <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
               <Link href={routes.editProfile}>
                 <Pencil aria-hidden="true" />
-                Modifier
+                {t.profilePages.edit}
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
               <Link href={publicProfileHref(profile.username)}>
                 <Eye aria-hidden="true" />
-                Profil public
+                {t.profilePages.publicProfile}
               </Link>
             </Button>
           </>
@@ -127,14 +127,14 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
               <Button asChild size="sm">
                 <Link href={routes.sell}>
                   <Plus aria-hidden="true" />
-                  <span className="max-[359px]:sr-only">Vendre</span>
+                  <span className="max-[359px]:sr-only">{t.profilePages.sell}</span>
                 </Link>
               </Button>
             ) : null
           }
         />
         {searchParams.annonce === "supprimee" ? (
-          <Alert variant="success">L&apos;annonce a été supprimée.</Alert>
+          <Alert variant="success">{t.profilePages.listingDeleted}</Alert>
         ) : null}
         {tab === "favorites" ? (
           favorites.items.length > 0 ? (
@@ -165,13 +165,13 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
           <EmptyState
             icon={PackageOpen}
             headingLevel="h3"
-            title="Vous n'avez encore publié aucune annonce"
-            description="Mettez en vente un article que vous n'utilisez plus : c'est gratuit."
+            title={t.profilePages.noListingsTitle}
+            description={t.profilePages.noListingsBody}
             action={
               <Button asChild>
                 <Link href={routes.sell}>
                   <Plus aria-hidden="true" />
-                  Vendre un article
+                  {t.profilePages.sellItem}
                 </Link>
               </Button>
             }

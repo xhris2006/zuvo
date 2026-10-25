@@ -3,6 +3,8 @@ import { getAdminTrends, parseTrendPeriod } from "@/features/admin/management-qu
 import { getCurrentStaffRole } from "@/features/admin/queries";
 import { getCityNames } from "@/features/locations/queries";
 import { cityNameFrom } from "@/features/locations/names";
+import { localizedCategoryName } from "@/features/categories/data";
+import { getT } from "@/i18n/server";
 import { type CsvCell, toCsv } from "@/lib/csv";
 
 const exportTypes = ["tendances", "villes", "categories"] as const;
@@ -13,29 +15,31 @@ const exportTypes = ["tendances", "villes", "categories"] as const;
  * rôle (admin_get_trends).
  */
 export async function GET(request: Request) {
+  const t = await getT();
+  const texts = t.adminPages.csv;
   if (!(await getCurrentStaffRole())) {
-    return new NextResponse("Introuvable", { status: 404 });
+    return new NextResponse(texts.notFound, { status: 404 });
   }
   const url = new URL(request.url);
   const type = exportTypes.find((value) => value === url.searchParams.get("type"));
-  if (!type) return new NextResponse("Type d'export invalide.", { status: 400 });
+  if (!type) return new NextResponse(texts.invalidType, { status: 400 });
   const days = parseTrendPeriod(url.searchParams.get("jours") ?? undefined);
 
   let trends;
   try {
     trends = await getAdminTrends(days);
   } catch {
-    return new NextResponse("Export indisponible pour le moment.", { status: 503 });
+    return new NextResponse(texts.unavailable, { status: 503 });
   }
 
   let header: string[];
   let rows: CsvCell[][];
   if (type === "tendances") {
-    header = ["jour", "inscriptions", "annonces_publiees", "signalements"];
+    header = texts.trends;
     rows = trends.days.map((day) => [day.day, day.users, day.listings, day.reports]);
   } else if (type === "villes") {
     const names = await getCityNames();
-    header = ["ville", "identifiant", "annonces_en_vente", "membres"];
+    header = texts.cities;
     rows = trends.cities.map((city) => [
       cityNameFrom(city.city, names),
       city.city,
@@ -43,9 +47,9 @@ export async function GET(request: Request) {
       city.users,
     ]);
   } else {
-    header = ["categorie", "identifiant", "annonces_en_vente"];
+    header = texts.categories;
     rows = trends.categories.map((category) => [
-      category.name,
+      localizedCategoryName(t.categoryNames, category),
       category.slug,
       category.active_listings,
     ]);

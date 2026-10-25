@@ -8,10 +8,10 @@ import { Pagination } from "@/components/ui/pagination";
 import { exploreHref, routes } from "@/config/routes";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { CategoryList } from "@/features/categories/components/category-list";
-import { defaultCategories } from "@/features/categories/data";
 import {
   type Category,
   getCategories,
+  getDefaultCategories,
   type SearchResult,
   searchListings,
 } from "@/features/listings/queries";
@@ -31,17 +31,18 @@ import {
   sortOptions,
   toSearchParams,
 } from "@/features/search/schema";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { getCities } from "@/features/locations/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
 
 export async function generateMetadata(props: PageProps<"/explorer">): Promise<Metadata> {
+  const t = await getT();
   const searchParams = await props.searchParams;
   if (parseExploreTab(searchParams.type) === "boutiques") {
     return {
-      title: "Boutiques",
-      description: getDictionary().explore.shopsDescription,
+      title: t.explore.shopsTitle,
+      description: t.explore.shopsDescription,
       alternates: { canonical: exploreTabHref("boutiques") },
       robots: sanitizeShopQuery(searchParams.q) ? { index: false } : undefined,
     };
@@ -53,8 +54,8 @@ export async function generateMetadata(props: PageProps<"/explorer">): Promise<M
       )
     : undefined;
   return {
-    title: category ? `${category.name} d'occasion` : "Explorer les annonces",
-    description: "Recherchez des articles de seconde main par catégorie, ville, état et prix.",
+    title: category ? t.explore.metaCategoryTitle(category.name) : t.explore.metaTitle,
+    description: t.explore.metaDescription,
     alternates: {
       canonical: category ? exploreHref(toSearchParams({ category: category.slug })) : "/explorer",
     },
@@ -63,18 +64,13 @@ export async function generateMetadata(props: PageProps<"/explorer">): Promise<M
   };
 }
 
-function resultLabel(total: number) {
-  if (total === 0) return "Aucune annonce";
-  return total === 1 ? "1 annonce" : `${total.toLocaleString("fr-FR")} annonces`;
-}
-
 /** Onglet « Boutiques » : recherche de vendeurs par nom ou pseudo. */
 async function ShopsExplorer({
   searchParams,
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
-  const t = getDictionary();
+  const t = await getT();
   const query = sanitizeShopQuery(searchParams.q);
   const page = parsePageParam(searchParams.page);
   let result: ShopSearchResult | null = null;
@@ -108,7 +104,7 @@ async function ShopsExplorer({
           <EmptyState
             icon={WifiOff}
             title={t.explore.shopsUnavailableTitle}
-            description="Le service ne répond pas pour le moment. Réessayez dans quelques instants."
+            description={t.explore.serviceDown}
           />
         ) : result === null ? (
           <EmptyState
@@ -145,7 +141,7 @@ async function ShopsExplorer({
 }
 
 export default async function ExplorePage(props: PageProps<"/explorer">) {
-  const t = getDictionary();
+  const t = await getT();
   const searchParams = await props.searchParams;
   if (parseExploreTab(searchParams.type) === "boutiques") {
     return <ShopsExplorer searchParams={searchParams} />;
@@ -168,7 +164,7 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
     categories = await getCategories();
     if (configured) result = await searchListings(filters);
   } catch {
-    categories = defaultCategories.map((category) => ({ ...category, id: null }));
+    categories = await getDefaultCategories();
     unavailable = true;
   }
   const pageCount = result ? Math.ceil(result.total / result.pageSize) : 0;
@@ -182,7 +178,7 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
   return (
     <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
-        title={filters.q ? `Résultats pour « ${filters.q} »` : t.explore.title}
+        title={filters.q ? t.explore.resultsFor(filters.q) : t.explore.title}
         description={<span className="hidden sm:inline">{t.explore.description}</span>}
       />
 
@@ -220,7 +216,7 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
                 className="mr-auto text-sm font-medium text-muted-foreground"
                 aria-live="polite"
               >
-                {resultLabel(result.total)}
+                {t.explore.resultCount(result.total, t.format.number(result.total))}
               </p>
             ) : (
               <span className="mr-auto" />
@@ -243,8 +239,8 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
           {unavailable ? (
             <EmptyState
               icon={WifiOff}
-              title="Annonces momentanément indisponibles"
-              description="Le service ne répond pas pour le moment. Réessayez dans quelques instants."
+              title={t.explore.listingsUnavailableTitle}
+              description={t.explore.serviceDown}
             />
           ) : result === null ? (
             <EmptyState

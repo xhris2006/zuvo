@@ -9,24 +9,25 @@ import { MemberGate } from "@/features/auth/components/member-gate";
 import { ConversationList } from "@/features/messaging/components/conversation-list";
 import { getConversations } from "@/features/messaging/queries";
 import { PushPrompt } from "@/features/notifications/components/push-prompt";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Messages",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.pages.messagesTitle, robots: { index: false } };
+}
 
 async function Inbox() {
   const conversations = await getConversations();
   if (conversations.length === 0) {
+    const t = await getT();
     return (
       <EmptyState
         icon={MessagesSquare}
-        title="Aucune conversation"
-        description="Contactez un vendeur depuis une annonce pour démarrer une conversation."
+        title={t.messagingPages.emptyTitle}
+        description={t.messagingPages.emptyBody}
         action={
           <Button asChild>
-            <Link href={routes.explore}>Explorer les annonces</Link>
+            <Link href={routes.explore}>{t.messagingPages.explore}</Link>
           </Button>
         }
       />
@@ -35,8 +36,8 @@ async function Inbox() {
   return <ConversationList conversations={conversations} />;
 }
 
-export default function MessagesPage() {
-  const t = getDictionary();
+export default async function MessagesPage() {
+  const t = await getT();
   return (
     <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader title={t.pages.messagesTitle} />

@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, Eye, EyeOff } from "lucide-react";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { getT } from "@/i18n/server";
 
 type RowAction = (formData: FormData) => Promise<void>;
 
@@ -7,7 +8,7 @@ type RowAction = (formData: FormData) => Promise<void>;
  * Activer / désactiver et déplacer un élément de liste (catégorie, ville).
  * Formulaires simples : fonctionnent sans JavaScript.
  */
-export function ReferenceRowActions({
+export async function ReferenceRowActions({
   id,
   name,
   isActive,
@@ -24,6 +25,7 @@ export function ReferenceRowActions({
   toggleAction: RowAction;
   moveAction: RowAction;
 }) {
+  const t = await getT();
   return (
     <div className="flex shrink-0 items-center gap-1">
       <form action={moveAction}>
@@ -33,8 +35,8 @@ export function ReferenceRowActions({
           variant="ghost"
           size="sm"
           disabled={isFirst}
-          aria-label={`Monter ${name}`}
-          title="Monter"
+          aria-label={t.adminUi.rowActions.moveUp(name)}
+          title={t.adminUi.rowActions.up}
         >
           <ArrowUp aria-hidden="true" />
         </SubmitButton>
@@ -46,8 +48,8 @@ export function ReferenceRowActions({
           variant="ghost"
           size="sm"
           disabled={isLast}
-          aria-label={`Descendre ${name}`}
-          title="Descendre"
+          aria-label={t.adminUi.rowActions.moveDown(name)}
+          title={t.adminUi.rowActions.down}
         >
           <ArrowDown aria-hidden="true" />
         </SubmitButton>
@@ -57,7 +59,7 @@ export function ReferenceRowActions({
         <input type="hidden" name="active" value={String(!isActive)} />
         <SubmitButton variant="outline" size="sm">
           {isActive ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-          {isActive ? "Désactiver" : "Activer"}
+          {isActive ? t.adminUi.rowActions.deactivate : t.adminUi.rowActions.activate}
         </SubmitButton>
       </form>
     </div>

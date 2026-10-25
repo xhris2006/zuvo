@@ -30,7 +30,7 @@ import { routes } from "@/config/routes";
 import { signOutAction } from "@/features/auth/actions";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { isNavItemActive } from "./nav-items";
 
@@ -55,7 +55,7 @@ const itemClass =
 /** Liens de la barre latérale (ordinateur), avec l'état actif et les compteurs. */
 export function SidebarNav({ account, isStaff }: SidebarNavProps) {
   const pathname = usePathname();
-  const t = getDictionary();
+  const t = useT();
   const items: SidebarItem[] = [
     { href: routes.home, label: t.nav.home, icon: House, exact: true },
     { href: routes.explore, label: t.nav.explore, icon: Compass },

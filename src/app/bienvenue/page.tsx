@@ -6,12 +6,17 @@ import { siteConfig } from "@/config/site";
 import { WelcomeScreen } from "@/features/home/components/welcome-screen";
 import { getRecentListings } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
+import { getLocale, getT } from "@/i18n/server";
+import { intlLocales } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
 
-export const metadata: Metadata = {
-  title: { absolute: `${siteConfig.name} — ${siteConfig.tagline}` },
-  alternates: { canonical: "/bienvenue" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: { absolute: `${siteConfig.name} — ${t.site.tagline}` },
+    alternates: { canonical: "/bienvenue" },
+  };
+}
 
 /** Annonces récentes pour la mosaïque ; une panne n'empêche pas l'affichage. */
 async function loadMosaicListings(): Promise<ListingCardData[]> {
@@ -27,6 +32,7 @@ async function loadMosaicListings(): Promise<ListingCardData[]> {
  * redirige les visiteurs non connectés.
  */
 export default async function WelcomePage(props: PageProps<"/bienvenue">) {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const searchParams = await props.searchParams;
   const listings = await loadMosaicListings();
   const siteUrl = getSiteUrl();
@@ -37,9 +43,9 @@ export default async function WelcomePage(props: PageProps<"/bienvenue">) {
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: siteConfig.name,
-          description: siteConfig.description,
+          description: t.site.description,
           url: siteUrl,
-          inLanguage: siteConfig.intlLocale,
+          inLanguage: intlLocales[locale],
           potentialAction: {
             "@type": "SearchAction",
             target: {
@@ -54,9 +60,13 @@ export default async function WelcomePage(props: PageProps<"/bienvenue">) {
         listings={listings}
         notice={
           searchParams.compte === "supprime" ? (
-            <Alert variant="success" title="Compte supprimé" role="status" className="text-left">
-              Votre compte et vos annonces ont été supprimés. Merci d&apos;avoir utilisé{" "}
-              {siteConfig.name}.
+            <Alert
+              variant="success"
+              title={t.authPages.accountDeletedTitle}
+              role="status"
+              className="text-left"
+            >
+              {t.authPages.accountDeletedBody(siteConfig.name)}
             </Alert>
           ) : null
         }

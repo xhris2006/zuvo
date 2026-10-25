@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import { addBannedWordAction, saveAntiSpamSettingsAction } from "../management-actions";
 import type { AntiSpamField } from "../schemas";
@@ -20,6 +21,7 @@ export function AntiSpamSettingsForm({
   newAccountDays: number;
   newAccountDailyListings: number;
 }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(saveAntiSpamSettingsAction, idle);
   const id = useId();
   const value = (field: AntiSpamField, fallback: number) =>
@@ -31,8 +33,8 @@ export function AntiSpamSettingsForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           id={`${id}-days`}
-          label="Un compte est « récent » pendant (jours)"
-          hint="0 : aucune limite pour les nouveaux comptes."
+          label={t.adminUi.antiSpam.days}
+          hint={t.adminUi.antiSpam.daysHint}
           error={state.fieldErrors?.newAccountDays}
         >
           {(control) => (
@@ -49,8 +51,8 @@ export function AntiSpamSettingsForm({
         </Field>
         <Field
           id={`${id}-listings`}
-          label="Publications autorisées par 24 h"
-          hint="Pour un compte récent ; les brouillons ne comptent pas."
+          label={t.adminUi.antiSpam.listings}
+          hint={t.adminUi.antiSpam.listingsHint}
           error={state.fieldErrors?.newAccountDailyListings}
         >
           {(control) => (
@@ -68,7 +70,7 @@ export function AntiSpamSettingsForm({
       </div>
       <SubmitButton pending={pending} className="self-start">
         <Save aria-hidden="true" />
-        Enregistrer
+        {t.adminUi.save}
       </SubmitButton>
     </form>
   );
@@ -76,6 +78,7 @@ export function AntiSpamSettingsForm({
 
 /** Ajout d'un mot interdit (normalisé côté serveur : minuscules, sans accents). */
 export function BannedWordForm() {
+  const t = useT();
   const [state, formAction, pending] = useActionState(addBannedWordAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const id = useId();
@@ -89,7 +92,7 @@ export function BannedWordForm() {
       <div className="flex flex-wrap items-end gap-2">
         <Field
           id={`${id}-word`}
-          label="Mot ou expression"
+          label={t.adminUi.antiSpam.word}
           error={state.fieldErrors?.word}
           className="min-w-0 flex-1 basis-56"
         >
@@ -105,7 +108,7 @@ export function BannedWordForm() {
         </Field>
         <SubmitButton pending={pending}>
           <Plus aria-hidden="true" />
-          Ajouter
+          {t.adminUi.add}
         </SubmitButton>
       </div>
     </form>

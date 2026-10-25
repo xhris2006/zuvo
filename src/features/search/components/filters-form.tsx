@@ -9,7 +9,7 @@ import { type City, cities as defaultCities } from "@/config/locations";
 import { routes } from "@/config/routes";
 import type { CategorySummary } from "@/features/categories/data";
 import { listingConditions } from "@/features/listings/constants";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { type SearchFilters, sortOptions } from "../schema";
 
 type FiltersFormProps = {
@@ -25,13 +25,13 @@ type FiltersFormProps = {
  * Formulaire de filtres en GET : il fonctionne sans JavaScript et produit
  * une URL partageable. Les valeurs sont revalidées côté serveur.
  */
-export function FiltersForm({
+export async function FiltersForm({
   filters,
   categories,
   cities = defaultCities,
   idPrefix,
 }: FiltersFormProps) {
-  const t = getDictionary();
+  const t = await getT();
   const id = (name: string) => `${idPrefix}-${name}`;
 
   return (

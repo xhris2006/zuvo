@@ -17,31 +17,36 @@ import {
   requireStaff,
 } from "@/features/admin/queries";
 import { listingHref } from "@/features/listings/links";
-import { getDictionary } from "@/i18n";
-import { formatDateTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
 import { parsePageParam } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Journal de modération" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminPages.log.title };
+}
 
 function JournalTabs({
   current,
   showConfig,
+  t,
 }: {
   current: "moderation" | "configuration";
   showConfig: boolean;
+  t: ServerDictionary;
 }) {
   if (!showConfig) return null;
   const tabs = [
-    { key: "moderation", label: "Modération", href: routes.adminLog },
+    { key: "moderation", label: t.adminUi.nav.moderation, href: routes.adminLog },
     {
       key: "configuration",
-      label: "Configuration",
+      label: t.adminUi.nav.config,
       href: `${routes.adminLog}?vue=configuration` as Route,
     },
   ] as const;
   return (
-    <nav aria-label="Journaux" className="flex gap-2">
+    <nav aria-label={t.adminPages.log.tabsLabel} className="flex gap-2">
       {tabs.map((tab) => (
         <Link
           key={tab.key}
@@ -84,12 +89,12 @@ function readableSummary(
 
 /** Journal des catégories, villes et messages globaux (administrateurs). */
 async function ConfigurationLog({ page }: { page: number }) {
-  const t = getDictionary();
+  const t = await getT();
   const log = await getConfigActivity(page);
   return (
     <>
       {log.items.length === 0 ? (
-        <EmptyState icon={ScrollText} title="Aucune modification enregistrée" />
+        <EmptyState icon={ScrollText} title={t.adminPages.log.noChanges} />
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card text-sm shadow-card">
           {log.items.map((entry) => (
@@ -104,8 +109,8 @@ async function ConfigurationLog({ page }: { page: number }) {
                 </span>
               ) : null}
               <span className="text-xs text-muted-foreground">
-                {formatDateTime(entry.createdAt)}
-                {entry.adminUsername ? ` · par @${entry.adminUsername}` : ""}
+                {t.format.dateTime(entry.createdAt)}
+                {entry.adminUsername ? t.adminPages.by(entry.adminUsername) : ""}
               </span>
             </li>
           ))}
@@ -135,8 +140,8 @@ function logHref(filters: ModerationLogFilters, page = 1): Route {
 }
 
 /** Filtres du journal (formulaire GET, sans JavaScript). */
-function LogFilters({ filters }: { filters: ModerationLogFilters }) {
-  const t = getDictionary();
+async function LogFilters({ filters }: { filters: ModerationLogFilters }) {
+  const t = await getT();
   const active = logHref(filters) !== routes.adminLog;
   return (
     <form
@@ -145,10 +150,10 @@ function LogFilters({ filters }: { filters: ModerationLogFilters }) {
     >
       <div className="flex flex-col gap-1.5">
         <label htmlFor="log-action" className="text-sm font-medium">
-          Action
+          {t.adminPages.log.action}
         </label>
         <Select id="log-action" name="action" defaultValue={filters.action ?? ""}>
-          <option value="">Toutes</option>
+          <option value="">{t.adminPages.log.all}</option>
           {Constants.public.Enums.moderation_action_type.map((action) => (
             <option key={action} value={action}>
               {t.admin.actions[action]}
@@ -158,10 +163,10 @@ function LogFilters({ filters }: { filters: ModerationLogFilters }) {
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="log-target" className="text-sm font-medium">
-          Cible
+          {t.adminPages.log.target}
         </label>
         <Select id="log-target" name="cible" defaultValue={filters.targetType ?? ""}>
-          <option value="">Toutes</option>
+          <option value="">{t.adminPages.log.all}</option>
           {Constants.public.Enums.report_target_type.map((target) => (
             <option key={target} value={target}>
               {t.reports.targets[target]}
@@ -171,37 +176,37 @@ function LogFilters({ filters }: { filters: ModerationLogFilters }) {
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="log-member" className="text-sm font-medium">
-          Membre de l&apos;équipe
+          {t.adminPages.log.member}
         </label>
         <Input
           id="log-member"
           name="membre"
           defaultValue={filters.admin ?? ""}
-          placeholder="@pseudo"
+          placeholder={t.adminPages.listings.usernamePlaceholder}
           autoComplete="off"
         />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="log-from" className="text-sm font-medium">
-            Du
+            {t.adminPages.log.from}
           </label>
           <Input id="log-from" name="du" type="date" defaultValue={filters.from ?? ""} />
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="log-to" className="text-sm font-medium">
-            Au
+            {t.adminPages.log.to}
           </label>
           <Input id="log-to" name="au" type="date" defaultValue={filters.to ?? ""} />
         </div>
       </div>
       <div className="flex items-end gap-2">
         <Button type="submit" className="flex-1">
-          Filtrer
+          {t.adminPages.filter}
         </Button>
         {active ? (
           <Button asChild variant="ghost">
-            <Link href={routes.adminLog}>Effacer</Link>
+            <Link href={routes.adminLog}>{t.adminPages.log.clear}</Link>
           </Button>
         ) : null}
       </div>
@@ -211,7 +216,7 @@ function LogFilters({ filters }: { filters: ModerationLogFilters }) {
 
 export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
   const { role } = await requireStaff(routes.adminLog);
-  const t = getDictionary();
+  const t = await getT();
   const searchParams = await props.searchParams;
   const page = parsePageParam(searchParams.page);
   const showConfig = role === "admin";
@@ -219,10 +224,10 @@ export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
     return (
       <>
         <PageHeader
-          title="Journal de configuration"
-          description="Modifications des catégories, des villes et du message global, non modifiables."
+          title={t.adminPages.log.configTitle}
+          description={t.adminPages.log.configDescription}
         />
-        <JournalTabs current="configuration" showConfig />
+        <JournalTabs current="configuration" showConfig t={t} />
         <ConfigurationLog page={page} />
       </>
     );
@@ -232,22 +237,19 @@ export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
 
   return (
     <>
-      <PageHeader
-        title="Journal de modération"
-        description="Toutes les actions de l'équipe de modération, non modifiables."
-      />
-      <JournalTabs current="moderation" showConfig={showConfig} />
+      <PageHeader title={t.adminPages.log.title} description={t.adminPages.log.description} />
+      <JournalTabs current="moderation" showConfig={showConfig} t={t} />
       <LogFilters filters={filters} />
       <p className="text-sm font-medium text-muted-foreground" aria-live="polite">
-        {log.total === 0 ? "Aucune action" : `${log.total} action${log.total > 1 ? "s" : ""}`}
+        {t.adminPages.log.count(log.total)}
       </p>
       {log.items.length === 0 ? (
-        <EmptyState icon={ScrollText} title="Aucune action ne correspond à ces filtres" />
+        <EmptyState icon={ScrollText} title={t.adminPages.log.noMatch} />
       ) : (
         // Zone défilante atteignable au clavier (tableau large sur mobile).
         <div
           role="region"
-          aria-label="Actions de modération"
+          aria-label={t.adminPages.log.regionLabel}
           tabIndex={0}
           className="overflow-x-auto rounded-2xl border border-border bg-card shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
@@ -255,26 +257,28 @@ export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
             <thead className="border-b border-border text-xs text-muted-foreground uppercase">
               <tr>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Date
+                  {t.adminPages.log.date}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Action
+                  {t.adminPages.log.action}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Cible
+                  {t.adminPages.log.target}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Par
+                  {t.adminPages.log.by}
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
-                  Motif / note
+                  {t.adminPages.log.note}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {log.items.map((entry) => (
                 <tr key={entry.id}>
-                  <td className="px-4 py-3 whitespace-nowrap">{formatDateTime(entry.createdAt)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {t.format.dateTime(entry.createdAt)}
+                  </td>
                   <td className="px-4 py-3">{t.admin.actions[entry.action]}</td>
                   <td className="px-4 py-3">
                     {t.reports.targets[entry.targetType]}{" "}
@@ -299,7 +303,7 @@ export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
                     {entry.admin
                       ? `@${entry.admin.username}`
                       : entry.action === "user_unsuspended"
-                        ? "Automatique"
+                        ? t.adminPages.log.automatic
                         : "—"}
                   </td>
                   <td className="max-w-xs px-4 py-3 break-words text-muted-foreground">

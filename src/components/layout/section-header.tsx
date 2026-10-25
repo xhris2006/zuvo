@@ -2,7 +2,7 @@ import { ChevronRight } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 type SectionHeaderProps = {
@@ -16,7 +16,7 @@ type SectionHeaderProps = {
 };
 
 /** Titre de section avec lien d'accès à la liste complète. */
-export function SectionHeader({
+export async function SectionHeader({
   id,
   title,
   description,
@@ -24,7 +24,7 @@ export function SectionHeader({
   linkLabel,
   className,
 }: SectionHeaderProps) {
-  const t = getDictionary();
+  const t = await getT();
   return (
     <div className={cn("mb-4 flex items-end justify-between gap-4 sm:mb-5", className)}>
       <div className="flex min-w-0 flex-col gap-0.5">

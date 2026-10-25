@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { routes } from "@/config/routes";
 import { AdminNav } from "@/features/admin/components/admin-nav";
 import { requireStaff } from "@/features/admin/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: { default: "Administration", template: "%s · Administration" },
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: { default: t.adminUi.nav.administration, template: t.adminPages.titleTemplate },
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Espace réservé à l'équipe de modération (404 pour les autres). Chaque page
@@ -15,7 +18,7 @@ export const metadata: Metadata = {
  */
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { role } = await requireStaff(routes.admin);
-  const t = getDictionary();
+  const t = await getT();
   return (
     <div className="container-page flex max-w-6xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-8">
       <div className="z-30 lg:sticky lg:top-4">

@@ -14,14 +14,16 @@ import { requireAdmin } from "@/features/admin/queries";
 import { getProfileByUsername } from "@/features/profiles/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { USERNAME_PATTERN } from "@/features/profiles/username";
-import { getDictionary } from "@/i18n";
-import { formatDate } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Équipe" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.team };
+}
 
 export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
   const { user: me } = await requireAdmin(routes.adminTeam);
-  const t = getDictionary();
+  const t = await getT();
   const raw = (await props.searchParams).pseudo;
   const pseudo = (typeof raw === "string" ? raw : "").trim().replace(/^@/, "").toLowerCase();
   const [members, candidate] = await Promise.all([
@@ -34,39 +36,33 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
 
   return (
     <>
-      <PageHeader
-        title="Équipe"
-        description="Administrateurs et modérateurs. Chaque attribution ou retrait de rôle est inscrit au journal."
-      />
+      <PageHeader title={t.adminUi.nav.team} description={t.adminPages.team.description} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Nommer un membre</CardTitle>
-          <CardDescription>
-            Un modérateur traite les signalements, les annonces et les comptes. Un administrateur
-            gère en plus l&apos;équipe, les catégories, les villes et la configuration.
-          </CardDescription>
+          <CardTitle>{t.adminPages.team.appoint}</CardTitle>
+          <CardDescription>{t.adminPages.team.appointDescription}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <form action={routes.adminTeam} role="search" className="flex flex-wrap gap-2">
             <label htmlFor="team-search" className="sr-only">
-              Nom d&apos;utilisateur
+              {t.adminPages.team.username}
             </label>
             <Input
               id="team-search"
               name="pseudo"
               defaultValue={pseudo}
-              placeholder="@pseudo"
+              placeholder={t.adminPages.listings.usernamePlaceholder}
               autoComplete="off"
               className="max-w-xs"
             />
             <Button type="submit" variant="outline">
               <Search aria-hidden="true" />
-              Rechercher
+              {t.adminPages.team.search}
             </Button>
           </form>
           {pseudo && !candidate ? (
-            <p className="text-sm text-muted-foreground">Aucun compte visible avec ce pseudo.</p>
+            <p className="text-sm text-muted-foreground">{t.adminPages.team.noAccount}</p>
           ) : null}
           {candidate ? (
             <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/60 p-3">
@@ -81,7 +77,7 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
                 <span className="text-xs text-muted-foreground">@{candidate.username}</span>
               </span>
               {candidate.id === me.id ? (
-                <p className="text-sm text-muted-foreground">C&apos;est vous.</p>
+                <p className="text-sm text-muted-foreground">{t.adminPages.team.itsYou}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {rolesOfCandidate.includes("moderator") ||
@@ -90,7 +86,7 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
                       userId={candidate.id}
                       role="moderator"
                       grant
-                      label="Nommer modérateur"
+                      label={t.adminPages.team.makeModerator}
                     />
                   )}
                   {rolesOfCandidate.includes("admin") ? null : (
@@ -98,7 +94,7 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
                       userId={candidate.id}
                       role="admin"
                       grant
-                      label="Nommer administrateur"
+                      label={t.adminPages.team.makeAdmin}
                     />
                   )}
                 </div>
@@ -111,7 +107,7 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
       <section aria-labelledby="team-list" className="flex flex-col gap-3">
         <h2 id="team-list" className="flex items-center gap-2 text-lg font-bold tracking-tight">
           <ShieldCheck className="size-5 text-primary" aria-hidden="true" />
-          Membres de l&apos;équipe
+          {t.adminPages.team.members}
         </h2>
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
           {members.map((member) => (
@@ -126,25 +122,25 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
                     href={adminUserHref(member.userId)}
                     className="truncate font-medium hover:underline"
                   >
-                    {member.displayName ?? "Compte masqué"}
+                    {member.displayName ?? t.adminPages.team.hiddenAccount}
                   </Link>
                   <Badge variant={member.role === "admin" ? "primary" : "neutral"}>
                     {t.admin.roles[member.role]}
                   </Badge>
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {member.username ? `@${member.username} · ` : ""}depuis le{" "}
-                  {formatDate(member.grantedAt)}
+                  {member.username ? `@${member.username} · ` : ""}
+                  {t.adminPages.team.since(t.format.date(member.grantedAt))}
                 </span>
               </span>
               {member.userId === me.id ? (
-                <span className="text-xs text-muted-foreground">Vous</span>
+                <span className="text-xs text-muted-foreground">{t.adminPages.team.you}</span>
               ) : (
                 <RoleForm
                   userId={member.userId}
                   role={member.role}
                   grant={false}
-                  label="Retirer le rôle"
+                  label={t.adminPages.team.revokeRole}
                   variant="destructive"
                 />
               )}

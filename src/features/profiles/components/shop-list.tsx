@@ -4,14 +4,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { publicProfileHref } from "@/config/routes";
 import { cityNameFrom } from "@/features/locations/names";
 import { getCityNames } from "@/features/locations/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { avatarUrl } from "../avatar-url";
 import type { ShopSummary } from "../shops";
 import { VerifiedBadge } from "./verified-badge";
 
 /** Résultats de recherche de boutiques : photo, nom, pseudo, ville et annonces en vente. */
 export async function ShopList({ shops }: { shops: ShopSummary[] }) {
-  const t = getDictionary();
+  const t = await getT();
   const cityNames = await getCityNames();
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

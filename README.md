@@ -6,7 +6,8 @@ et échangent directement avec les acheteurs.
 
 - Publication gratuite, aucune commission, aucun abonnement obligatoire.
 - Pas de paiement ni de livraison intégrés dans la première version.
-- Prix en FCFA (XAF), interface en français (architecture prête pour l'anglais).
+- Prix en FCFA (XAF), interface en français ou en anglais (choix dans Paramètres →
+  Langue, ou FR / EN sur les pages de bienvenue et de connexion).
 
 > **Nom provisoire.** Le nom, le pays, la devise et la langue sont centralisés
 > dans [`src/config/site.ts`](src/config/site.ts).
@@ -50,6 +51,14 @@ l'authentification n'est pas encore disponible.
 - **Navigation** : page de bienvenue pour les visiteurs (`/bienvenue`), accueil
   réservé aux membres connectés, en-tête mobile qui se masque au défilement,
   barre latérale sur ordinateur, mode sombre (Paramètres → Apparence).
+- **Langues** : français (par défaut) et anglais sur tout le site, y compris
+  l'administration et les pages d'information. Le choix est mémorisé sur
+  l'appareil (cookie `zuvo-locale`) et appliqué dès le rendu serveur. Restent
+  dans une seule langue : les contenus saisis par les membres et l'équipe
+  (annonces, message global, catégories ajoutées), les e-mails de Supabase Auth
+  et le texte des notifications push (français, voir
+  [`docs/notifications.md`](docs/notifications.md)). Les versions anglaises des
+  documents juridiques sont, comme les françaises, des brouillons à faire valider.
 - **Messagerie** : une conversation par acheteur et par annonce, temps réel,
   accusés de lecture, compteur de non-lus.
 - **Notifications** : nouveaux abonnés, favoris, nouvelles annonces des
@@ -161,7 +170,8 @@ src/
   features/            Code par domaine : auth, profiles, listings, search,
                        favorites, messaging, notifications, moderation,
                        admin, account…
-  i18n/                Dictionnaires de traduction (fr)
+  i18n/                Langues : dictionnaires fr/en partagés (navigateur) et
+                       serveur (dictionaries/server), getT() et useT()
   lib/                 Utilitaires : env, CSP, formatage (prix XAF, dates),
                        clients et types générés de la base (lib/supabase)
   proxy.ts             Session, redirections, Content-Security-Policy

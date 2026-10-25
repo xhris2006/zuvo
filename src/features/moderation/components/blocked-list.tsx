@@ -2,15 +2,17 @@ import { Avatar } from "@/components/ui/avatar";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import type { BlockedUser } from "../queries";
 import { BlockButton } from "./block-button";
+import { getT } from "@/i18n/server";
 
-export function BlockedList({ users }: { users: BlockedUser[] }) {
+export async function BlockedList({ users }: { users: BlockedUser[] }) {
+  const t = await getT();
   if (users.length === 0) {
-    return <p className="text-sm text-muted-foreground">Vous n&apos;avez bloqué personne.</p>;
+    return <p className="text-sm text-muted-foreground">{t.moderation.noneBlocked}</p>;
   }
   return (
     <ul className="flex flex-col divide-y divide-border">
       {users.map((user) => {
-        const name = user.displayName ?? "Utilisateur indisponible";
+        const name = user.displayName ?? t.moderation.unavailableUser;
         return (
           <li key={user.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
             <Avatar name={name} src={avatarUrl(user.avatarPath)} size="sm" />

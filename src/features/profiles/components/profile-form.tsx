@@ -14,6 +14,7 @@ import { updateProfileAction } from "../actions";
 import type { PublicProfile } from "../queries";
 import { BIO_MAX_LENGTH } from "../schemas";
 import { AvatarUploader } from "./avatar-uploader";
+import { useT } from "@/i18n/client";
 
 type ProfileFormProps = {
   profile: PublicProfile;
@@ -23,6 +24,7 @@ type ProfileFormProps = {
 };
 
 export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: ProfileFormProps) {
+  const t = useT();
   const initialState: FormState = {
     status: "idle",
     values: {
@@ -47,7 +49,12 @@ export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: Prof
         currentUrl={avatarUrl}
         error={errors.avatarPath}
       />
-      <Field id="displayName" label="Nom affiché" error={errors.displayName} required>
+      <Field
+        id="displayName"
+        label={t.profileForms.displayName}
+        error={errors.displayName}
+        required
+      >
         {(control) => (
           <Input
             {...control}
@@ -60,8 +67,8 @@ export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: Prof
       </Field>
       <Field
         id="username"
-        label="Nom d'utilisateur"
-        hint="Il apparaît dans l'adresse de votre profil public."
+        label={t.profileForms.username}
+        hint={t.profileForms.usernameHint}
         error={errors.username}
         required
       >
@@ -77,10 +84,10 @@ export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: Prof
           />
         )}
       </Field>
-      <Field id="city" label="Ville" error={errors.city}>
+      <Field id="city" label={t.profileForms.city} error={errors.city}>
         {(control) => (
           <Select {...control} name="city" defaultValue={values.city}>
-            <option value="">Non précisée</option>
+            <option value="">{t.profileForms.cityUnset}</option>
             {cities.map((city) => (
               <option key={city.slug} value={city.slug}>
                 {city.name}
@@ -91,8 +98,8 @@ export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: Prof
       </Field>
       <Field
         id="bio"
-        label="Biographie"
-        hint={`${BIO_MAX_LENGTH} caractères au maximum.`}
+        label={t.profileForms.bio}
+        hint={t.profileForms.bioHint(BIO_MAX_LENGTH)}
         error={errors.bio}
       >
         {(control) => (
@@ -106,7 +113,7 @@ export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: Prof
         )}
       </Field>
       <SubmitButton pending={pending} className="self-start">
-        Enregistrer
+        {t.profileForms.save}
       </SubmitButton>
     </form>
   );

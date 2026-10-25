@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { buttonVariants } from "@/components/ui/button";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 type SortMenuProps = {
@@ -21,12 +22,13 @@ type SortMenuProps = {
 
 /** Choix du tri (liens : chaque option garde les filtres en cours). */
 export function SortMenu({ label, options, className }: SortMenuProps) {
+  const t = useT();
   const current = options.find((option) => option.active)?.label;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(buttonVariants({ variant: "outline", size: "sm" }), className)}
-        aria-label={current ? `${label} : ${current}` : label}
+        aria-label={current ? t.explore.sortCurrent(label, current) : label}
       >
         <ArrowDownUp aria-hidden="true" />
         <span className="max-w-32 truncate">{current ?? label}</span>

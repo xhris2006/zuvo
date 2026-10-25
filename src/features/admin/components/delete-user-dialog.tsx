@@ -18,6 +18,7 @@ import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import { type DeleteUserField, deleteUserAction } from "../management-actions";
 
@@ -25,6 +26,7 @@ const idle: FormState<DeleteUserField> = { status: "idle" };
 
 /** Suppression définitive d'un compte, confirmée par la saisie de son nom d'utilisateur. */
 export function DeleteUserDialog({ userId, username }: { userId: string; username: string }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(deleteUserAction, idle);
   const id = useId();
   return (
@@ -32,23 +34,20 @@ export function DeleteUserDialog({ userId, username }: { userId: string; usernam
       <DialogTrigger asChild>
         <Button variant="destructive" size="sm">
           <Trash2 aria-hidden="true" />
-          Supprimer le compte
+          {t.adminUi.deleteUser.trigger}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Supprimer définitivement ce compte ?</DialogTitle>
-          <DialogDescription>
-            Le profil, les annonces, les favoris, les abonnements et les conversations de @
-            {username} seront supprimés, ainsi que ses photos. Cette action est irréversible.
-          </DialogDescription>
+          <DialogTitle>{t.adminUi.deleteUser.title}</DialogTitle>
+          <DialogDescription>{t.adminUi.deleteUser.description(username)}</DialogDescription>
         </DialogHeader>
         <form action={formAction} className="flex flex-col gap-4" noValidate>
           <input type="hidden" name="userId" value={userId} />
           <FormMessage state={state} />
           <Field
             id={`${id}-reason`}
-            label="Motif (consigné dans le journal)"
+            label={t.adminUi.reasonForLog}
             error={state.fieldErrors?.reason}
             required
           >
@@ -64,7 +63,7 @@ export function DeleteUserDialog({ userId, username }: { userId: string; usernam
           </Field>
           <Field
             id={`${id}-confirmation`}
-            label={`Pour confirmer, saisissez « ${username} »`}
+            label={t.adminUi.deleteUser.confirm(username)}
             error={state.fieldErrors?.confirmation}
             required
           >
@@ -75,11 +74,11 @@ export function DeleteUserDialog({ userId, username }: { userId: string; usernam
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                Annuler
+                {t.adminUi.cancel}
               </Button>
             </DialogClose>
             <SubmitButton pending={pending} variant="destructive">
-              Supprimer définitivement
+              {t.adminUi.deleteUser.submit}
             </SubmitButton>
           </DialogFooter>
         </form>

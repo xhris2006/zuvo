@@ -3,10 +3,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
-export default function NotFound() {
-  const t = getDictionary();
+export default async function NotFound() {
+  const t = await getT();
   return (
     <div className="container-page max-w-xl pt-12 sm:pt-20">
       <EmptyState

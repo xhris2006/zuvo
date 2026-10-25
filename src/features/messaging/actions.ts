@@ -20,9 +20,10 @@ import {
   type PhotoUrls,
   photoCaptionSchema,
 } from "./schemas";
+import { getT } from "@/i18n/server";
+import { translateValidation } from "@/lib/forms/validation";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SESSION_EXPIRED = "Votre session a expiré. Reconnectez-vous.";
 
 export type ContactState = { message?: string };
 
@@ -31,8 +32,9 @@ export async function startConversationAction(
   _previous: ContactState,
   formData: FormData,
 ): Promise<ContactState> {
+  const texts = (await getT()).messagingActions;
   const listingId = formText(formData, "listingId");
-  if (!UUID.test(listingId)) return { message: "Annonce introuvable." };
+  if (!UUID.test(listingId)) return { message: texts.listingNotFound };
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
@@ -45,13 +47,10 @@ export async function startConversationAction(
   });
   if (error || !data) {
     if (error?.code === "PT429") {
-      return { message: "Vous avez contacté beaucoup de vendeurs récemment. Réessayez plus tard." };
+      return { message: texts.contactRateLimited };
     }
-    if (error?.code === "23514") return { message: "Vous ne pouvez pas vous contacter vous-même." };
-    return {
-      message:
-        "Impossible de contacter ce vendeur : l'annonce n'est plus disponible ou le contact est bloqué.",
-    };
+    if (error?.code === "23514") return { message: texts.contactSelf };
+    return { message: texts.contactFailed };
   }
   redirect(conversationHref(data));
 }
@@ -68,18 +67,24 @@ export async function sendMessageAction(
   body: string,
   photoPath: string | null = null,
 ): Promise<SendMessageResult> {
-  if (!UUID.test(conversationId)) return { status: "error", message: "Conversation introuvable." };
+  const t = await getT();
+  const texts = t.messagingActions;
+  if (!UUID.test(conversationId)) return { status: "error", message: texts.conversationNotFound };
   if (photoPath !== null && !isMessagePhotoPath(conversationId, photoPath)) {
-    return { status: "error", message: "Photo invalide." };
+    return { status: "error", message: texts.invalidPhoto };
   }
   const parsed = (photoPath ? photoCaptionSchema : messageBodySchema).safeParse(body);
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message ?? "Message invalide." };
+    const issue = parsed.error.issues[0]?.message;
+    return {
+      status: "error",
+      message: issue ? translateValidation(issue, t.validation) : texts.invalidMessage,
+    };
   }
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
 
   const { data, error } = await supabase
     .from("messages")
@@ -92,15 +97,9 @@ export async function sendMessageAction(
       await supabase.storage.from(MESSAGE_PHOTO_BUCKET).remove([photoPath]);
     }
     if (error?.code === "PT429") {
-      return {
-        status: "error",
-        message: "Vous envoyez beaucoup de messages. Patientez un instant.",
-      };
+      return { status: "error", message: texts.sendRateLimited };
     }
-    return {
-      status: "error",
-      message: "Impossible d'envoyer ce message dans cette conversation.",
-    };
+    return { status: "error", message: texts.sendFailed };
   }
   revalidatePath(routes.messages);
   schedulePushDispatch({ type: "new_message", actorId: user.id, conversationId });

@@ -17,17 +17,14 @@ import {
 } from "@/features/admin/management-queries";
 import { requireStaff } from "@/features/admin/queries";
 import { listingHref } from "@/features/listings/links";
-import { formatDateTime, formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { parsePageParam } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Assistance" };
-
-const statusLabels: Record<SupportInboxStatus, string> = {
-  open: "En attente",
-  answered: "Répondues",
-  closed: "Closes",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.support };
+}
 
 function inboxHref(status: SupportInboxStatus, page = 1): Route {
   const params = new URLSearchParams();
@@ -39,6 +36,7 @@ function inboxHref(status: SupportInboxStatus, page = 1): Route {
 
 export default async function AdminSupportPage(props: PageProps<"/admin/assistance">) {
   await requireStaff(routes.adminSupport);
+  const t = await getT();
   const searchParams = await props.searchParams;
   const status =
     supportInboxStatuses.find((value) => value === searchParams.statut) ?? ("open" as const);
@@ -47,11 +45,8 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
 
   return (
     <>
-      <PageHeader
-        title="Assistance"
-        description="Demandes des membres et contestations de retraits d'annonces. Chaque réponse est notifiée à son auteur et inscrite au journal."
-      />
-      <nav aria-label="Statut des demandes" className="flex flex-wrap gap-2">
+      <PageHeader title={t.adminUi.nav.support} description={t.adminPages.support.description} />
+      <nav aria-label={t.adminPages.support.statusNav} className="flex flex-wrap gap-2">
         {supportInboxStatuses.map((value) => (
           <Link
             key={value}
@@ -64,13 +59,13 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
                 : "border border-border bg-card hover:bg-muted",
             )}
           >
-            {statusLabels[value]}
+            {t.adminPages.support.statuses[value]}
           </Link>
         ))}
       </nav>
 
       {inbox.items.length === 0 ? (
-        <EmptyState icon={Inbox} title="Aucune demande" />
+        <EmptyState icon={Inbox} title={t.adminPages.support.empty} />
       ) : (
         <ul className="flex flex-col gap-3">
           {inbox.items.map((request) => (
@@ -81,7 +76,9 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
               <div className="flex flex-wrap items-center gap-2">
                 <span className="min-w-0 flex-1 font-semibold break-words">{request.subject}</span>
                 <Badge variant={request.kind === "appeal" ? "warning" : "primary"}>
-                  {request.kind === "appeal" ? "Contestation" : "Contact"}
+                  {request.kind === "appeal"
+                    ? t.adminPages.support.appeal
+                    : t.adminPages.support.contact}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -93,14 +90,14 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
                     {request.author.displayName} (@{request.author.username})
                   </Link>
                 ) : (
-                  "Compte supprimé"
+                  t.adminPages.deletedAccount
                 )}{" "}
-                · {formatRelativeTime(request.createdAt)}
+                · {t.format.relativeTime(request.createdAt)}
               </p>
               {request.listing ? (
                 <div className="flex flex-wrap items-center gap-2 rounded-xl bg-muted/60 px-3 py-2 text-sm">
                   <span className="min-w-0 flex-1">
-                    Annonce :{" "}
+                    {t.adminPages.support.listingLabel}{" "}
                     <Link
                       href={listingHref(request.listing.id)}
                       className="font-medium hover:underline"
@@ -109,7 +106,7 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
                     </Link>
                     {request.listing.removedReason ? (
                       <span className="block text-xs text-danger">
-                        Motif du retrait : {request.listing.removedReason}
+                        {t.adminPages.removalReason(request.listing.removedReason)}
                       </span>
                     ) : null}
                   </span>
@@ -118,19 +115,19 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
                       trigger={
                         <Button variant="outline" size="sm">
                           <RotateCcw aria-hidden="true" />
-                          Rétablir l&apos;annonce
+                          {t.adminPages.support.restoreListing}
                         </Button>
                       }
-                      title={`Rétablir « ${request.listing.title} » ?`}
-                      description="L'annonce n'est plus bloquée : son vendeur pourra la modifier et la remettre en vente. Répondez ensuite à la contestation."
-                      confirmLabel="Rétablir"
+                      title={t.adminPages.restoreTitle(request.listing.title)}
+                      description={t.adminPages.support.restoreDescription}
+                      confirmLabel={t.adminPages.restore}
                       confirmVariant="primary"
                       action={restoreListingWithReasonAction}
                       fields={{ listingId: request.listing.id }}
-                      reasonLabel="Motif (consigné dans le journal)"
+                      reasonLabel={t.adminUi.reasonForLog}
                     />
                   ) : (
-                    <Badge variant="success">Rétablie</Badge>
+                    <Badge variant="success">{t.adminPages.support.restored}</Badge>
                   )}
                 </div>
               ) : null}
@@ -138,8 +135,8 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
               {request.response ? (
                 <div className="rounded-xl bg-secondary/60 p-3 text-sm">
                   <p className="mb-1 text-xs font-semibold text-secondary-foreground">
-                    Réponse envoyée
-                    {request.handledAt ? ` · ${formatDateTime(request.handledAt)}` : ""}
+                    {t.adminPages.support.replySent}
+                    {request.handledAt ? ` · ${t.format.dateTime(request.handledAt)}` : ""}
                   </p>
                   <p className="whitespace-pre-line">{request.response}</p>
                 </div>

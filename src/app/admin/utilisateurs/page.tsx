@@ -20,20 +20,23 @@ import { isSuspensionActive } from "@/features/admin/suspension";
 import { cityNameFrom } from "@/features/locations/names";
 import { getCityNames } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
-import { getDictionary } from "@/i18n";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { parsePageParam } from "@/lib/pagination";
 
-export const metadata: Metadata = { title: "Utilisateurs" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.users };
+}
 
 /** Recherche par e-mail ou téléphone : administrateurs uniquement, journalisée par la base. */
-function ContactSearch({
+async function ContactSearch({
   contact,
   results,
 }: {
   contact: string;
   results: ContactSearchResult[] | null;
 }) {
+  const t = await getT();
   return (
     <section
       aria-labelledby="contact-search-title"
@@ -42,23 +45,22 @@ function ContactSearch({
       <div className="flex flex-col">
         <h2 id="contact-search-title" className="flex items-center gap-2 text-sm font-semibold">
           <AtSign className="size-4 text-muted-foreground" aria-hidden="true" />
-          Recherche par e-mail ou téléphone
+          {t.adminPages.users.contactSearch}
         </h2>
         <p className="text-xs text-muted-foreground">
-          Réservée aux administrateurs. Chaque recherche est inscrite au journal de configuration
-          (sans le terme recherché).
+          {t.adminPages.users.contactSearchDescription}
         </p>
       </div>
       <form role="search" className="flex flex-wrap gap-2" action={routes.adminUsers}>
         <label htmlFor="admin-contact-search" className="sr-only">
-          Adresse e-mail ou numéro de téléphone
+          {t.adminPages.users.contactLabel}
         </label>
         <Input
           id="admin-contact-search"
           name="contact"
           type="search"
           defaultValue={contact}
-          placeholder="adresse@exemple.cm ou 6 90 12 34 56"
+          placeholder={t.adminPages.users.contactPlaceholder}
           minLength={3}
           maxLength={120}
           autoComplete="off"
@@ -66,11 +68,11 @@ function ContactSearch({
         />
         <Button type="submit" variant="outline">
           <Search aria-hidden="true" />
-          Rechercher
+          {t.adminPages.team.search}
         </Button>
       </form>
       {results === null ? null : results.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Aucun compte trouvé.</p>
+        <p className="text-sm text-muted-foreground">{t.adminPages.users.noAccount}</p>
       ) : (
         <ul className="divide-y divide-border rounded-xl border border-border">
           {results.map((result) => (
@@ -82,7 +84,9 @@ function ContactSearch({
                 {result.displayName} (@{result.username})
               </Link>
               <span className="text-muted-foreground">{result.email ?? "—"}</span>
-              <span className="text-muted-foreground">{result.phone ?? "Pas de téléphone"}</span>
+              <span className="text-muted-foreground">
+                {result.phone ?? t.adminPages.users.noPhone}
+              </span>
             </li>
           ))}
         </ul>
@@ -93,7 +97,7 @@ function ContactSearch({
 
 export default async function AdminUsersPage(props: PageProps<"/admin/utilisateurs">) {
   const { user, role } = await requireStaff(routes.adminUsers);
-  const t = getDictionary();
+  const t = await getT();
   const searchParams = await props.searchParams;
   const deleted = searchParams.supprime === "1";
   const query = typeof searchParams.q === "string" ? searchParams.q.slice(0, 60) : "";
@@ -121,38 +125,48 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
 
   return (
     <>
-      <PageHeader title="Utilisateurs" />
+      <PageHeader title={t.adminUi.nav.users} />
       {deleted ? (
         <Alert variant="success" role="status">
-          Le compte a été supprimé, ainsi que ses annonces et ses photos.
+          {t.adminPages.users.deleted}
         </Alert>
       ) : null}
       {role === "admin" ? <ContactSearch contact={contact} results={contactResults} /> : null}
       <form role="search" className="flex flex-wrap gap-2" action={routes.adminUsers}>
         {onlySuspended ? <input type="hidden" name="filtre" value="suspendus" /> : null}
         <label htmlFor="admin-user-search" className="sr-only">
-          Rechercher un utilisateur
+          {t.adminPages.users.searchLabel}
         </label>
         <Input
           id="admin-user-search"
           name="q"
           type="search"
           defaultValue={query}
-          placeholder="Nom d'utilisateur ou nom affiché"
+          placeholder={t.adminPages.users.searchPlaceholder}
           className="max-w-sm"
         />
         <Button type="submit" variant="outline">
           <Search aria-hidden="true" />
-          Rechercher
+          {t.adminPages.team.search}
         </Button>
       </form>
-      <nav aria-label="Filtrer les utilisateurs" className="flex gap-2">
+      <nav aria-label={t.adminPages.users.filterNav} className="flex gap-2">
         {[
-          { label: "Tous", active: !onlySuspended, href: listHref(1, false) },
-          { label: "Suspendus", active: onlySuspended, href: listHref(1, true) },
+          {
+            key: "all",
+            label: t.adminPages.users.all,
+            active: !onlySuspended,
+            href: listHref(1, false),
+          },
+          {
+            key: "suspended",
+            label: t.adminPages.users.suspendedTab,
+            active: onlySuspended,
+            href: listHref(1, true),
+          },
         ].map((tab) => (
           <Link
-            key={tab.label}
+            key={tab.key}
             href={tab.href}
             aria-current={tab.active ? "page" : undefined}
             className={
@@ -167,7 +181,7 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
       </nav>
 
       {users.items.length === 0 ? (
-        <EmptyState icon={Users} title="Aucun utilisateur trouvé" />
+        <EmptyState icon={Users} title={t.adminPages.users.empty} />
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
           {users.items.map((item) => {
@@ -184,14 +198,14 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
                       {item.displayName}
                     </Link>
                     {item.role ? <Badge variant="primary">{t.admin.roles[item.role]}</Badge> : null}
-                    {suspended ? <Badge variant="danger">Suspendu</Badge> : null}
+                    {suspended ? <Badge variant="danger">{t.adminPages.suspended}</Badge> : null}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
                     @{item.username}
-                    {item.city ? ` · ${cityNameFrom(item.city, cityNames)}` : ""} · inscrit le{" "}
-                    {formatDate(item.createdAt)}
+                    {item.city ? ` · ${cityNameFrom(item.city, cityNames)}` : ""} ·{" "}
+                    {t.adminPages.users.joined(t.format.date(item.createdAt))}
                     {suspended && item.suspendedUntil
-                      ? ` · suspendu jusqu'au ${formatDateTime(item.suspendedUntil)}`
+                      ? t.adminPages.users.suspendedUntil(t.format.dateTime(item.suspendedUntil))
                       : ""}
                   </span>
                 </span>
@@ -202,15 +216,15 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
                     trigger={
                       <Button variant="ghost" size="sm" className="text-danger">
                         <UserX aria-hidden="true" />
-                        Suspendre
+                        {t.adminPages.suspend}
                       </Button>
                     }
-                    title={`Suspendre ${item.displayName} ?`}
-                    description="Son profil et ses annonces seront masqués ; il ne pourra plus publier ni envoyer de messages."
-                    confirmLabel="Suspendre"
+                    title={t.adminPages.suspendTitle(item.displayName)}
+                    description={t.adminPages.suspendDescription}
+                    confirmLabel={t.adminPages.suspend}
                     action={setUserSuspensionAction}
                     fields={{ userId: item.id, suspended: "true" }}
-                    reasonLabel="Motif (consigné dans le journal)"
+                    reasonLabel={t.adminUi.reasonForLog}
                   >
                     <SuspensionFields />
                   </ModerationDialog>
@@ -227,8 +241,7 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
       />
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <UserCheck className="size-4" aria-hidden="true" />
-        Les membres de l&apos;équipe (administrateurs et modérateurs) ne peuvent pas être
-        sanctionnés.
+        {t.adminPages.users.staffProtected}
       </p>
     </>
   );

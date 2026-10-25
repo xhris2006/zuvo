@@ -35,7 +35,7 @@ describe("suspensionEnd", () => {
   it("refuse une durée inconnue", () => {
     expect(suspensionEnd("2y", "", now)).toEqual({
       ok: false,
-      message: "Durée de suspension invalide.",
+      error: "invalidDuration",
     });
   });
 });

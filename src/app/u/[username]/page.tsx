@@ -22,7 +22,7 @@ import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileByUsername, getProfileStats, isFollowing } from "@/features/profiles/queries";
 import { USERNAME_PATTERN } from "@/features/profiles/username";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
 async function loadProfile(rawUsername: string) {
   const username = decodeURIComponent(rawUsername).toLowerCase();
@@ -32,12 +32,11 @@ async function loadProfile(rawUsername: string) {
 
 export async function generateMetadata(props: PageProps<"/u/[username]">): Promise<Metadata> {
   const { username } = await props.params;
-  const profile = await loadProfile(username);
-  if (!profile) return { title: "Profil introuvable", robots: { index: false } };
+  const [profile, t] = await Promise.all([loadProfile(username), getT()]);
+  if (!profile) return { title: t.profilePages.notFound, robots: { index: false } };
   const title = `${profile.display_name} (@${profile.username})`;
   const description =
-    profile.bio?.slice(0, 160) ??
-    `Découvrez les articles de ${profile.display_name} sur ${siteConfig.name}.`;
+    profile.bio?.slice(0, 160) ?? t.profilePages.discover(profile.display_name, siteConfig.name);
   const image = avatarUrl(profile.avatar_path);
   return {
     title,
@@ -66,14 +65,14 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   ]);
   const profilePath = publicProfileHref(profile.username);
   const pageCount = Math.ceil(listings.total / searchLimits.pageSize);
-  const t = getDictionary();
+  const t = await getT();
 
   let actions;
   let menu;
   if (isOwnProfile) {
     actions = (
       <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
-        <Link href={routes.editProfile}>Modifier mon profil</Link>
+        <Link href={routes.editProfile}>{t.profilePages.editMine}</Link>
       </Button>
     );
   } else if (viewer) {
@@ -95,7 +94,7 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   } else {
     actions = (
       <Button asChild className="flex-1 sm:flex-none">
-        <Link href={signInHref(profilePath)}>Suivre</Link>
+        <Link href={signInHref(profilePath)}>{t.profilePages.follow}</Link>
       </Button>
     );
     menu = (
@@ -138,8 +137,8 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
           <EmptyState
             icon={PackageOpen}
             headingLevel="h3"
-            title="Aucun article en vente pour le moment"
-            description={`${profile.display_name} n'a pas encore d'annonce en ligne.`}
+            title={t.profilePages.noneOnSaleTitle}
+            description={t.profilePages.noneOnSaleBody(profile.display_name)}
           />
         )}
       </section>

@@ -15,24 +15,26 @@ import { SupportForm } from "@/features/support/components/support-form";
 import { getAppealableListing, getMySupportRequests } from "@/features/support/queries";
 import type { SupportStatus } from "@/features/support/schemas";
 import { isSupabaseConfigured } from "@/lib/env";
-import { formatDateTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Assistance", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.supportPage.title, robots: { index: false } };
+}
 
-const statusBadges: Record<
-  SupportStatus,
-  { label: string; variant: "warning" | "success" | "neutral" }
-> = {
-  open: { label: "En attente", variant: "warning" },
-  answered: { label: "Répondu", variant: "success" },
-  closed: { label: "Clos", variant: "neutral" },
+const statusVariants: Record<SupportStatus, "warning" | "success" | "neutral"> = {
+  open: "warning",
+  answered: "success",
+  closed: "neutral",
 };
 
 export default async function SupportPage(props: PageProps<"/assistance">) {
+  const t = await getT();
+  const copy = t.supportPage;
   if (!isSupabaseConfigured()) {
     return (
       <div className="container-page flex max-w-3xl flex-col gap-6 pt-4 sm:pt-10">
-        <PageHeader title="Assistance" />
+        <PageHeader title={copy.title} />
         <AuthRequired returnTo={routes.support} />
       </div>
     );
@@ -47,34 +49,24 @@ export default async function SupportPage(props: PageProps<"/assistance">) {
 
   return (
     <div className="container-page flex max-w-3xl flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
-      <PageHeader
-        title="Assistance"
-        description="Écrivez à l'équipe Zuvo. Vous serez prévenu par notification dès qu'elle aura répondu."
-      />
+      <PageHeader title={copy.title} description={copy.description} />
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {appealListing ? "Contester le retrait d'une annonce" : "Nouvelle demande"}
-          </CardTitle>
+          <CardTitle>{appealListing ? copy.appealTitle : copy.newTitle}</CardTitle>
           <CardDescription>
-            {appealListing
-              ? "Expliquez pourquoi l'annonce respecte les règles : l'équipe réexaminera sa décision."
-              : "Question sur votre compte, une annonce ou un échange : décrivez la situation."}
+            {appealListing ? copy.appealDescription : copy.newDescription}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {contester && !appealListing ? (
-            <Alert variant="warning">
-              Cette annonce ne peut pas être contestée (elle n&apos;a pas été retirée ou ne vous
-              appartient pas). Vous pouvez tout de même écrire à l&apos;équipe ci-dessous.
-            </Alert>
+            <Alert variant="warning">{copy.notAppealable}</Alert>
           ) : null}
           {appealListing ? (
-            <Alert variant="danger" title={`Annonce retirée : « ${appealListing.title} »`}>
-              {appealListing.removed_reason ?? "Aucun motif précisé."}{" "}
+            <Alert variant="danger" title={copy.removedListing(appealListing.title)}>
+              {appealListing.removed_reason ?? copy.noReason}{" "}
               <Link href={listingHref(appealListing.id)} className="font-semibold underline">
-                Voir l&apos;annonce
+                {copy.viewListing}
               </Link>
             </Alert>
           ) : null}
@@ -87,7 +79,7 @@ export default async function SupportPage(props: PageProps<"/assistance">) {
           />
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Phone className="size-4" aria-hidden="true" />
-            Assistance téléphonique :{" "}
+            {copy.phone}{" "}
             <a
               href={`tel:${siteConfig.supportPhone}`}
               className="font-medium text-foreground hover:underline"
@@ -100,14 +92,13 @@ export default async function SupportPage(props: PageProps<"/assistance">) {
 
       <section aria-labelledby="my-requests" className="flex flex-col gap-3">
         <h2 id="my-requests" className="text-lg font-bold tracking-tight">
-          Mes demandes
+          {copy.myRequests}
         </h2>
         {requests.length === 0 ? (
-          <EmptyState icon={Inbox} headingLevel="h3" title="Aucune demande pour le moment" />
+          <EmptyState icon={Inbox} headingLevel="h3" title={copy.none} />
         ) : (
           <ul className="flex flex-col gap-3">
             {requests.map((request) => {
-              const badge = statusBadges[request.status];
               return (
                 <li
                   key={request.id}
@@ -118,12 +109,14 @@ export default async function SupportPage(props: PageProps<"/assistance">) {
                       {request.subject}
                     </span>
                     {request.kind === "appeal" ? (
-                      <Badge variant="primary">Contestation</Badge>
+                      <Badge variant="primary">{copy.appeal}</Badge>
                     ) : null}
-                    <Badge variant={badge.variant}>{badge.label}</Badge>
+                    <Badge variant={statusVariants[request.status]}>
+                      {copy.statuses[request.status]}
+                    </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Envoyée le {formatDateTime(request.createdAt)}
+                    {copy.sentOn(t.format.dateTime(request.createdAt))}
                     {request.listing ? (
                       <>
                         {" · "}
@@ -139,8 +132,8 @@ export default async function SupportPage(props: PageProps<"/assistance">) {
                   {request.response ? (
                     <div className="rounded-xl bg-secondary/60 p-3 text-sm">
                       <p className="mb-1 text-xs font-semibold text-secondary-foreground">
-                        Réponse de l&apos;équipe
-                        {request.handledAt ? ` · ${formatDateTime(request.handledAt)}` : ""}
+                        {copy.teamReply}
+                        {request.handledAt ? ` · ${t.format.dateTime(request.handledAt)}` : ""}
                       </p>
                       <p className="whitespace-pre-line">{request.response}</p>
                     </div>

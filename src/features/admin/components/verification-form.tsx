@@ -5,6 +5,7 @@ import { useActionState, useId } from "react";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import { setSellerVerificationAction } from "../management-actions";
 
@@ -12,6 +13,7 @@ const idle: FormState<"note"> = { status: "idle" };
 
 /** Attribution ou retrait du badge « vendeur vérifié » (administrateurs). */
 export function VerificationForm({ userId, verified }: { userId: string; verified: boolean }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(setSellerVerificationAction, idle);
   const id = useId();
   return (
@@ -22,13 +24,13 @@ export function VerificationForm({ userId, verified }: { userId: string; verifie
       {verified ? null : (
         <>
           <label htmlFor={`${id}-note`} className="text-sm font-medium">
-            Vérification effectuée (facultatif, consigné dans le journal)
+            {t.adminUi.verification.note}
           </label>
           <Input
             id={`${id}-note`}
             name="note"
             maxLength={500}
-            placeholder="Ex. : pièce d'identité vérifiée en agence"
+            placeholder={t.adminUi.verification.placeholder}
           />
         </>
       )}
@@ -39,7 +41,7 @@ export function VerificationForm({ userId, verified }: { userId: string; verifie
         className="self-start"
       >
         {verified ? <BadgeX aria-hidden="true" /> : <BadgeCheck aria-hidden="true" />}
-        {verified ? "Retirer le badge vérifié" : "Attribuer le badge vérifié"}
+        {verified ? t.adminUi.verification.revoke : t.adminUi.verification.grant}
       </SubmitButton>
     </form>
   );

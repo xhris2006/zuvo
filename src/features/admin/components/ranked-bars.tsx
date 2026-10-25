@@ -1,4 +1,4 @@
-import { formatCount } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { barPercent } from "../chart-scale";
 
 type RankedBarsProps = {
@@ -15,7 +15,7 @@ type RankedBarsProps = {
  * Comparaison de grandeurs : barres horizontales d'une seule teinte, triées,
  * valeur au bout de chaque barre (texte en couleur de texte, jamais de série).
  */
-export function RankedBars({
+export async function RankedBars({
   title,
   description,
   rows,
@@ -23,6 +23,7 @@ export function RankedBars({
   restLabel,
   emptyText,
 }: RankedBarsProps) {
+  const t = await getT();
   const sorted = rows.filter((row) => row.value > 0).sort((a, b) => b.value - a.value);
   const shown = sorted.slice(0, limit);
   const rest = sorted.slice(limit).reduce((sum, row) => sum + row.value, 0);
@@ -51,7 +52,7 @@ export function RankedBars({
                   aria-hidden="true"
                 />
                 <span className="shrink-0 text-xs font-semibold tabular-nums">
-                  {formatCount(item.value)}
+                  {t.format.count(item.value)}
                 </span>
               </span>
             </li>

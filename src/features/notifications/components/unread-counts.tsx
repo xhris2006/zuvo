@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 export type UnreadCounts = { messages: number; notifications: number };
@@ -129,8 +129,8 @@ export function UnreadBadge({ kind, className }: { kind: keyof UnreadCounts; cla
 /** Texte accessible associé, à placer après le libellé du lien. */
 export function UnreadLabel({ kind }: { kind: keyof UnreadCounts }) {
   const count = useUnreadCounts()[kind];
+  const t = useT();
   if (count <= 0) return null;
-  const t = getDictionary();
   const label =
     kind === "messages" ? t.nav.unreadMessages(count) : t.nav.unreadNotifications(count);
   return <span className="sr-only">{`, ${label}`}</span>;

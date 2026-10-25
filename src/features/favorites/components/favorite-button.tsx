@@ -6,6 +6,7 @@ import { useActionState, useOptimistic } from "react";
 import { signInHref } from "@/features/auth/links";
 import { cn } from "@/lib/utils";
 import { toggleFavoriteAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 type FavoriteButtonProps = {
   listingId: string;
@@ -25,12 +26,13 @@ export function FavoriteButton({
   variant = "icon",
   className,
 }: FavoriteButtonProps) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(toggleFavoriteAction, {
     favorited: initialFavorited,
   });
   // Affichage immédiat du nouvel état, confirmé (ou annulé) par la réponse du serveur.
   const [favorited, setOptimisticFavorited] = useOptimistic(state.favorited);
-  const label = favorited ? "Retirer des favoris" : "Ajouter aux favoris";
+  const label = favorited ? t.listing.favoriteRemove : t.listing.favoriteAdd;
   const iconClass = cn(
     "size-5 transition-colors",
     favorited && "fill-danger text-danger",
@@ -50,10 +52,10 @@ export function FavoriteButton({
       <Link
         href={signInHref(returnTo)}
         className={variant === "icon" ? iconButtonClass : fullButtonClass}
-        aria-label={variant === "icon" ? "Se connecter pour ajouter aux favoris" : undefined}
+        aria-label={variant === "icon" ? t.listing.signInToFavorite : undefined}
       >
         <Heart className="size-5" aria-hidden="true" />
-        {variant === "button" ? "Favori" : null}
+        {variant === "button" ? t.listing.favorite : null}
       </Link>
     );
   }
@@ -75,7 +77,7 @@ export function FavoriteButton({
         className={variant === "icon" ? iconButtonClass : fullButtonClass}
       >
         <Heart className={iconClass} aria-hidden="true" />
-        {variant === "button" ? (favorited ? "Dans vos favoris" : "Favori") : null}
+        {variant === "button" ? (favorited ? t.listing.inFavorites : t.listing.favorite) : null}
       </button>
       {state.message ? (
         <span className="sr-only" role="alert">

@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cn } from "@/lib/utils";
 import { toggleFollowAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 type FollowButtonProps = {
   profileId: string;
@@ -19,6 +20,7 @@ export function FollowButton({
   initialFollowing,
   className,
 }: FollowButtonProps) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(toggleFollowAction, {
     following: initialFollowing,
   });
@@ -33,7 +35,7 @@ export function FollowButton({
         aria-pressed={state.following}
       >
         {state.following ? <UserCheck aria-hidden="true" /> : <UserPlus aria-hidden="true" />}
-        {state.following ? "Abonné" : "Suivre"}
+        {state.following ? t.profileForms.following : t.profileForms.follow}
       </SubmitButton>
       {state.message ? (
         <p className="text-xs text-danger" role="alert">

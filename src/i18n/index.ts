@@ -1,17 +1,16 @@
-import { siteConfig } from "@/config/site";
-import { fr, type Dictionary } from "./dictionaries/fr";
+import { en } from "./dictionaries/en";
+import { type Dictionary, fr } from "./dictionaries/fr";
+import type { Locale } from "./config";
 
-export const locales = ["fr"] as const;
-export type Locale = (typeof locales)[number];
+export * from "./config";
 
-const dictionaries: Record<Locale, Dictionary> = { fr };
+const dictionaries: Record<Locale, Dictionary> = { fr, en };
 
 /**
- * Retourne le dictionnaire de la langue demandée. Pour ajouter l'anglais :
- * créer `dictionaries/en.ts` typé `Dictionary`, l'ajouter à `locales` et
- * à `dictionaries`, puis déterminer la langue (cookie ou préfixe d'URL).
+ * Dictionnaire partagé (serveur et navigateur) d'une langue. Côté serveur,
+ * utiliser `getT()` (`@/i18n/server`) ; côté client, `useT()` (`@/i18n/client`).
  */
-export function getDictionary(locale: Locale = siteConfig.defaultLocale): Dictionary {
+export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale];
 }
 

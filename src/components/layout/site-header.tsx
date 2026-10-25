@@ -8,7 +8,7 @@ import { isCurrentUserStaff } from "@/features/admin/queries";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { DesktopNav } from "./desktop-nav";
 import { HideOnScrollHeader } from "./hide-on-scroll-header";
@@ -47,7 +47,7 @@ function IconLink({
 }
 
 export async function SiteHeader() {
-  const t = getDictionary();
+  const t = await getT();
   const profile = await getCurrentProfile();
   // Lien « Administration » pour toute l'équipe (administrateurs et modérateurs).
   const isAdmin = profile ? await isCurrentUserStaff() : false;

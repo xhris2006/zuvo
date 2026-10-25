@@ -1,5 +1,6 @@
 import "server-only";
 import { isSuspensionActive } from "@/features/admin/suspension";
+import { defaultLocale, getDictionary } from "@/i18n";
 import type { TypedSupabaseClient } from "@/lib/supabase/server";
 import {
   describeNotification,
@@ -115,7 +116,7 @@ export async function dispatchPendingPush(
       const result = await sendPush(
         devices,
         {
-          ...describeNotification(subject),
+          ...describeNotification(subject, getDictionary(defaultLocale)),
           url: notificationHref(subject),
           tag: notification.conversation_id
             ? `conversation:${notification.conversation_id}`

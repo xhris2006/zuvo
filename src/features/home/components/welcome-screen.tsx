@@ -5,9 +5,14 @@ import type { CSSProperties, ReactNode } from "react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
+import {
+  defaultCategories,
+  getCategoryIcon,
+  localizedCategoryName,
+} from "@/features/categories/data";
+import { LanguageToggle } from "@/features/language/components/language-switch";
 import type { ListingCardData } from "@/features/listings/types";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { buildMosaicColumns, type MosaicTile } from "../mosaic";
 
@@ -21,21 +26,19 @@ const columnMotion = [
 /** Formes variées pour éviter un effet de grille trop régulier. */
 const tileShapes = ["aspect-[3/4]", "aspect-[4/5]", "aspect-square"] as const;
 
-function categoryName(slug: string) {
-  return defaultCategories.find((category) => category.slug === slug)?.name ?? slug;
-}
-
 function Tile({
   tile,
   shape,
   eager,
   icon: Icon,
+  label,
 }: {
   tile: MosaicTile;
   shape: string;
   eager: boolean;
-  /** Icône de la catégorie (vignettes sans photo). */
+  /** Icône et nom de la catégorie (vignettes sans photo). */
   icon?: LucideIcon;
+  label?: string;
 }) {
   if (tile.kind === "photo") {
     return (
@@ -59,7 +62,7 @@ function Tile({
       )}
     >
       {Icon ? <Icon className="size-7" strokeWidth={1.6} /> : null}
-      <span className="text-xs leading-tight font-semibold">{categoryName(tile.categorySlug)}</span>
+      <span className="text-xs leading-tight font-semibold">{label}</span>
     </div>
   );
 }
@@ -70,7 +73,7 @@ function Tile({
  * l'utilisateur réduit les animations), message et accès à l'inscription et
  * à la connexion. Les membres connectés arrivent directement sur l'accueil.
  */
-export function WelcomeScreen({
+export async function WelcomeScreen({
   listings,
   notice,
 }: {
@@ -78,14 +81,19 @@ export function WelcomeScreen({
   /** Message affiché au-dessus (ex. compte supprimé). */
   notice?: ReactNode;
 }) {
-  const t = getDictionary();
+  const t = await getT();
   const columns = buildMosaicColumns(listings, 3, 4);
+  const categoryLabel = (slug: string) => {
+    const category = defaultCategories.find((item) => item.slug === slug);
+    return category ? localizedCategoryName(t.categoryNames, category) : slug;
+  };
 
   return (
     <section
       aria-labelledby="welcome-title"
-      className="welcome-backdrop flex min-h-dvh flex-col overflow-hidden"
+      className="welcome-backdrop relative flex min-h-dvh flex-col overflow-hidden"
     >
+      <LanguageToggle className="absolute top-[max(1.25rem,env(safe-area-inset-top))] right-4 z-10 sm:right-6 lg:right-8" />
       <div className="container-page flex flex-1 flex-col gap-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-14 lg:py-10">
         <Logo className="self-center lg:hidden" />
         <div
@@ -116,6 +124,11 @@ export function WelcomeScreen({
                             icon={
                               tile.kind === "placeholder"
                                 ? getCategoryIcon(tile.categorySlug)
+                                : undefined
+                            }
+                            label={
+                              tile.kind === "placeholder"
+                                ? categoryLabel(tile.categorySlug)
                                 : undefined
                             }
                           />

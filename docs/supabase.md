@@ -94,7 +94,10 @@ Dans **Authentication** :
   et ne peut pas être consommé par un robot qui précharge les liens des e-mails.
   Avec les modèles par défaut de Supabase, la confirmation passe par
   `/auth/callback` et ne fonctionne que dans le navigateur où l'inscription a
-  été faite.
+  été faite. Ces modèles sont en français : Supabase n'envoie qu'une version
+  par modèle, quelle que soit la langue choisie dans l'application. Pour les
+  utilisateurs anglophones, vous pouvez ajouter une traduction anglaise sous le
+  texte français dans chaque modèle.
 - **URL Configuration → Redirect URLs** doit contenir les adresses
   `…/auth/callback` du site (couvertes par `https://votre-domaine/**`).
 

@@ -2,14 +2,14 @@
 
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 
 export const HIDDEN_ANNOUNCEMENT_COOKIE = "zuvo_hidden_announcement";
 
 /** Masque l'annonce en cours pour ce navigateur (30 jours). */
 export function DismissAnnouncement({ id }: { id: string }) {
   const router = useRouter();
-  const t = getDictionary();
+  const t = useT();
   return (
     <button
       type="button"

@@ -11,11 +11,12 @@ import { ProfileForm } from "@/features/profiles/components/profile-form";
 import { getOwnPrivateContact, getProfileById } from "@/features/profiles/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { getCities } from "@/features/locations/queries";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Modifier mon profil",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.profilePages.editTitle, robots: { index: false } };
+}
 
 export default async function EditProfilePage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
@@ -25,23 +26,22 @@ export default async function EditProfilePage() {
     getOwnPrivateContact(user.id),
   ]);
   if (!profile) redirect(routes.profile);
+  const t = await getT();
 
   return (
     <div className="container-page flex max-w-2xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader
-        title="Modifier mon profil"
+        title={t.profilePages.editTitle}
         actions={
           <Link href={routes.profile} className="text-sm font-semibold text-primary">
-            Retour au profil
+            {t.profilePages.backToProfile}
           </Link>
         }
       />
       <Card>
         <CardHeader>
-          <CardTitle>Profil public</CardTitle>
-          <CardDescription>
-            Ces informations sont visibles par tous les utilisateurs.
-          </CardDescription>
+          <CardTitle>{t.profilePages.publicCard}</CardTitle>
+          <CardDescription>{t.profilePages.publicCardDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <ProfileForm
@@ -53,7 +53,7 @@ export default async function EditProfilePage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Coordonnées privées</CardTitle>
+          <CardTitle>{t.profilePages.privateCard}</CardTitle>
         </CardHeader>
         <CardContent>
           <PrivateContactForm phone={privateContact?.phone ?? null} />

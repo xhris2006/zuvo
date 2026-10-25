@@ -10,8 +10,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Zuvo — règles du projet
 
-- Interface en français. Les textes d'interface vont dans `src/i18n/dictionaries/fr.ts`
-  (pas de chaînes en dur dans les composants réutilisables).
+- Interface bilingue, français par défaut et anglais (cookie `zuvo-locale`). Aucun texte
+  d'interface en dur : textes partagés (envoyés au navigateur) dans
+  `src/i18n/dictionaries/fr.ts` et `en.ts`, textes serveur uniquement (pages, actions,
+  administration) dans `src/i18n/dictionaries/server/fr.ts` et `en.ts` ; toujours les
+  deux langues (le type de `en` impose les mêmes clés). Lecture : `await getT()`
+  (`@/i18n/server`) côté serveur, `useT()` (`@/i18n/client`) côté client ; dates et
+  prix via `t.format`, messages Zod via `vm()` et `fieldErrorsFrom(error, t)`. Long
+  document (aide, pages juridiques) : `content.tsx` avec une version par langue.
 - Nom du produit, pays, devise : `src/config/site.ts`. Chemins : `src/config/routes.ts`
   (`typedRoutes` est activé, un lien invalide casse le typecheck).
 - Server Components par défaut ; `"use client"` uniquement pour l'interactivité.

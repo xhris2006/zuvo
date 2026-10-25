@@ -13,7 +13,7 @@ import { ListingViewToggle, parseListingView } from "@/features/listings/compone
 import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
 import { getFollowedFeed } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
 /**
  * Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage.
@@ -36,7 +36,7 @@ async function loadHomeListings(userId: string): Promise<{
 
 /** Accueil des membres connectés ; les visiteurs sont dirigés vers la page de bienvenue. */
 export default async function HomePage(props: PageProps<"/">) {
-  const t = getDictionary();
+  const t = await getT();
   const user = await getCurrentUser().catch(() => null);
   if (!user) redirect(routes.welcome);
   const view = parseListingView((await props.searchParams).vue);

@@ -21,19 +21,19 @@ import { getFavoriteIds, getListingDetail, getSimilarListings } from "@/features
 import { ContactSellerButton } from "@/features/messaging/components/contact-seller-button";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
 import { cityName } from "@/features/locations/queries";
+import { localizedCategoryName } from "@/features/categories/data";
 import { toSearchParams } from "@/features/search/schema";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { getSiteUrl } from "@/lib/env";
-import { formatPrice, formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(props: PageProps<"/annonces/[id]">): Promise<Metadata> {
   const { id } = await props.params;
-  const listing = await getListingDetail(id);
-  if (!listing) return { title: "Annonce introuvable", robots: { index: false } };
-  const price = listing.price === null ? "" : ` – ${formatPrice(listing.price)}`;
+  const [listing, t] = await Promise.all([getListingDetail(id), getT()]);
+  if (!listing) return { title: t.listingPage.notFound, robots: { index: false } };
+  const price = listing.price === null ? "" : ` – ${t.format.price(listing.price)}`;
   const description =
-    listing.description.slice(0, 160) || `${listing.title} à vendre sur ${siteConfig.name}.`;
+    listing.description.slice(0, 160) || t.listingPage.forSaleOn(listing.title, siteConfig.name);
   const image = listing.images[0]?.url;
   const indexable = ["active", "reserved", "sold"].includes(listing.status) && !listing.removed_at;
   return {
@@ -55,7 +55,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
   const listing = await getListingDetail(id);
   if (!listing) notFound();
 
-  const t = getDictionary();
+  const t = await getT();
   const viewer = await getCurrentUser();
   const isOwner = viewer?.id === listing.seller_id;
   const canContact =
@@ -72,24 +72,26 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
   // Mobile : barre d'action fixe (contact) à la place de la navigation.
   const hasActionBar = !isOwner && canContact;
   const details = [
-    listing.condition ? { label: "État", value: t.listing.conditions[listing.condition] } : null,
+    listing.condition
+      ? { label: t.listingPage.condition, value: t.listing.conditions[listing.condition] }
+      : null,
     listing.category
       ? {
-          label: "Catégorie",
+          label: t.listingPage.category,
           value: (
             <Link
               href={exploreHref(toSearchParams({ category: listing.category.slug }))}
               className="text-primary hover:underline"
             >
-              {listing.category.name}
+              {localizedCategoryName(t.categoryNames, listing.category)}
             </Link>
           ),
         }
       : null,
-    city ? { label: "Ville", value: city } : null,
+    city ? { label: t.listingPage.city, value: city } : null,
     {
-      label: listing.published_at ? "Publiée" : "Créée",
-      value: formatRelativeTime(listing.published_at ?? listing.created_at),
+      label: listing.published_at ? t.listingPage.published : t.listingPage.created,
+      value: t.format.relativeTime(listing.published_at ?? listing.created_at),
     },
   ].filter((detail) => detail !== null);
 
@@ -103,7 +105,9 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
         price={listing.price}
         status={listing.status}
         condition={listing.condition}
-        category={listing.category?.name}
+        category={
+          listing.category ? localizedCategoryName(t.categoryNames, listing.category) : undefined
+        }
       />
 
       <div className="container-page grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-x-10 lg:gap-y-10">
@@ -133,8 +137,8 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
 
         <div className="flex flex-col gap-5 lg:col-start-2 lg:row-start-1">
           {listing.removed_at ? (
-            <Alert variant="danger" title="Annonce retirée par la modération">
-              {listing.removed_reason ?? "Elle n'est plus visible par les autres utilisateurs."}
+            <Alert variant="danger" title={t.listingPage.removedTitle}>
+              {listing.removed_reason ?? t.listingPage.removedDefault}
               {isOwner ? (
                 <>
                   {" "}
@@ -142,16 +146,15 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
                     href={`${routes.support}?contester=${listing.id}` as Route}
                     className="font-semibold underline underline-offset-2"
                   >
-                    Contester ce retrait
+                    {t.listingPage.appeal}
                   </Link>
                 </>
               ) : null}
             </Alert>
           ) : null}
           {listing.status === "draft" ? (
-            <Alert variant="info" title="Brouillon">
-              Cette annonce n&apos;est visible que par vous tant qu&apos;elle n&apos;est pas
-              publiée.
+            <Alert variant="info" title={t.listingPage.draftTitle}>
+              {t.listingPage.draftBody}
             </Alert>
           ) : null}
 
@@ -173,13 +176,13 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
               {listing.title}
             </h1>
             <p className="text-[1.75rem] leading-none font-bold tracking-tight sm:text-3xl">
-              {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+              {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
             </p>
             <p className="text-sm text-muted-foreground">
               {city ? `${city} · ` : ""}
               {listing.published_at
-                ? `Publiée ${formatRelativeTime(listing.published_at)}`
-                : `Créée ${formatRelativeTime(listing.created_at)}`}
+                ? t.listingPage.publishedAgo(t.format.relativeTime(listing.published_at))
+                : t.listingPage.createdAgo(t.format.relativeTime(listing.created_at))}
             </p>
           </div>
 
@@ -246,7 +249,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
 
           <section aria-labelledby="details-title">
             <h2 id="details-title" className="sr-only">
-              Détails
+              {t.listingPage.details}
             </h2>
             <dl className="divide-y divide-border rounded-2xl border border-border bg-card px-4 text-sm">
               {details.map((detail) => (
@@ -261,10 +264,10 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
 
         <section aria-labelledby="description-title" className="lg:col-start-1 lg:row-start-2">
           <h2 id="description-title" className="mb-2 text-lg font-bold tracking-tight sm:text-xl">
-            Description
+            {t.listingPage.description}
           </h2>
           <p className="text-[0.95rem] leading-7 whitespace-pre-line text-foreground/90">
-            {listing.description || "Aucune description."}
+            {listing.description || t.listingPage.noDescription}
           </p>
         </section>
 
@@ -272,7 +275,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           {listing.seller ? (
             <section aria-labelledby="seller-title" className="hidden flex-col gap-2 md:flex">
               <h2 id="seller-title" className="text-lg font-bold tracking-tight sm:text-xl">
-                Vendeur
+                {t.listingPage.seller}
               </h2>
               <SellerCard seller={listing.seller} />
             </section>
@@ -281,10 +284,9 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           <div className="flex gap-3 rounded-2xl bg-accent p-4 text-sm text-accent-foreground">
             <ShieldCheck className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
             <p>
-              Rencontrez le vendeur dans un lieu public et ne payez jamais avant d&apos;avoir vu
-              l&apos;article.{" "}
+              {t.listingPage.safety}{" "}
               <Link href={routes.safety} className="font-semibold underline">
-                Nos conseils
+                {t.listingPage.safetyLink}
               </Link>
             </p>
           </div>
@@ -293,7 +295,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
 
       {similar.length > 0 ? (
         <section aria-labelledby="similar-title" className="container-page">
-          <SectionHeader id="similar-title" title="Annonces similaires" />
+          <SectionHeader id="similar-title" title={t.listingPage.similar} />
           <ListingResults listings={similar} layout="carousel" />
         </section>
       ) : null}

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { getDictionary } from "@/i18n";
+import { translateValidation } from "@/lib/forms/validation";
 import { listingFieldsSchema, listingImagesSchema, publicationErrors } from "./schemas";
+
+/** Message de validation traduit en français (les schémas produisent des codes). */
+const text = (message?: string) =>
+  message === undefined ? undefined : translateValidation(message, getDictionary("fr").validation);
 
 const base = {
   title: "  Robe en wax  ",
@@ -47,7 +53,7 @@ describe("listingFieldsSchema", () => {
     ["city", "Paris !", "Ville invalide."],
   ])("refuse %s = %j", (field, value, message) => {
     const result = listingFieldsSchema.safeParse({ ...base, [field]: value });
-    expect(result.error?.issues[0]?.message).toBe(message);
+    expect(text(result.error?.issues[0]?.message)).toBe(message);
   });
 
   it("n'exige rien de plus pour publier une annonce complète", () => {

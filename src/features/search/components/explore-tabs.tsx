@@ -2,7 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { exploreHref } from "@/config/routes";
 import type { ExploreTab } from "@/features/profiles/shop-search";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 /** Lien vers un onglet d'Explorer en conservant le terme recherché. */
@@ -21,8 +21,8 @@ type ExploreTabsProps = {
 };
 
 /** Onglets « Articles | Boutiques » de la page Explorer (liens, sans JavaScript). */
-export function ExploreTabs({ current, query, className }: ExploreTabsProps) {
-  const t = getDictionary();
+export async function ExploreTabs({ current, query, className }: ExploreTabsProps) {
+  const t = await getT();
   const tabs = [
     { tab: "articles", label: t.explore.tabArticles },
     { tab: "boutiques", label: t.explore.tabShops },

@@ -8,9 +8,11 @@ import { routes } from "@/config/routes";
 import { listUserFiles, removeUserFiles } from "@/features/account/storage-cleanup";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { vm } from "@/lib/forms/validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { adminErrorMessage, FORBIDDEN } from "./errors";
+import { getT } from "@/i18n/server";
+import { adminErrorMessage } from "./errors";
 import { isCurrentUserAdmin } from "./queries";
 import {
   type AnnouncementField,
@@ -50,26 +52,28 @@ const roleSchema = z.object({
 });
 
 export async function setRoleAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const t = await getT();
+  const tx = t.adminActions;
   const parsed = roleSchema.safeParse({
     userId: formText(formData, "userId"),
     role: formText(formData, "role"),
     granted: formText(formData, "granted"),
   });
-  if (!parsed.success) return { status: "error", message: "Requête invalide." };
+  if (!parsed.success) return { status: "error", message: tx.invalidRequest };
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
 
   const { error } = await context.supabase.rpc("admin_set_role", {
     p_user_id: parsed.data.userId,
     p_role: parsed.data.role,
     p_granted: parsed.data.granted,
   });
-  if (error) return { status: "error", message: adminErrorMessage(error) };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
   revalidatePath(routes.admin, "layout");
-  const label = parsed.data.role === "admin" ? "administrateur" : "modérateur";
+  const label = tx.roleNames[parsed.data.role];
   return {
     status: "success",
-    message: parsed.data.granted ? `Rôle ${label} attribué.` : `Rôle ${label} retiré.`,
+    message: parsed.data.granted ? tx.roleGranted(label) : tx.roleRevoked(label),
   };
 }
 
@@ -80,7 +84,7 @@ export type DeleteUserField = "reason" | "confirmation";
 
 const deleteUserSchema = z.object({
   userId: z.uuid(),
-  reason: z.string().trim().min(3, "Indiquez un motif d'au moins 3 caractères.").max(500),
+  reason: z.string().trim().min(3, vm("textMin", 3)).max(500),
   confirmation: z
     .string()
     .trim()
@@ -97,6 +101,8 @@ export async function deleteUserAction(
   _previous: FormState<DeleteUserField>,
   formData: FormData,
 ): Promise<FormState<DeleteUserField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const parsed = deleteUserSchema.safeParse({
     userId: formText(formData, "userId"),
     reason: formText(formData, "reason"),
@@ -104,22 +110,22 @@ export async function deleteUserAction(
   });
   const values = { reason: formText(formData, "reason") };
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
 
   const { data: username, error: checkError } = await context.supabase.rpc(
     "admin_check_user_deletion",
     { p_user_id: parsed.data.userId },
   );
   if (checkError || !username) {
-    return { status: "error", message: adminErrorMessage(checkError), values };
+    return { status: "error", message: adminErrorMessage(tx, checkError), values };
   }
   if (parsed.data.confirmation !== username) {
     return {
       status: "error",
-      fieldErrors: { confirmation: `Saisissez exactement « ${username} » pour confirmer.` },
+      fieldErrors: { confirmation: tx.confirmUsername(username) },
       values,
     };
   }
@@ -128,15 +134,14 @@ export async function deleteUserAction(
   if (!admin) {
     return {
       status: "error",
-      message:
-        "Suppression impossible : la clé serveur Supabase (SUPABASE_SERVICE_ROLE_KEY) n'est pas configurée.",
+      message: tx.serviceKeyMissing,
       values,
     };
   }
   const files = await listUserFiles(admin, parsed.data.userId);
   const { error: deleteError } = await admin.auth.admin.deleteUser(parsed.data.userId);
   if (deleteError) {
-    return { status: "error", message: "La suppression a échoué. Veuillez réessayer.", values };
+    return { status: "error", message: tx.deleteFailed, values };
   }
   if (!(await removeUserFiles(admin, files))) {
     // Aucun identifiant ni chemin dans les journaux.
@@ -173,26 +178,28 @@ export async function createCategoryAction(
   _previous: FormState<ReferenceField>,
   formData: FormData,
 ): Promise<FormState<ReferenceField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const values = { name: formText(formData, "name"), slug: formText(formData, "slug") };
   const parsed = categoryFormSchema.safeParse(values);
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   const { error } = await context.supabase.from("categories").insert({
     name: parsed.data.name,
     slug: parsed.data.slug,
     sort_order: await nextSortOrder(context.supabase, "categories"),
   });
-  if (error) return { status: "error", message: adminErrorMessage(error), values };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
   revalidateCatalog();
-  return { status: "success", message: `Catégorie « ${parsed.data.name} » ajoutée.` };
+  return { status: "success", message: tx.categoryAdded(parsed.data.name) };
 }
 
 const renameSchema = z.object({
   id: z.string().min(1).max(60),
-  name: z.string().trim().min(2, "Indiquez un nom d'au moins 2 caractères.").max(60),
+  name: z.string().trim().min(2, vm("nameMin", 2)).max(60, vm("maxChars", 60)),
   region: z.string().trim().max(60),
 });
 
@@ -200,6 +207,8 @@ export async function renameCategoryAction(
   _previous: FormState<ReferenceField>,
   formData: FormData,
 ): Promise<FormState<ReferenceField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const parsed = renameSchema.safeParse({
     id: formText(formData, "id"),
     name: formText(formData, "name"),
@@ -208,19 +217,19 @@ export async function renameCategoryAction(
   if (!parsed.success || !z.uuid().safeParse(parsed.data.id).success) {
     return {
       status: "error",
-      fieldErrors: parsed.success ? {} : fieldErrorsFrom(parsed.error),
-      message: parsed.success ? "Requête invalide." : undefined,
+      fieldErrors: parsed.success ? {} : fieldErrorsFrom(parsed.error, t),
+      message: parsed.success ? tx.invalidRequest : undefined,
     };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   const { error } = await context.supabase
     .from("categories")
     .update({ name: parsed.data.name })
     .eq("id", parsed.data.id);
-  if (error) return { status: "error", message: adminErrorMessage(error) };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
   revalidateCatalog();
-  return { status: "success", message: "Nom enregistré." };
+  return { status: "success", message: tx.nameSaved };
 }
 
 /** Active ou désactive une catégorie (formulaire sans JavaScript). */
@@ -305,6 +314,8 @@ export async function createCityAction(
   _previous: FormState<ReferenceField>,
   formData: FormData,
 ): Promise<FormState<ReferenceField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const values = {
     name: formText(formData, "name"),
     region: formText(formData, "region"),
@@ -312,19 +323,19 @@ export async function createCityAction(
   };
   const parsed = cityFormSchema.safeParse(values);
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   const { error } = await context.supabase.from("cities").insert({
     slug: parsed.data.slug,
     name: parsed.data.name,
     region: parsed.data.region,
     sort_order: await nextSortOrder(context.supabase, "cities"),
   });
-  if (error) return { status: "error", message: adminErrorMessage(error), values };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
   revalidateCatalog();
-  return { status: "success", message: `Ville « ${parsed.data.name} » ajoutée.` };
+  return { status: "success", message: tx.cityAdded(parsed.data.name) };
 }
 
 const citySlug = z.string().regex(/^[a-z0-9-]{1,60}$/);
@@ -333,6 +344,8 @@ export async function updateCityAction(
   _previous: FormState<ReferenceField>,
   formData: FormData,
 ): Promise<FormState<ReferenceField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const parsed = renameSchema.safeParse({
     id: formText(formData, "id"),
     name: formText(formData, "name"),
@@ -341,19 +354,19 @@ export async function updateCityAction(
   if (!parsed.success || !citySlug.safeParse(parsed.data.id).success) {
     return {
       status: "error",
-      fieldErrors: parsed.success ? {} : fieldErrorsFrom(parsed.error),
-      message: parsed.success ? "Requête invalide." : undefined,
+      fieldErrors: parsed.success ? {} : fieldErrorsFrom(parsed.error, t),
+      message: parsed.success ? tx.invalidRequest : undefined,
     };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   const { error } = await context.supabase
     .from("cities")
     .update({ name: parsed.data.name, region: parsed.data.region })
     .eq("slug", parsed.data.id);
-  if (error) return { status: "error", message: adminErrorMessage(error) };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
   revalidateCatalog();
-  return { status: "success", message: "Ville enregistrée." };
+  return { status: "success", message: tx.citySaved };
 }
 
 export async function toggleCityAction(formData: FormData): Promise<void> {
@@ -381,6 +394,8 @@ export async function saveAnnouncementAction(
   _previous: FormState<AnnouncementField>,
   formData: FormData,
 ): Promise<FormState<AnnouncementField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const values = {
     kind: formText(formData, "kind"),
     message: formText(formData, "message"),
@@ -394,13 +409,13 @@ export async function saveAnnouncementAction(
     isActive: formData.get("isActive") === "on",
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   if (id && !z.uuid().safeParse(id).success) {
-    return { status: "error", message: "Requête invalide." };
+    return { status: "error", message: tx.invalidRequest };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
 
   const row = {
     kind: parsed.data.kind,
@@ -413,9 +428,12 @@ export async function saveAnnouncementAction(
   const { error } = id
     ? await context.supabase.from("site_announcements").update(row).eq("id", id)
     : await context.supabase.from("site_announcements").insert(row);
-  if (error) return { status: "error", message: adminErrorMessage(error), values };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
   revalidatePath("/", "layout");
-  return { status: "success", message: id ? "Message mis à jour." : "Message publié." };
+  return {
+    status: "success",
+    message: id ? tx.announcementUpdated : tx.announcementPublished,
+  };
 }
 
 export async function toggleAnnouncementAction(formData: FormData): Promise<void> {
@@ -442,53 +460,56 @@ export async function saveAntiSpamSettingsAction(
   _previous: FormState<AntiSpamField>,
   formData: FormData,
 ): Promise<FormState<AntiSpamField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const values = {
     newAccountDays: formText(formData, "newAccountDays"),
     newAccountDailyListings: formText(formData, "newAccountDailyListings"),
   };
   const parsed = antiSpamSettingsSchema.safeParse(values);
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   for (const [key, value] of [
     ["new_account_days", parsed.data.newAccountDays],
     ["new_account_daily_listings", parsed.data.newAccountDailyListings],
   ] as const) {
     const { error } = await context.supabase.from("app_settings").update({ value }).eq("key", key);
-    if (error) return { status: "error", message: adminErrorMessage(error), values };
+    if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
   }
   revalidatePath(routes.adminAntiSpam);
-  return { status: "success", message: "Réglages enregistrés." };
+  return { status: "success", message: tx.settingsSaved };
 }
 
 export async function addBannedWordAction(
   _previous: FormState<AntiSpamField>,
   formData: FormData,
 ): Promise<FormState<AntiSpamField>> {
+  const t = await getT();
+  const tx = t.adminActions;
   const raw = formText(formData, "word");
   const word = normalizeBannedWord(raw);
   if (!word) {
     return {
       status: "error",
-      fieldErrors: { word: "De 2 à 40 lettres ou chiffres (espaces et tirets acceptés)." },
+      fieldErrors: { word: tx.bannedWordInvalid },
       values: { word: raw },
     };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   const { error } = await context.supabase.from("banned_words").insert({ word });
   if (error) {
     return {
       status: "error",
-      message:
-        error.code === "23505" ? `« ${word} » est déjà dans la liste.` : adminErrorMessage(error),
+      message: error.code === "23505" ? tx.bannedWordExists(word) : adminErrorMessage(tx, error),
       values: { word: raw },
     };
   }
   revalidatePath(routes.adminAntiSpam);
-  return { status: "success", message: `« ${word} » ajouté à la liste.` };
+  return { status: "success", message: tx.bannedWordAdded(word) };
 }
 
 export async function removeBannedWordAction(formData: FormData): Promise<void> {
@@ -505,32 +526,34 @@ export async function removeBannedWordAction(formData: FormData): Promise<void> 
 const verificationSchema = z.object({
   userId: z.uuid(),
   verified: z.enum(["true", "false"]).transform((value) => value === "true"),
-  note: z.string().trim().max(500, "500 caractères au maximum."),
+  note: z.string().trim().max(500, vm("maxChars", 500)),
 });
 
 export async function setSellerVerificationAction(
   _previous: FormState<"note">,
   formData: FormData,
 ): Promise<FormState<"note">> {
+  const t = await getT();
+  const tx = t.adminActions;
   const parsed = verificationSchema.safeParse({
     userId: formText(formData, "userId"),
     verified: formText(formData, "verified"),
     note: formText(formData, "note"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error) };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t) };
   }
   const context = await adminContext();
-  if (!context) return { status: "error", message: FORBIDDEN };
+  if (!context) return { status: "error", message: tx.forbidden };
   const { error } = await context.supabase.rpc("admin_set_seller_verification", {
     p_user_id: parsed.data.userId,
     p_verified: parsed.data.verified,
     p_note: parsed.data.note || undefined,
   });
-  if (error) return { status: "error", message: adminErrorMessage(error) };
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
   revalidatePath("/", "layout");
   return {
     status: "success",
-    message: parsed.data.verified ? "Badge « vendeur vérifié » attribué." : "Badge retiré.",
+    message: parsed.data.verified ? tx.badgeGranted : tx.badgeRevoked,
   };
 }

@@ -13,8 +13,10 @@ import { idleFormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { signUpAction } from "../actions";
 import { PASSWORD_MIN_LENGTH } from "../schemas";
+import { useT } from "@/i18n/client";
 
 export function SignUpForm() {
+  const t = useT();
   const [state, formAction, pending] = useActionState(signUpAction, idleFormState);
   const formRef = useRef<HTMLFormElement>(null);
   useFocusFirstError(formRef, state);
@@ -25,8 +27,8 @@ export function SignUpForm() {
       <FormMessage state={state} />
       <Field
         id="displayName"
-        label="Nom affiché"
-        hint="Visible sur votre profil, par exemple votre prénom."
+        label={t.authForms.displayName}
+        hint={t.authForms.displayNameHint}
         error={errors.displayName}
       >
         {(control) => (
@@ -42,8 +44,8 @@ export function SignUpForm() {
       </Field>
       <Field
         id="username"
-        label="Nom d'utilisateur"
-        hint="3 à 30 caractères : lettres minuscules, chiffres et _."
+        label={t.authForms.username}
+        hint={t.authForms.usernameHint}
         error={errors.username}
       >
         {(control) => (
@@ -59,7 +61,7 @@ export function SignUpForm() {
           />
         )}
       </Field>
-      <Field id="email" label="Adresse e-mail" error={errors.email}>
+      <Field id="email" label={t.authForms.email} error={errors.email}>
         {(control) => (
           <Input
             {...control}
@@ -74,8 +76,8 @@ export function SignUpForm() {
       </Field>
       <Field
         id="password"
-        label="Mot de passe"
-        hint={`Au moins ${PASSWORD_MIN_LENGTH} caractères, avec des lettres et des chiffres.`}
+        label={t.authForms.password}
+        hint={t.authForms.passwordHint(PASSWORD_MIN_LENGTH)}
         error={errors.password}
       >
         {(control) => (
@@ -99,21 +101,21 @@ export function SignUpForm() {
             required
           />
           <label htmlFor="acceptTerms" className="text-sm text-muted-foreground">
-            J&apos;accepte les{" "}
+            {t.authForms.acceptPrefix}{" "}
             <Link
               href={routes.terms}
               className="font-medium text-primary underline"
               target="_blank"
             >
-              conditions d&apos;utilisation
+              {t.authForms.acceptTerms}
             </Link>{" "}
-            et la{" "}
+            {t.authForms.acceptAnd}{" "}
             <Link
               href={routes.privacy}
               className="font-medium text-primary underline"
               target="_blank"
             >
-              politique de confidentialité
+              {t.authForms.acceptPrivacy}
             </Link>
             .
           </label>
@@ -125,7 +127,7 @@ export function SignUpForm() {
         ) : null}
       </div>
       <SubmitButton pending={pending} className="w-full">
-        Créer mon compte
+        {t.authForms.createAccount}
       </SubmitButton>
     </form>
   );

@@ -1,7 +1,9 @@
+"use client";
+
 import { Search } from "lucide-react";
 import Form from "next/form";
 import { routes } from "@/config/routes";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 type SearchFormProps = {
@@ -11,7 +13,7 @@ type SearchFormProps = {
 };
 
 export function SearchForm({ id, defaultValue, className }: SearchFormProps) {
-  const t = getDictionary();
+  const t = useT();
   return (
     <Form action={routes.explore} role="search" className={cn("relative w-full", className)}>
       <label htmlFor={id} className="sr-only">

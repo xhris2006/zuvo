@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vm } from "@/lib/forms/validation";
 
 export const MESSAGE_MAX_LENGTH = 2000;
 
@@ -8,14 +9,14 @@ export const MESSAGES_PAGE_SIZE = 50;
 export const messageBodySchema = z
   .string()
   .trim()
-  .min(1, "Écrivez un message.")
-  .max(MESSAGE_MAX_LENGTH, `${MESSAGE_MAX_LENGTH} caractères au maximum.`);
+  .min(1, vm("messageRequired"))
+  .max(MESSAGE_MAX_LENGTH, vm("maxChars", MESSAGE_MAX_LENGTH));
 
 /** Texte facultatif accompagnant une photo. */
 export const photoCaptionSchema = z
   .string()
   .trim()
-  .max(MESSAGE_MAX_LENGTH, `${MESSAGE_MAX_LENGTH} caractères au maximum.`)
+  .max(MESSAGE_MAX_LENGTH, vm("maxChars", MESSAGE_MAX_LENGTH))
   .transform((value) => value || null);
 
 /** Bucket privé des photos de conversation. */

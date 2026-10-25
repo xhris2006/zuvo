@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import type { ReferenceField } from "../schemas";
 
@@ -27,6 +28,7 @@ export function ReferenceCreateForm({
   submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(action, idle);
+  const t = useT();
   const formRef = useRef<HTMLFormElement>(null);
   const id = useId();
   useEffect(() => {
@@ -42,7 +44,7 @@ export function ReferenceCreateForm({
     >
       <FormMessage state={state} />
       <div className={withRegion ? "grid gap-4 sm:grid-cols-3" : "grid gap-4 sm:grid-cols-2"}>
-        <Field id={`${id}-name`} label="Nom" error={state.fieldErrors?.name} required>
+        <Field id={`${id}-name`} label={t.adminUi.name} error={state.fieldErrors?.name} required>
           {(control) => (
             <Input
               {...control}
@@ -53,7 +55,7 @@ export function ReferenceCreateForm({
           )}
         </Field>
         {withRegion ? (
-          <Field id={`${id}-region`} label="Région" error={state.fieldErrors?.region}>
+          <Field id={`${id}-region`} label={t.adminUi.region} error={state.fieldErrors?.region}>
             {(control) => (
               <Input
                 {...control}
@@ -66,8 +68,8 @@ export function ReferenceCreateForm({
         ) : null}
         <Field
           id={`${id}-slug`}
-          label="Identifiant (facultatif)"
-          hint="Utilisé dans les adresses ; déduit du nom s'il est vide. Non modifiable ensuite."
+          label={t.adminUi.referenceForms.slug}
+          hint={t.adminUi.referenceForms.slugHint}
           error={state.fieldErrors?.slug}
         >
           {(control) => (
@@ -104,13 +106,14 @@ export function ReferenceEditForm({
   region?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, idle);
+  const t = useT();
   const fieldId = useId();
   return (
     <form action={formAction} className="flex min-w-0 flex-1 flex-col gap-1.5">
       <input type="hidden" name="id" value={id} />
       <div className="flex flex-wrap items-center gap-2">
         <label htmlFor={`${fieldId}-name`} className="sr-only">
-          Nom
+          {t.adminUi.name}
         </label>
         <Input
           id={`${fieldId}-name`}
@@ -124,14 +127,14 @@ export function ReferenceEditForm({
         {region !== undefined ? (
           <>
             <label htmlFor={`${fieldId}-region`} className="sr-only">
-              Région
+              {t.adminUi.region}
             </label>
             <Input
               id={`${fieldId}-region`}
               name="region"
               defaultValue={region}
               maxLength={60}
-              placeholder="Région"
+              placeholder={t.adminUi.region}
               className="h-9 min-w-0 flex-1 basis-32"
             />
           </>
@@ -140,10 +143,10 @@ export function ReferenceEditForm({
           pending={pending}
           variant="outline"
           size="sm"
-          aria-label={`Enregistrer ${name}`}
+          aria-label={t.adminUi.referenceForms.saveItem(name)}
         >
           <Check aria-hidden="true" />
-          <span className="sr-only sm:not-sr-only">Enregistrer</span>
+          <span className="sr-only sm:not-sr-only">{t.adminUi.save}</span>
         </SubmitButton>
       </div>
       {state.status === "error" ? (

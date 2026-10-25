@@ -20,10 +20,12 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import type { FormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { type DeleteAccountField, deleteAccountAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 const idle: FormState<DeleteAccountField> = { status: "idle" };
 
 export function DeleteAccountDialog({ username }: { username: string }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(deleteAccountAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const id = useId();
@@ -34,17 +36,13 @@ export function DeleteAccountDialog({ username }: { username: string }) {
       <DialogTrigger asChild>
         <Button variant="outline" className="self-start border-danger/40 text-danger">
           <Trash2 aria-hidden="true" />
-          Supprimer mon compte
+          {t.account.delete}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Supprimer définitivement votre compte ?</DialogTitle>
-          <DialogDescription>
-            Votre profil, vos annonces et leurs photos, vos favoris, abonnements et notifications
-            seront supprimés. Vos messages restent visibles par vos interlocuteurs, sous le nom «
-            Utilisateur supprimé ». Cette action est irréversible.
-          </DialogDescription>
+          <DialogTitle>{t.account.deleteTitle}</DialogTitle>
+          <DialogDescription>{t.account.deleteBody}</DialogDescription>
         </DialogHeader>
         <form ref={formRef} action={formAction} className="flex flex-col gap-4" noValidate>
           <FormMessage state={state} />
@@ -52,7 +50,7 @@ export function DeleteAccountDialog({ username }: { username: string }) {
             id={`${id}-confirmation`}
             label={
               <>
-                Pour confirmer, saisissez votre nom d&apos;utilisateur : <strong>{username}</strong>
+                {t.account.confirmLabel} <strong>{username}</strong>
               </>
             }
             error={state.fieldErrors?.confirmation}
@@ -71,11 +69,11 @@ export function DeleteAccountDialog({ username }: { username: string }) {
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                Annuler
+                {t.account.cancel}
               </Button>
             </DialogClose>
             <SubmitButton pending={pending} variant="destructive">
-              Supprimer définitivement
+              {t.account.confirm}
             </SubmitButton>
           </DialogFooter>
         </form>

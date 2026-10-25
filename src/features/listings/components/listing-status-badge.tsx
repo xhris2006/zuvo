@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import type { ListingStatus } from "../constants";
 
 const variants = {
@@ -10,14 +10,14 @@ const variants = {
   withdrawn: "neutral",
 } as const satisfies Record<ListingStatus, string>;
 
-export function ListingStatusBadge({
+export async function ListingStatusBadge({
   status,
   className,
 }: {
   status: ListingStatus;
   className?: string;
 }) {
-  const t = getDictionary();
+  const t = await getT();
   return (
     <Badge variant={variants[status]} className={className}>
       {t.listing.statuses[status]}

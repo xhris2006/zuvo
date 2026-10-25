@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import { saveAnnouncementAction } from "../management-actions";
 import type { AnnouncementField } from "../schemas";
@@ -27,6 +28,7 @@ export type AnnouncementDefaults = {
 
 /** Publication ou modification du message global (dates à l'heure du Cameroun). */
 export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(saveAnnouncementAction, idle);
   const id = useId();
   const value = (field: AnnouncementField) =>
@@ -40,15 +42,24 @@ export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults 
     >
       {defaults.id ? <input type="hidden" name="id" value={defaults.id} /> : null}
       <FormMessage state={state} />
-      <Field id={`${id}-kind`} label="Type" error={state.fieldErrors?.kind}>
+      <Field
+        id={`${id}-kind`}
+        label={t.adminUi.announcementForm.kind}
+        error={state.fieldErrors?.kind}
+      >
         {(control) => (
           <Select {...control} name="kind" defaultValue={value("kind")}>
-            <option value="info">Information (le visiteur peut la masquer)</option>
-            <option value="maintenance">Maintenance (toujours affichée)</option>
+            <option value="info">{t.adminUi.announcementForm.info}</option>
+            <option value="maintenance">{t.adminUi.announcementForm.maintenance}</option>
           </Select>
         )}
       </Field>
-      <Field id={`${id}-message`} label="Message" error={state.fieldErrors?.message} required>
+      <Field
+        id={`${id}-message`}
+        label={t.adminUi.announcementForm.message}
+        error={state.fieldErrors?.message}
+        required
+      >
         {(control) => (
           <Textarea
             {...control}
@@ -61,8 +72,8 @@ export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults 
       </Field>
       <Field
         id={`${id}-link`}
-        label="Lien (facultatif)"
-        hint="Une page du site (ex. /aide) ou une adresse commençant par https://."
+        label={t.adminUi.announcementForm.link}
+        hint={t.adminUi.announcementForm.linkHint}
         error={state.fieldErrors?.linkUrl}
       >
         {(control) => (
@@ -72,8 +83,8 @@ export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           id={`${id}-starts`}
-          label="Début (facultatif)"
-          hint="Heure du Cameroun. Vide : immédiatement."
+          label={t.adminUi.announcementForm.starts}
+          hint={t.adminUi.announcementForm.startsHint}
           error={state.fieldErrors?.startsAt}
         >
           {(control) => (
@@ -87,8 +98,8 @@ export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults 
         </Field>
         <Field
           id={`${id}-ends`}
-          label="Fin (facultatif)"
-          hint="Vide : jusqu'à désactivation."
+          label={t.adminUi.announcementForm.ends}
+          hint={t.adminUi.announcementForm.endsHint}
           error={state.fieldErrors?.endsAt}
         >
           {(control) => (
@@ -103,11 +114,11 @@ export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults 
       </div>
       <label className="flex items-center gap-3 text-sm font-medium">
         <Checkbox name="isActive" defaultChecked={defaults.isActive} />
-        Activé
+        {t.adminUi.announcementForm.active}
       </label>
       <SubmitButton pending={pending} className="self-start">
         <Megaphone aria-hidden="true" />
-        {defaults.id ? "Enregistrer les modifications" : "Publier le message"}
+        {defaults.id ? t.adminUi.announcementForm.saveChanges : t.adminUi.announcementForm.publish}
       </SubmitButton>
     </form>
   );

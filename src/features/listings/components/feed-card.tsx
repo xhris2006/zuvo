@@ -7,8 +7,7 @@ import { publicProfileHref } from "@/config/routes";
 import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { VerifiedBadge } from "@/features/profiles/components/verified-badge";
-import { getDictionary } from "@/i18n";
-import { formatPrice, formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import type { FeedListingData } from "../feed";
 import { listingHref } from "../links";
 import { FeedCardPhotos } from "./feed-card-photos";
@@ -24,7 +23,7 @@ type FeedCardProps = {
 
 /** Carte du fil : photos à faire défiler, vendeur à cheval sur la photo, prix et détails. */
 export async function FeedCard({ listing, action, priority = false }: FeedCardProps) {
-  const t = getDictionary();
+  const t = await getT();
   const city = await cityName(listing.citySlug);
   const details = [city, listing.condition ? t.listing.conditions[listing.condition] : null]
     .filter(Boolean)
@@ -92,7 +91,7 @@ export async function FeedCard({ listing, action, priority = false }: FeedCardPr
         ) : null}
         {listing.publishedAt ? (
           <time dateTime={listing.publishedAt} className="shrink-0">
-            {formatRelativeTime(listing.publishedAt)}
+            {t.format.relativeTime(listing.publishedAt)}
           </time>
         ) : null}
       </p>
@@ -100,7 +99,7 @@ export async function FeedCard({ listing, action, priority = false }: FeedCardPr
       <div className="flex items-start gap-2 px-1 pt-2">
         <div className="flex min-w-0 flex-1 flex-col">
           <p className="text-base font-bold tracking-tight">
-            {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+            {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
           </p>
           <h3 className="line-clamp-1 text-sm text-foreground">
             <Link

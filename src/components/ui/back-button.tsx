@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 type BackButtonProps = {
@@ -16,7 +16,7 @@ type BackButtonProps = {
 /** Pastille ronde « Retour » : page précédente, sinon page de repli. */
 export function BackButton({ fallbackHref, label, className }: BackButtonProps) {
   const router = useRouter();
-  const t = getDictionary();
+  const t = useT();
   return (
     <button
       type="button"

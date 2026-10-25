@@ -16,6 +16,7 @@ import { Field } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import type { ModerationField } from "../actions";
 
@@ -47,10 +48,11 @@ export function ModerationDialog({
   confirmLabel,
   action,
   fields,
-  reasonLabel = "Motif (communiqué à l'utilisateur concerné)",
+  reasonLabel,
   children,
   confirmVariant = "destructive",
 }: ModerationDialogProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, idle);
   const id = useId();
@@ -68,7 +70,7 @@ export function ModerationDialog({
             <FormMessage state={state} />
             <DialogFooter>
               <DialogClose asChild>
-                <Button>Fermer</Button>
+                <Button>{t.adminUi.close}</Button>
               </DialogClose>
             </DialogFooter>
           </div>
@@ -81,7 +83,7 @@ export function ModerationDialog({
             {children}
             <Field
               id={`${id}-reason`}
-              label={reasonLabel}
+              label={reasonLabel ?? t.adminUi.reasonForUser}
               error={state.fieldErrors?.reason}
               required
             >
@@ -98,7 +100,7 @@ export function ModerationDialog({
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="ghost">
-                  Annuler
+                  {t.adminUi.cancel}
                 </Button>
               </DialogClose>
               <SubmitButton pending={pending} variant={confirmVariant}>

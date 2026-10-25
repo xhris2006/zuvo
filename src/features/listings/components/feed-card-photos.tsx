@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { type ReactNode, useRef, useState } from "react";
 import { LinkPending } from "@/components/ui/link-pending";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 type FeedCardPhotosProps = {
@@ -38,7 +38,7 @@ export function FeedCardPhotos({
   children,
   className,
 }: FeedCardPhotosProps) {
-  const t = getDictionary();
+  const t = useT();
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const count = urls.length;
@@ -53,7 +53,7 @@ export function FeedCardPhotos({
     <div
       className={cn("group/photos relative overflow-hidden bg-muted", className)}
       role={count > 1 ? "group" : undefined}
-      aria-roledescription={count > 1 ? "carrousel" : undefined}
+      aria-roledescription={count > 1 ? t.listing.carousel : undefined}
       aria-label={count > 1 ? t.listing.photosLabel(title) : undefined}
     >
       <div

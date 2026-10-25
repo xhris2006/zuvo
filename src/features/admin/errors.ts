@@ -1,33 +1,24 @@
-export const FORBIDDEN = "Action réservée à l'administration.";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
 
 type RpcError = { code?: string; message?: string } | null;
-
-/** Messages des erreurs métier renvoyées par les fonctions SQL d'administration. */
-const knownErrors: Record<string, string> = {
-  invalid_suspension_end: "La date de fin de suspension est invalide.",
-  cannot_moderate_self: "Cette action n'est pas possible sur votre propre compte.",
-  cannot_moderate_staff: "Cette action n'est pas possible sur un membre de l'équipe.",
-  cannot_change_own_role: "Vous ne pouvez pas modifier votre propre rôle.",
-  user_suspended: "Ce compte est suspendu : réactivez-le avant de lui attribuer un rôle.",
-  role_unchanged: "Ce rôle est déjà dans cet état.",
-};
+type AdminActionTexts = ServerDictionary["adminActions"];
 
 /** Message lisible pour une erreur d'une fonction ou d'une table d'administration. */
-export function adminErrorMessage(error: RpcError): string {
-  const known = error?.message ? knownErrors[error.message] : undefined;
+export function adminErrorMessage(texts: AdminActionTexts, error: RpcError): string {
+  const known = error?.message ? texts.errors[error.message] : undefined;
   if (known) return known;
   switch (error?.code) {
     case "42501":
-      return FORBIDDEN;
+      return texts.forbidden;
     case "P0002":
-      return "Élément introuvable ou déjà traité.";
+      return texts.notFound;
     case "22023":
-      return "Indiquez un motif d'au moins 3 caractères.";
+      return texts.reasonMin;
     case "23505":
-      return "Cet élément existe déjà.";
+      return texts.duplicate;
     case "23514":
-      return "Valeur refusée : vérifiez le format des champs.";
+      return texts.checkFormat;
     default:
-      return "L'action a échoué. Veuillez réessayer.";
+      return texts.failed;
   }
 }

@@ -8,6 +8,7 @@ import { signInHref } from "@/features/auth/links";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { startConversationAction } from "../actions";
+import { useT } from "@/i18n/client";
 
 type ContactSellerButtonProps = {
   listingId: string;
@@ -16,13 +17,14 @@ type ContactSellerButtonProps = {
 };
 
 export function ContactSellerButton({ listingId, signedIn, returnTo }: ContactSellerButtonProps) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(startConversationAction, {});
 
   if (!signedIn) {
     return (
       <Link href={signInHref(returnTo)} className={cn(buttonVariants({ size: "lg" }), "w-full")}>
         <MessageCircle aria-hidden="true" />
-        Contacter le vendeur
+        {t.messaging.contactSeller}
       </Link>
     );
   }
@@ -32,7 +34,7 @@ export function ContactSellerButton({ listingId, signedIn, returnTo }: ContactSe
       <input type="hidden" name="listingId" value={listingId} />
       <SubmitButton pending={pending} size="lg" className="w-full">
         <MessageCircle aria-hidden="true" />
-        Contacter le vendeur
+        {t.messaging.contactSeller}
       </SubmitButton>
       {state.message ? (
         <p className="text-sm text-danger" role="alert">

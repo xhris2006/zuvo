@@ -12,7 +12,7 @@ import {
 import { publicProfileHref, routes } from "@/config/routes";
 import { signOutAction } from "@/features/auth/actions";
 import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 
 type OwnProfileMenuProps = {
   username: string;
@@ -20,7 +20,7 @@ type OwnProfileMenuProps = {
 
 /** Menu « trois points » de « Mon profil » : paramètres, raccourcis du compte et déconnexion. */
 export function OwnProfileMenu({ username }: OwnProfileMenuProps) {
-  const t = getDictionary();
+  const t = useT();
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger

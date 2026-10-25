@@ -2,7 +2,7 @@
 
 import { Moon } from "lucide-react";
 import { useId, useState } from "react";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { THEME_COOKIE, THEME_COOKIE_MAX_AGE, type Theme, themeColors } from "../theme";
 
@@ -11,7 +11,7 @@ import { THEME_COOKIE, THEME_COOKIE_MAX_AGE, type Theme, themeColors } from "../
  * mémorise sur cet appareil (cookie lu par le serveur au prochain affichage).
  */
 export function ThemeSwitch({ initial }: { initial: Theme }) {
-  const t = getDictionary();
+  const t = useT();
   const id = useId();
   const [theme, setTheme] = useState<Theme>(initial);
   const dark = theme === "dark";

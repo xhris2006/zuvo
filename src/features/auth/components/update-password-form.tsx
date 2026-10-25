@@ -12,8 +12,10 @@ import { idleFormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { updatePasswordAction } from "../actions";
 import { PASSWORD_MIN_LENGTH } from "../schemas";
+import { useT } from "@/i18n/client";
 
 export function UpdatePasswordForm() {
+  const t = useT();
   const [state, formAction, pending] = useActionState(updatePasswordAction, idleFormState);
   const formRef = useRef<HTMLFormElement>(null);
   useFocusFirstError(formRef, state);
@@ -22,7 +24,7 @@ export function UpdatePasswordForm() {
       <div className="flex flex-col gap-4">
         <FormMessage state={state} />
         <Button asChild>
-          <Link href={routes.profile}>Aller à mon profil</Link>
+          <Link href={routes.profile}>{t.authForms.goToProfile}</Link>
         </Button>
       </div>
     );
@@ -32,8 +34,8 @@ export function UpdatePasswordForm() {
       <FormMessage state={state} />
       <Field
         id="password"
-        label="Nouveau mot de passe"
-        hint={`Au moins ${PASSWORD_MIN_LENGTH} caractères, avec des lettres et des chiffres.`}
+        label={t.authForms.newPassword}
+        hint={t.authForms.passwordHint(PASSWORD_MIN_LENGTH)}
         error={state.fieldErrors?.password}
       >
         {(control) => (
@@ -42,7 +44,7 @@ export function UpdatePasswordForm() {
       </Field>
       <Field
         id="confirmPassword"
-        label="Confirmer le mot de passe"
+        label={t.authForms.confirmPassword}
         error={state.fieldErrors?.confirmPassword}
       >
         {(control) => (
@@ -50,7 +52,7 @@ export function UpdatePasswordForm() {
         )}
       </Field>
       <SubmitButton pending={pending} className="w-full">
-        Enregistrer le mot de passe
+        {t.authForms.savePassword}
       </SubmitButton>
     </form>
   );

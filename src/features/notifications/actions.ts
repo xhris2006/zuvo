@@ -13,10 +13,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notificationHref } from "./content";
 import { getPushConfig, sendPush } from "./push/send";
 import { isAllowedPushEndpoint } from "./push-endpoint";
+import { getT } from "@/i18n/server";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const SESSION_EXPIRED = "Votre session a expiré. Reconnectez-vous.";
-const GENERIC_ERROR = "L'enregistrement a échoué. Veuillez réessayer.";
 
 export async function markAllNotificationsReadAction(): Promise<void> {
   const supabase = await createSupabaseServerClient();
@@ -74,9 +73,10 @@ export async function updateNotificationPreferencesAction(
   _previous: FormState<PreferenceField>,
   formData: FormData,
 ): Promise<FormState<PreferenceField>> {
+  const texts = (await getT()).notificationActions;
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
 
   const update = Object.fromEntries(
     preferenceFields.map((field) => [field, formData.get(field) === "on"]),
@@ -86,9 +86,9 @@ export async function updateNotificationPreferencesAction(
     .from("notification_preferences")
     .update(update)
     .eq("user_id", user.id);
-  if (error) return { status: "error", message: GENERIC_ERROR };
+  if (error) return { status: "error", message: texts.generic };
   revalidatePath(routes.settings);
-  return { status: "success", message: "Préférences enregistrées." };
+  return { status: "success", message: texts.preferencesSaved };
 }
 
 // -----------------------------------------------------------------------------
@@ -110,13 +110,12 @@ export type PushResult = { status: "ok" } | { status: "error"; message: string }
 
 /** Enregistre l'abonnement push du navigateur pour l'utilisateur connecté. */
 export async function savePushSubscriptionAction(input: unknown): Promise<PushResult> {
+  const texts = (await getT()).notificationActions;
   const parsed = pushSubscriptionSchema.safeParse(input);
-  if (!parsed.success) {
-    return { status: "error", message: "Abonnement aux notifications invalide." };
-  }
+  if (!parsed.success) return { status: "error", message: texts.invalidSubscription };
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
 
   const userAgent = (await headers()).get("user-agent")?.slice(0, 300) ?? undefined;
   const { error } = await supabase.rpc("register_push_subscription", {
@@ -126,10 +125,7 @@ export async function savePushSubscriptionAction(input: unknown): Promise<PushRe
     p_user_agent: userAgent,
   });
   if (error) {
-    return {
-      status: "error",
-      message: "Impossible d'activer les notifications sur cet appareil.",
-    };
+    return { status: "error", message: texts.enableFailed };
   }
   revalidatePath(routes.settings);
   return { status: "ok" };
@@ -140,11 +136,12 @@ export async function savePushSubscriptionAction(input: unknown): Promise<PushRe
  * push est désactivé pour le compte.
  */
 export async function removePushSubscriptionAction(endpoint: string): Promise<PushResult> {
+  const texts = (await getT()).notificationActions;
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
   if (typeof endpoint !== "string" || endpoint.length > 1000) {
-    return { status: "error", message: GENERIC_ERROR };
+    return { status: "error", message: texts.generic };
   }
 
   await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
@@ -167,23 +164,20 @@ const TEST_INTERVAL_MS = 30_000;
 
 /** Envoie une notification de test à tous les appareils de l'utilisateur. */
 export async function sendTestPushAction(): Promise<PushResult & { sent?: number }> {
+  const texts = (await getT()).notificationActions;
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
 
   // Même chemin que les vraies notifications : clés VAPID et clé service_role.
   const config = getPushConfig();
   if (!config || !createSupabaseAdminClient()) {
-    return {
-      status: "error",
-      message:
-        "Le serveur n'est pas encore configuré pour envoyer des notifications push. L'administrateur peut vérifier la configuration dans Administration → Configuration.",
-    };
+    return { status: "error", message: texts.serverNotConfigured };
   }
 
   const now = Date.now();
   if (now - (lastTestByUser.get(user.id) ?? 0) < TEST_INTERVAL_MS) {
-    return { status: "error", message: "Patientez quelques secondes avant un nouvel essai." };
+    return { status: "error", message: texts.waitBeforeRetry };
   }
   lastTestByUser.set(user.id, now);
 
@@ -192,14 +186,14 @@ export async function sendTestPushAction(): Promise<PushResult & { sent?: number
     .select("id, endpoint, p256dh, auth")
     .eq("user_id", user.id);
   if (!subscriptions?.length) {
-    return { status: "error", message: "Aucun appareil n'est abonné aux notifications." };
+    return { status: "error", message: texts.noDevice };
   }
 
   const result = await sendPush(
     subscriptions,
     {
-      title: "Notifications activées",
-      body: "Vous recevrez ici les nouveaux messages et l'activité de vos annonces.",
+      title: texts.testTitle,
+      body: texts.testBody,
       url: routes.notifications,
       tag: "test",
     },
@@ -211,10 +205,7 @@ export async function sendTestPushAction(): Promise<PushResult & { sent?: number
   if (result.sent.length === 0) {
     return {
       status: "error",
-      message:
-        result.expired.length > 0
-          ? "Cet appareil n'est plus abonné. Désactivez puis réactivez les notifications."
-          : "Le service de notifications a refusé l'envoi. L'administrateur doit vérifier les clés VAPID (Administration → Configuration).",
+      message: result.expired.length > 0 ? texts.deviceExpired : texts.serviceRefused,
     };
   }
   return { status: "ok", sent: result.sent.length };

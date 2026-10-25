@@ -76,6 +76,34 @@ test("le thème sombre mémorisé s'applique dès le rendu serveur", async ({
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
 
+test("la langue anglaise mémorisée s'applique dès le rendu serveur", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  await context.addCookies([{ name: "zuvo-locale", value: "en", url: baseURL }]);
+  await page.goto("/aide");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("heading", { level: 1, name: "Help and contact" })).toBeVisible();
+});
+
+test("la bascule FR / EN de la page de bienvenue change la langue", async ({ page }) => {
+  await page.goto("/bienvenue");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await page.getByRole("button", { name: "English" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Give your things a second life" }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByRole("button", { name: "English" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  // Le choix est mémorisé : il s'applique aux pages suivantes.
+  await page.goto("/connexion");
+  await expect(page.getByRole("heading", { level: 1, name: "Sign in" })).toBeVisible();
+});
+
 test("la navigation mobile n'apparaît que sur petit écran", async ({ page, isMobile }) => {
   await page.goto("/aide");
   const bottomNav = page.locator("nav.fixed");

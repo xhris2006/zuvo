@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { LinkPending } from "@/components/ui/link-pending";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { getPrimaryNavItems, isNavItemActive } from "./nav-items";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const t = getDictionary();
+  const t = useT();
   const items = getPrimaryNavItems(t);
 
   return (

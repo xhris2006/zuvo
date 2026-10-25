@@ -9,6 +9,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { updateAvatarAction } from "../actions";
 import { AVATAR_BUCKET } from "../avatar-url";
+import { useT } from "@/i18n/client";
 
 const MAX_INPUT_BYTES = 15 * 1024 * 1024;
 
@@ -35,6 +36,7 @@ export function AvatarQuickEdit({
   avatarClassName,
   messageClassName,
 }: AvatarQuickEditProps) {
+  const t = useT();
   const router = useRouter();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,7 +47,7 @@ export function AvatarQuickEdit({
   async function handleFile(file: File) {
     setMessage(null);
     if (!file.type.startsWith("image/") || file.size > MAX_INPUT_BYTES) {
-      setMessage("Choisissez une image de moins de 15 Mo.");
+      setMessage(t.profileForms.chooseSmallImage);
       return;
     }
     const supabase = getSupabaseBrowserClient();
@@ -65,13 +67,13 @@ export function AvatarQuickEdit({
         return;
       }
       setPreview(URL.createObjectURL(blob));
-      setMessage("Photo de profil mise à jour.");
+      setMessage(t.profileForms.photoUpdated);
       router.refresh();
     } catch (caught) {
       setMessage(
         caught instanceof ImageProcessingError
-          ? caught.message
-          : "L'envoi de la photo a échoué. Veuillez réessayer.",
+          ? t.images[caught.code]
+          : t.profileForms.uploadFailed,
       );
     } finally {
       setBusy(false);
@@ -107,7 +109,7 @@ export function AvatarQuickEdit({
           <Camera className="size-4" />
         </span>
         <span className="sr-only">
-          {preview ? "Changer la photo de profil" : "Ajouter une photo de profil"}
+          {preview ? t.profileForms.changeProfilePhoto : t.profileForms.addProfilePhoto}
         </span>
         <input
           ref={inputRef}

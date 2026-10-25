@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { exploreHref } from "@/config/routes";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { type SearchFilters, toSearchParams } from "../schema";
 
@@ -11,8 +11,8 @@ type CategoryChipsProps = {
 };
 
 /** Raccourcis de catégorie défilants (petits écrans), en gardant les autres filtres. */
-export function CategoryChips({ filters, categories, className }: CategoryChipsProps) {
-  const t = getDictionary();
+export async function CategoryChips({ filters, categories, className }: CategoryChipsProps) {
+  const t = await getT();
   const chips = [
     { slug: undefined, name: t.explore.allCategoriesShort },
     ...categories.map((category) => ({ slug: category.slug, name: category.name })),

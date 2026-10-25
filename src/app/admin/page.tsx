@@ -22,12 +22,16 @@ import {
   trendPeriods,
 } from "@/features/admin/management-queries";
 import { getAdminStats, requireStaff } from "@/features/admin/queries";
+import { localizedCategoryName } from "@/features/categories/data";
 import { cityNameFrom } from "@/features/locations/names";
 import { getCityNames } from "@/features/locations/queries";
-import { formatCount, formatDayMonth } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Tableau de bord" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.dashboard };
+}
 
 function periodHref(days: TrendPeriod): Route {
   return (days === 30 ? routes.admin : `${routes.admin}?jours=${days}`) as Route;
@@ -39,6 +43,7 @@ function exportHref(type: "tendances" | "villes" | "categories", days: TrendPeri
 
 export default async function AdminDashboardPage(props: PageProps<"/admin">) {
   await requireStaff(routes.admin);
+  const t = await getT();
   const days = parseTrendPeriod((await props.searchParams).jours);
   const [stats, trends, cityNames, openSupport] = await Promise.all([
     getAdminStats(),
@@ -54,56 +59,62 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
     highlight?: boolean;
   }> = [
     {
-      label: "Signalements en attente",
+      label: t.adminPages.dashboard.pendingReports,
       value: stats.pending_reports,
       icon: Flag,
       href: routes.adminReports,
       highlight: stats.pending_reports > 0,
     },
     {
-      label: "Signalements en cours",
+      label: t.adminPages.dashboard.inReviewReports,
       value: stats.in_review_reports,
       icon: ShieldAlert,
       href: `${routes.adminReports}?statut=in_review` as Route,
     },
     {
-      label: "Demandes d'assistance",
+      label: t.adminPages.dashboard.supportRequests,
       value: openSupport,
       icon: LifeBuoy,
       href: routes.adminSupport,
       highlight: openSupport > 0,
     },
-    { label: "Utilisateurs", value: stats.users, icon: Users, href: routes.adminUsers },
-    { label: "Nouveaux comptes (7 j)", value: stats.new_users_7d, icon: UserPlus },
-    { label: "Comptes suspendus", value: stats.suspended_users, icon: UserX },
-    { label: "Annonces en vente", value: stats.active_listings, icon: Package },
-    { label: "Annonces publiées (7 j)", value: stats.new_listings_7d, icon: Package },
     {
-      label: "Annonces retirées",
+      label: t.adminPages.dashboard.users,
+      value: stats.users,
+      icon: Users,
+      href: routes.adminUsers,
+    },
+    { label: t.adminPages.dashboard.newUsers, value: stats.new_users_7d, icon: UserPlus },
+    { label: t.adminPages.dashboard.suspendedUsers, value: stats.suspended_users, icon: UserX },
+    { label: t.adminPages.dashboard.activeListings, value: stats.active_listings, icon: Package },
+    { label: t.adminPages.dashboard.newListings, value: stats.new_listings_7d, icon: Package },
+    {
+      label: t.adminPages.dashboard.removedListings,
       value: stats.removed_listings,
       icon: Package,
       href: `${routes.adminListings}?moderation=retirees` as Route,
     },
   ];
 
-  const series = [
-    { key: "users", title: "Inscriptions", unit: "inscriptions" },
-    { key: "listings", title: "Annonces publiées", unit: "annonces" },
-    { key: "reports", title: "Signalements", unit: "signalements" },
-  ] as const;
+  const series = (["users", "listings", "reports"] as const).map((key) => ({
+    key,
+    ...t.adminPages.dashboard.series[key],
+  }));
 
   return (
     <>
       <PageHeader
-        title="Tableau de bord"
-        description="Chiffres réels, mis à jour à chaque visite."
+        title={t.adminUi.nav.dashboard}
+        description={t.adminPages.dashboard.description}
       />
       <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {tiles.map((tile) => {
           const content = (
             <>
               <tile.icon className="size-5 text-muted-foreground" aria-hidden="true" />
-              <span className="text-2xl font-bold tracking-tight">{formatCount(tile.value)}</span>
+              <span className="text-2xl font-bold tracking-tight">
+                {t.format.count(tile.value)}
+              </span>
               <span className="text-sm text-muted-foreground">{tile.label}</span>
             </>
           );
@@ -127,10 +138,13 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
       <section aria-labelledby="trends-title" className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="trends-title" className="text-lg font-bold tracking-tight sm:text-xl">
-            Tendances
+            {t.adminPages.dashboard.trends}
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-            <nav aria-label="Période" className="inline-flex rounded-full bg-muted p-1">
+            <nav
+              aria-label={t.adminPages.dashboard.period}
+              className="inline-flex rounded-full bg-muted p-1"
+            >
               {trendPeriods.map((period) => (
                 <Link
                   key={period}
@@ -143,7 +157,7 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {period} jours
+                  {t.adminPages.dashboard.periodDays(period)}
                 </Link>
               ))}
             </nav>
@@ -152,14 +166,14 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold transition-colors hover:bg-muted"
             >
               <Download className="size-3.5" aria-hidden="true" />
-              Export CSV
+              {t.adminPages.dashboard.exportCsv}
             </a>
           </div>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {series.map((item) => {
             const points = trends.days.map((day) => ({
-              label: formatDayMonth(day.day),
+              label: t.format.dayMonth(day.day),
               value: day[item.key],
             }));
             const total = points.reduce((sum, point) => sum + point.value, 0);
@@ -167,7 +181,7 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
               <TrendColumns
                 key={item.key}
                 title={item.title}
-                summary={`${formatCount(total)} sur ${days} jours`}
+                summary={t.adminPages.dashboard.summary(t.format.count(total), days)}
                 points={points}
                 unit={item.unit}
               />
@@ -179,7 +193,7 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
       <section aria-labelledby="breakdown-title" className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="breakdown-title" className="text-lg font-bold tracking-tight sm:text-xl">
-            Répartition des annonces en vente
+            {t.adminPages.dashboard.breakdown}
           </h2>
           <div className="flex gap-2">
             <a
@@ -187,39 +201,39 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold transition-colors hover:bg-muted"
             >
               <Download className="size-3.5" aria-hidden="true" />
-              Villes (CSV)
+              {t.adminPages.dashboard.citiesCsv}
             </a>
             <a
               href={exportHref("categories", days)}
               className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold transition-colors hover:bg-muted"
             >
               <Download className="size-3.5" aria-hidden="true" />
-              Catégories (CSV)
+              {t.adminPages.dashboard.categoriesCsv}
             </a>
           </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           <RankedBars
-            title="Par ville"
-            description="Annonces en vente dans chaque ville."
+            title={t.adminPages.dashboard.byCity}
+            description={t.adminPages.dashboard.byCityDescription}
             rows={trends.cities.map((city) => ({
               key: city.city,
               label: cityNameFrom(city.city, cityNames) ?? city.city,
               value: city.active_listings,
             }))}
-            restLabel="Autres villes"
-            emptyText="Aucune annonce en vente."
+            restLabel={t.adminPages.dashboard.otherCities}
+            emptyText={t.adminPages.dashboard.noActiveListings}
           />
           <RankedBars
-            title="Par catégorie"
-            description="Annonces en vente dans chaque catégorie."
+            title={t.adminPages.dashboard.byCategory}
+            description={t.adminPages.dashboard.byCategoryDescription}
             rows={trends.categories.map((category) => ({
               key: category.slug,
-              label: category.name,
+              label: localizedCategoryName(t.categoryNames, category),
               value: category.active_listings,
             }))}
-            restLabel="Catégories suivantes"
-            emptyText="Aucune annonce en vente."
+            restLabel={t.adminPages.dashboard.otherCategories}
+            emptyText={t.adminPages.dashboard.noActiveListings}
           />
         </div>
       </section>

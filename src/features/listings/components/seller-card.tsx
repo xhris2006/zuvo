@@ -5,7 +5,7 @@ import { publicProfileHref } from "@/config/routes";
 import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { VerifiedBadge } from "@/features/profiles/components/verified-badge";
-import { formatMonthYear } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
 type SellerCardProps = {
   seller: {
@@ -22,6 +22,7 @@ type SellerCardProps = {
 };
 
 export async function SellerCard({ seller, compact = false }: SellerCardProps) {
+  const t = await getT();
   const city = await cityName(seller.city);
   if (compact) {
     return (
@@ -57,7 +58,8 @@ export async function SellerCard({ seller, compact = false }: SellerCardProps) {
         </span>
         <span className="truncate text-sm text-muted-foreground">@{seller.username}</span>
         <span className="text-xs text-muted-foreground">
-          {city ? `${city} · ` : ""}Membre depuis {formatMonthYear(seller.created_at)}
+          {city ? `${city} · ` : ""}
+          {t.profile.memberSince(t.format.monthYear(seller.created_at))}
         </span>
       </div>
       <ChevronRight className="size-5 text-muted-foreground" aria-hidden="true" />

@@ -5,8 +5,7 @@ import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { followersHref, followingHref } from "@/config/routes";
 import { cityName } from "@/features/locations/queries";
-import { getDictionary } from "@/i18n";
-import { formatCount, formatMonthYear } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { avatarUrl } from "../avatar-url";
 import { VerifiedBadge } from "./verified-badge";
 import type { ProfileStats, PublicProfile } from "../queries";
@@ -32,7 +31,7 @@ export async function ProfileHeader({
   back,
   menu,
 }: ProfileHeaderProps) {
-  const t = getDictionary();
+  const t = await getT();
   const city = await cityName(profile.city);
   const items: { key: string; label: string; value: number; href?: Route }[] = [
     {
@@ -100,7 +99,7 @@ export async function ProfileHeader({
             ) : null}
             <li className="flex items-center gap-1">
               <CalendarDays className="size-3.5 sm:size-4" aria-hidden="true" />
-              {t.profile.memberSince(formatMonthYear(profile.created_at))}
+              {t.profile.memberSince(t.format.monthYear(profile.created_at))}
             </li>
           </ul>
           {profile.bio ? (
@@ -125,7 +124,7 @@ export async function ProfileHeader({
                   item.label
                 )}
               </dt>
-              <dd className="text-lg leading-tight font-bold">{formatCount(item.value)}</dd>
+              <dd className="text-lg leading-tight font-bold">{t.format.count(item.value)}</dd>
             </div>
           ))}
         </dl>

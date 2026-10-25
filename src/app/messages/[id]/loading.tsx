@@ -1,9 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 
 /** Conversation en chargement : même disposition plein écran que la page. */
-export default function ConversationLoading() {
-  const t = getDictionary();
+export default async function ConversationLoading() {
+  const t = await getT();
   return (
     <div
       data-immersive

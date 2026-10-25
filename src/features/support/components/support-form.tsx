@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { FormState } from "@/lib/forms/form-state";
 import { createSupportRequestAction } from "../actions";
 import { MESSAGE_MAX, SUBJECT_MAX, type SupportField } from "../schemas";
+import { useT } from "@/i18n/client";
 
 const idle: FormState<SupportField> = { status: "idle" };
 
@@ -20,6 +21,7 @@ type SupportFormProps = {
 
 /** Formulaire d'assistance : question libre ou contestation d'un retrait d'annonce. */
 export function SupportForm({ appeal }: SupportFormProps) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(createSupportRequestAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const id = useId();
@@ -32,7 +34,12 @@ export function SupportForm({ appeal }: SupportFormProps) {
       <input type="hidden" name="kind" value={appeal ? "appeal" : "contact"} />
       {appeal ? <input type="hidden" name="listingId" value={appeal.listingId} /> : null}
       <FormMessage state={state} />
-      <Field id={`${id}-subject`} label="Objet" error={state.fieldErrors?.subject} required>
+      <Field
+        id={`${id}-subject`}
+        label={t.supportForm.subject}
+        error={state.fieldErrors?.subject}
+        required
+      >
         {(control) => (
           <Input
             {...control}
@@ -42,7 +49,7 @@ export function SupportForm({ appeal }: SupportFormProps) {
               state.status === "error"
                 ? state.values?.subject
                 : appeal
-                  ? `Contestation du retrait de « ${appeal.title} »`
+                  ? t.supportForm.appealSubject(appeal.title)
                   : undefined
             }
           />
@@ -50,8 +57,8 @@ export function SupportForm({ appeal }: SupportFormProps) {
       </Field>
       <Field
         id={`${id}-message`}
-        label={appeal ? "Pourquoi contestez-vous ce retrait ?" : "Votre message"}
-        hint="Ne communiquez jamais de mot de passe ni de code reçu par SMS."
+        label={appeal ? t.supportForm.appealMessage : t.supportForm.message}
+        hint={t.supportForm.hint}
         error={state.fieldErrors?.message}
         required
       >
@@ -67,7 +74,7 @@ export function SupportForm({ appeal }: SupportFormProps) {
       </Field>
       <SubmitButton pending={pending} className="self-start">
         <Send aria-hidden="true" />
-        {appeal ? "Envoyer la contestation" : "Envoyer"}
+        {appeal ? t.supportForm.sendAppeal : t.supportForm.send}
       </SubmitButton>
     </form>
   );

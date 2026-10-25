@@ -5,6 +5,7 @@ import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { formText } from "@/lib/forms/form-state";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
+import { getT } from "@/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -16,13 +17,13 @@ export async function toggleFavoriteAction(
   previous: FavoriteState,
   formData: FormData,
 ): Promise<FavoriteState> {
+  const texts = (await getT()).favoriteActions;
   const listingId = formText(formData, "listingId");
-  if (!UUID.test(listingId)) return { ...previous, message: "Annonce introuvable." };
+  if (!UUID.test(listingId)) return { ...previous, message: texts.notFound };
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user)
-    return { ...previous, message: "Connectez-vous pour ajouter des favoris." };
+  if (!supabase || !user) return { ...previous, message: texts.signIn };
 
   const { count } = await supabase
     .from("favorites")
@@ -36,7 +37,7 @@ export async function toggleFavoriteAction(
     : await supabase.from("favorites").insert({ listing_id: listingId });
 
   if (error && error.code !== "23505") {
-    return { favorited: currentlyFavorited, message: "Impossible de modifier vos favoris." };
+    return { favorited: currentlyFavorited, message: texts.failed };
   }
 
   revalidatePath(routes.profile);

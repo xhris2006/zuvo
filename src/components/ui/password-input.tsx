@@ -2,11 +2,13 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { type ComponentProps, useState } from "react";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { Input } from "./input";
 
 /** Champ mot de passe avec bouton afficher / masquer. */
 export function PasswordInput({ className, ...props }: Omit<ComponentProps<"input">, "type">) {
+  const t = useT();
   const [visible, setVisible] = useState(false);
   return (
     <div className="relative">
@@ -15,7 +17,7 @@ export function PasswordInput({ className, ...props }: Omit<ComponentProps<"inpu
         type="button"
         onClick={() => setVisible((value) => !value)}
         className="absolute top-1/2 right-1 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
-        aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+        aria-label={visible ? t.ui.hidePassword : t.ui.showPassword}
         aria-pressed={visible}
       >
         {visible ? (

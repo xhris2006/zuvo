@@ -2,7 +2,7 @@ import { Info, Wrench } from "lucide-react";
 import type { Route } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { getCurrentAnnouncement } from "../queries";
 import { DismissAnnouncement, HIDDEN_ANNOUNCEMENT_COOKIE } from "./dismiss-announcement";
@@ -15,7 +15,7 @@ export async function SiteAnnouncementBanner() {
   // Une simple annonce masquée par le visiteur ne réapparaît pas (cookie).
   const hidden = (await cookies()).get(HIDDEN_ANNOUNCEMENT_COOKIE)?.value;
   if (!maintenance && hidden === announcement.id) return null;
-  const t = getDictionary();
+  const t = await getT();
   const Icon = maintenance ? Wrench : Info;
   const external = announcement.linkUrl?.startsWith("https://") ?? false;
 
@@ -34,7 +34,9 @@ export async function SiteAnnouncementBanner() {
         <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <p className="min-w-0 flex-1">
           <span className="font-semibold">
-            {maintenance ? t.announcement.maintenance : t.announcement.info} :{" "}
+            {t.announcement.label(
+              maintenance ? t.announcement.maintenance : t.announcement.info,
+            )}{" "}
           </span>
           {announcement.message}
           {announcement.linkUrl ? (

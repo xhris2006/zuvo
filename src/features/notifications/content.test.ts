@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { describeNotification, notificationHref } from "./content";
+import { getDictionary } from "@/i18n";
+import { describeNotification as describe_, notificationHref } from "./content";
+
+const fr = getDictionary("fr");
+const describeNotification = (subject: Parameters<typeof describe_>[0]) => describe_(subject, fr);
+
+it("traduit aussi en anglais", () => {
+  expect(
+    describe_({ type: "new_follower", actorName: "Awa", listingTitle: null }, getDictionary("en"))
+      .body,
+  ).toBe("Awa is now following you.");
+});
 
 const LISTING_ID = "4f1c2a3b-0000-4000-8000-0000000000aa";
 const CONVERSATION_ID = "4f1c2a3b-0000-4000-8000-0000000000bb";

@@ -1,7 +1,7 @@
 import { Ban, Heart, LifeBuoy, MessageCircle, Package, ShieldAlert, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { avatarUrl } from "@/features/profiles/avatar-url";
-import { formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { openNotificationAction } from "../actions";
 import type { NotificationType } from "../content";
@@ -17,7 +17,8 @@ const icons = {
   support_reply: LifeBuoy,
 } satisfies Record<NotificationType, unknown>;
 
-export function NotificationList({ items }: { items: NotificationItem[] }) {
+export async function NotificationList({ items }: { items: NotificationItem[] }) {
+  const t = await getT();
   return (
     <ul className="-mx-4 divide-y divide-border border-y border-border bg-card sm:mx-0 sm:overflow-hidden sm:rounded-2xl sm:border sm:shadow-card">
       {items.map((item) => {
@@ -64,13 +65,13 @@ export function NotificationList({ items }: { items: NotificationItem[] }) {
                     {item.body}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {formatRelativeTime(item.createdAt)}
+                    {t.format.relativeTime(item.createdAt)}
                   </span>
                 </span>
                 {item.isRead ? null : (
                   <span className="mt-1.5 flex items-center">
                     <span className="size-2.5 rounded-full bg-primary" aria-hidden="true" />
-                    <span className="sr-only">Non lue</span>
+                    <span className="sr-only">{t.notifications.unread}</span>
                   </span>
                 )}
               </button>

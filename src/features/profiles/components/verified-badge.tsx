@@ -1,5 +1,5 @@
 import { BadgeCheck } from "lucide-react";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 type VerifiedBadgeProps = {
@@ -9,8 +9,8 @@ type VerifiedBadgeProps = {
 };
 
 /** Badge « vendeur vérifié », attribué manuellement par l'administration. */
-export function VerifiedBadge({ variant = "label", className }: VerifiedBadgeProps) {
-  const t = getDictionary();
+export async function VerifiedBadge({ variant = "label", className }: VerifiedBadgeProps) {
+  const t = await getT();
   if (variant === "icon") {
     return (
       <span

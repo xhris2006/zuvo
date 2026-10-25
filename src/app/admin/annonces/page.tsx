@@ -25,11 +25,15 @@ import { listingHref } from "@/features/listings/links";
 import { getCategories } from "@/features/listings/queries";
 import { cityNameFrom } from "@/features/locations/names";
 import { getCities, getCityNames } from "@/features/locations/queries";
-import { getDictionary } from "@/i18n";
-import { formatCount, formatPrice, formatRelativeTime } from "@/lib/format";
+import { localizedCategoryName } from "@/features/categories/data";
+import { getT } from "@/i18n/server";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Annonces" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.listings };
+}
 
 function listHref(filters: AdminListingFilters, page = 1): Route {
   const params = new URLSearchParams();
@@ -44,17 +48,17 @@ function listHref(filters: AdminListingFilters, page = 1): Route {
   return (query ? `${routes.adminListings}?${query}` : routes.adminListings) as Route;
 }
 
-function ListingTabs({ current }: { current: "toutes" | "doublons" }) {
+function ListingTabs({ current, t }: { current: "toutes" | "doublons"; t: ServerDictionary }) {
   const tabs = [
-    { key: "toutes", label: "Toutes les annonces", href: routes.adminListings },
+    { key: "toutes", label: t.adminPages.listings.all, href: routes.adminListings },
     {
       key: "doublons",
-      label: "Doublons probables",
+      label: t.adminPages.listings.duplicates,
       href: `${routes.adminListings}?vue=doublons` as Route,
     },
   ] as const;
   return (
-    <nav aria-label="Vues des annonces" className="flex flex-wrap gap-2">
+    <nav aria-label={t.adminPages.listings.tabsLabel} className="flex flex-wrap gap-2">
       {tabs.map((tab) => (
         <Link
           key={tab.key}
@@ -76,10 +80,10 @@ function ListingTabs({ current }: { current: "toutes" | "doublons" }) {
 
 /** Annonces en ligne au titre identique : même vendeur, ou même description. */
 async function Duplicates() {
-  const t = getDictionary();
+  const t = await getT();
   const groups = await getDuplicateListings();
   if (groups.length === 0) {
-    return <EmptyState icon={Copy} title="Aucun doublon probable parmi les annonces en ligne" />;
+    return <EmptyState icon={Copy} title={t.adminPages.listings.noDuplicates} />;
   }
   return (
     <ul className="flex flex-col gap-3">
@@ -91,8 +95,10 @@ async function Duplicates() {
           <p className="text-sm">
             <span className="font-semibold">« {group.title} »</span>{" "}
             <span className="text-muted-foreground">
-              · {group.listings.length} annonces ·{" "}
-              {group.sellerCount === 1 ? "même vendeur" : `${group.sellerCount} vendeurs`}
+              · {t.adminPages.listings.duplicateCount(group.listings.length)} ·{" "}
+              {group.sellerCount === 1
+                ? t.adminPages.listings.sameSeller
+                : t.adminPages.listings.sellers(group.sellerCount)}
             </span>
           </p>
           <ul className="flex flex-col divide-y divide-border">
@@ -114,12 +120,12 @@ async function Duplicates() {
                   trigger={
                     <Button variant="ghost" size="sm" className="text-danger">
                       <Ban aria-hidden="true" />
-                      Retirer
+                      {t.adminPages.remove}
                     </Button>
                   }
-                  title={`Retirer « ${listing.title} » ?`}
-                  description="L'annonce sera masquée immédiatement et le vendeur prévenu avec le motif indiqué."
-                  confirmLabel="Retirer"
+                  title={t.adminPages.removeTitle(listing.title)}
+                  description={t.adminPages.removeDescription}
+                  confirmLabel={t.adminPages.remove}
                   action={removeListingAction}
                   fields={{ listingId: listing.id }}
                 />
@@ -134,16 +140,16 @@ async function Duplicates() {
 
 export default async function AdminListingsPage(props: PageProps<"/admin/annonces">) {
   await requireStaff(routes.adminListings);
-  const t = getDictionary();
+  const t = await getT();
   const searchParams = await props.searchParams;
   if (searchParams.vue === "doublons") {
     return (
       <>
         <PageHeader
-          title="Annonces"
-          description="Doublons probables : même titre chez un même vendeur, ou même texte chez plusieurs vendeurs."
+          title={t.adminUi.nav.listings}
+          description={t.adminPages.listings.duplicatesDescription}
         />
-        <ListingTabs current="doublons" />
+        <ListingTabs current="doublons" t={t} />
         <Duplicates />
       </>
     );
@@ -160,11 +166,8 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
 
   return (
     <>
-      <PageHeader
-        title="Annonces"
-        description="Toutes les annonces, y compris brouillons et annonces retirées."
-      />
-      <ListingTabs current="toutes" />
+      <PageHeader title={t.adminUi.nav.listings} description={t.adminPages.listings.description} />
+      <ListingTabs current="toutes" t={t} />
 
       <form
         action={routes.adminListings}
@@ -173,23 +176,23 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
       >
         <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-3">
           <label htmlFor="admin-listings-q" className="text-sm font-medium">
-            Mots-clés
+            {t.adminPages.listings.keywords}
           </label>
           <Input
             id="admin-listings-q"
             name="q"
             type="search"
             defaultValue={filters.q}
-            placeholder="Titre ou description"
+            placeholder={t.adminPages.listings.keywordsPlaceholder}
             maxLength={100}
           />
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="admin-listings-status" className="text-sm font-medium">
-            Statut
+            {t.adminPages.listings.status}
           </label>
           <Select id="admin-listings-status" name="statut" defaultValue={filters.status ?? ""}>
-            <option value="">Tous les statuts</option>
+            <option value="">{t.adminPages.listings.allStatuses}</option>
             {adminListingStatuses.map((status) => (
               <option key={status} value={status}>
                 {t.listing.statuses[status]}
@@ -199,41 +202,41 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="admin-listings-moderation" className="text-sm font-medium">
-            Modération
+            {t.adminPages.listings.moderation}
           </label>
           <Select
             id="admin-listings-moderation"
             name="moderation"
             defaultValue={filters.moderation ?? ""}
           >
-            <option value="">Toutes</option>
-            <option value="en-ligne">Non retirées</option>
-            <option value="retirees">Retirées par la modération</option>
+            <option value="">{t.adminPages.listings.allModeration}</option>
+            <option value="en-ligne">{t.adminPages.listings.notRemoved}</option>
+            <option value="retirees">{t.adminPages.listings.removedByModeration}</option>
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="admin-listings-category" className="text-sm font-medium">
-            Catégorie
+            {t.adminPages.listings.category}
           </label>
           <Select
             id="admin-listings-category"
             name="categorie"
             defaultValue={filters.category ?? ""}
           >
-            <option value="">Toutes les catégories</option>
+            <option value="">{t.adminPages.listings.allCategories}</option>
             {categories.map((category) => (
               <option key={category.slug} value={category.slug}>
-                {category.name}
+                {localizedCategoryName(t.categoryNames, category)}
               </option>
             ))}
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="admin-listings-city" className="text-sm font-medium">
-            Ville
+            {t.adminPages.listings.city}
           </label>
           <Select id="admin-listings-city" name="ville" defaultValue={filters.city ?? ""}>
-            <option value="">Toutes les villes</option>
+            <option value="">{t.adminPages.listings.allCities}</option>
             {cities.map((city) => (
               <option key={city.slug} value={city.slug}>
                 {city.name}
@@ -243,13 +246,13 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="admin-listings-seller" className="text-sm font-medium">
-            Vendeur
+            {t.adminPages.listings.seller}
           </label>
           <Input
             id="admin-listings-seller"
             name="vendeur"
             defaultValue={filters.seller ?? ""}
-            placeholder="@pseudo"
+            placeholder={t.adminPages.listings.usernamePlaceholder}
             maxLength={31}
             autoComplete="off"
           />
@@ -257,24 +260,22 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
         <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
           <Button type="submit" className="flex-1">
             <Search aria-hidden="true" />
-            Filtrer
+            {t.adminPages.filter}
           </Button>
           {hasFilters ? (
             <Button asChild variant="ghost">
-              <Link href={routes.adminListings}>Réinitialiser</Link>
+              <Link href={routes.adminListings}>{t.adminPages.reset}</Link>
             </Button>
           ) : null}
         </div>
       </form>
 
       <p className="text-sm font-medium text-muted-foreground" aria-live="polite">
-        {result.total === 0
-          ? "Aucune annonce"
-          : `${formatCount(result.total)} annonce${result.total > 1 ? "s" : ""}`}
+        {t.adminPages.listings.count(result.total, t.format.count(result.total))}
       </p>
 
       {result.items.length === 0 ? (
-        <EmptyState icon={PackageSearch} title="Aucune annonce ne correspond à ces filtres" />
+        <EmptyState icon={PackageSearch} title={t.adminPages.listings.noMatch} />
       ) : (
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
           {result.items.map((listing) => (
@@ -298,20 +299,20 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
                     {listing.title}
                   </Link>
                   {listing.removedAt ? (
-                    <Badge variant="danger">Retirée</Badge>
+                    <Badge variant="danger">{t.adminPages.listings.removed}</Badge>
                   ) : (
                     <ListingStatusBadge status={listing.status} />
                   )}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+                  {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
                   {listing.category ? ` · ${listing.category}` : ""}
-                  {listing.citySlug ? ` · ${cityNameFrom(listing.citySlug, cityNames)}` : ""} ·
-                  créée {formatRelativeTime(listing.createdAt)}
+                  {listing.citySlug ? ` · ${cityNameFrom(listing.citySlug, cityNames)}` : ""} ·{" "}
+                  {t.adminPages.listings.created(t.format.relativeTime(listing.createdAt))}
                 </span>
                 {listing.seller ? (
                   <span className="truncate text-xs">
-                    Vendeur :{" "}
+                    {t.adminPages.listings.sellerLabel}{" "}
                     <Link
                       href={adminUserHref(listing.seller.id)}
                       className="font-medium hover:underline"
@@ -322,7 +323,7 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
                 ) : null}
                 {listing.removedReason ? (
                   <span className="text-xs text-danger">
-                    Motif du retrait : {listing.removedReason}
+                    {t.adminPages.removalReason(listing.removedReason)}
                   </span>
                 ) : null}
               </span>
@@ -332,28 +333,28 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
                     trigger={
                       <Button variant="outline" size="sm">
                         <RotateCcw aria-hidden="true" />
-                        Rétablir
+                        {t.adminPages.restore}
                       </Button>
                     }
-                    title={`Rétablir « ${listing.title} » ?`}
-                    description="L'annonce n'est plus bloquée : son vendeur pourra la modifier et la remettre en vente."
-                    confirmLabel="Rétablir"
+                    title={t.adminPages.restoreTitle(listing.title)}
+                    description={t.adminPages.restoreDescription}
+                    confirmLabel={t.adminPages.restore}
                     confirmVariant="primary"
                     action={restoreListingWithReasonAction}
                     fields={{ listingId: listing.id }}
-                    reasonLabel="Motif (consigné dans le journal)"
+                    reasonLabel={t.adminUi.reasonForLog}
                   />
                 ) : (
                   <ModerationDialog
                     trigger={
                       <Button variant="ghost" size="sm" className="text-danger">
                         <Ban aria-hidden="true" />
-                        Retirer
+                        {t.adminPages.remove}
                       </Button>
                     }
-                    title={`Retirer « ${listing.title} » ?`}
-                    description="L'annonce sera masquée immédiatement et le vendeur prévenu avec le motif indiqué."
-                    confirmLabel="Retirer"
+                    title={t.adminPages.removeTitle(listing.title)}
+                    description={t.adminPages.removeDescription}
+                    confirmLabel={t.adminPages.remove}
                     action={removeListingAction}
                     fields={{ listingId: listing.id }}
                   />

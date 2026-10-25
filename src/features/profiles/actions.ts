@@ -6,11 +6,9 @@ import { getCurrentUser } from "@/features/auth/session";
 import { isAvailableCity } from "@/features/locations/queries";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
+import { getT } from "@/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isOwnAvatarPath, privateContactSchema, profileSchema } from "./schemas";
-
-const SESSION_EXPIRED = "Votre session a expiré. Reconnectez-vous.";
-const GENERIC_ERROR = "L'enregistrement a échoué. Veuillez réessayer.";
 
 // -----------------------------------------------------------------------------
 // Profil public
@@ -21,6 +19,8 @@ export async function updateProfileAction(
   _previous: FormState<ProfileField>,
   formData: FormData,
 ): Promise<FormState<ProfileField>> {
+  const t = await getT();
+  const texts = t.profileActions;
   const values = {
     username: formText(formData, "username"),
     displayName: formText(formData, "displayName"),
@@ -32,20 +32,20 @@ export async function updateProfileAction(
     avatarPath: formText(formData, "avatarPath"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED, values };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired, values };
 
   const { username, displayName, bio, city, avatarPath } = parsed.data;
   const removeAvatar = avatarPath === "-";
   if (avatarPath && !removeAvatar && !isOwnAvatarPath(user.id, avatarPath)) {
-    return { status: "error", fieldErrors: { avatarPath: "Photo de profil invalide." }, values };
+    return { status: "error", fieldErrors: { avatarPath: texts.invalidAvatar }, values };
   }
   if (city && !(await isAvailableCity(city))) {
-    return { status: "error", fieldErrors: { city: "Ville invalide." }, values };
+    return { status: "error", fieldErrors: { city: texts.invalidCity }, values };
   }
 
   const { data: current } = await supabase
@@ -69,11 +69,11 @@ export async function updateProfileAction(
     if (error.code === "23505") {
       return {
         status: "error",
-        fieldErrors: { username: "Ce nom d'utilisateur est déjà pris." },
+        fieldErrors: { username: texts.usernameTaken },
         values,
       };
     }
-    return { status: "error", message: GENERIC_ERROR, values };
+    return { status: "error", message: texts.generic, values };
   }
 
   // Supprime l'ancienne photo devenue inutile (sans bloquer en cas d'échec).
@@ -86,7 +86,7 @@ export async function updateProfileAction(
   if (current?.username && current.username !== username) {
     revalidatePath(publicProfileHref(current.username));
   }
-  return { status: "success", message: "Votre profil a été mis à jour.", values };
+  return { status: "success", message: texts.profileUpdated, values };
 }
 
 export type AvatarResult = { status: "ok" } | { status: "error"; message: string };
@@ -96,11 +96,12 @@ export type AvatarResult = { status: "ok" } | { status: "error"; message: string
  * dossier de l'utilisateur) ou la retire (null), puis supprime l'ancienne.
  */
 export async function updateAvatarAction(path: string | null): Promise<AvatarResult> {
+  const texts = (await getT()).profileActions;
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired };
   if (path !== null && (typeof path !== "string" || !isOwnAvatarPath(user.id, path))) {
-    return { status: "error", message: "Photo de profil invalide." };
+    return { status: "error", message: texts.invalidAvatar };
   }
 
   const { data: current } = await supabase
@@ -111,7 +112,7 @@ export async function updateAvatarAction(path: string | null): Promise<AvatarRes
   const { error } = await supabase.from("profiles").update({ avatar_path: path }).eq("id", user.id);
   if (error) {
     if (path) await supabase.storage.from("avatars").remove([path]);
-    return { status: "error", message: GENERIC_ERROR };
+    return { status: "error", message: texts.generic };
   }
   if (current?.avatar_path && current.avatar_path !== path) {
     await supabase.storage.from("avatars").remove([current.avatar_path]);
@@ -127,26 +128,28 @@ export async function updatePrivateContactAction(
   _previous: FormState<"phone">,
   formData: FormData,
 ): Promise<FormState<"phone">> {
+  const t = await getT();
+  const texts = t.profileActions;
   const values = { phone: formText(formData, "phone") };
   const parsed = privateContactSchema.safeParse(values);
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { status: "error", message: SESSION_EXPIRED, values };
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired, values };
 
   const { error } = await supabase
     .from("profile_private")
     .update({ phone: parsed.data.phone })
     .eq("id", user.id);
-  if (error) return { status: "error", message: GENERIC_ERROR, values };
+  if (error) return { status: "error", message: texts.generic, values };
 
   revalidatePath(routes.editProfile);
   return {
     status: "success",
-    message: parsed.data.phone ? "Numéro enregistré." : "Numéro supprimé.",
+    message: parsed.data.phone ? texts.phoneSaved : texts.phoneRemoved,
     values: { phone: parsed.data.phone ?? "" },
   };
 }
@@ -160,12 +163,13 @@ export async function toggleFollowAction(
   previous: FollowState,
   formData: FormData,
 ): Promise<FollowState> {
+  const texts = (await getT()).profileActions;
   const profileId = formText(formData, "profileId");
   const username = formText(formData, "username");
 
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) return { ...previous, message: SESSION_EXPIRED };
+  if (!supabase || !user) return { ...previous, message: texts.sessionExpired };
   if (!profileId || profileId === user.id) return previous;
 
   const { count } = await supabase
@@ -186,10 +190,7 @@ export async function toggleFollowAction(
   if (error) {
     return {
       following: currentlyFollowing,
-      message:
-        error.code === "PT429"
-          ? "Trop d'abonnements en peu de temps. Réessayez plus tard."
-          : "Impossible de suivre ce profil.",
+      message: error.code === "PT429" ? texts.followRateLimited : texts.followFailed,
     };
   }
 

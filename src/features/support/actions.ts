@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { getT } from "@/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { type SupportField, supportRequestSchema } from "./schemas";
 
@@ -12,6 +13,8 @@ export async function createSupportRequestAction(
   _previous: FormState<SupportField>,
   formData: FormData,
 ): Promise<FormState<SupportField>> {
+  const t = await getT();
+  const texts = t.supportActions;
   const values = { subject: formText(formData, "subject"), message: formText(formData, "message") };
   const parsed = supportRequestSchema.safeParse({
     ...values,
@@ -19,13 +22,11 @@ export async function createSupportRequestAction(
     listingId: formText(formData, "listingId"),
   });
   if (!parsed.success) {
-    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
   }
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user) {
-    return { status: "error", message: "Votre session a expiré. Reconnectez-vous.", values };
-  }
+  if (!supabase || !user) return { status: "error", message: texts.sessionExpired, values };
 
   const { error } = await supabase.from("support_requests").insert({
     kind: parsed.data.kind,
@@ -36,20 +37,17 @@ export async function createSupportRequestAction(
   if (error) {
     const message =
       error.code === "PT429"
-        ? "Vous avez envoyé beaucoup de demandes aujourd'hui. Réessayez demain."
+        ? texts.rateLimited
         : error.code === "23505"
-          ? "Une contestation est déjà en cours pour cette annonce."
+          ? texts.appealPending
           : error.code === "P0002"
-            ? "Cette annonce ne peut pas être contestée."
-            : "L'envoi a échoué. Veuillez réessayer.";
+            ? texts.notAppealable
+            : texts.failed;
     return { status: "error", message, values };
   }
   revalidatePath(routes.support);
   return {
     status: "success",
-    message:
-      parsed.data.kind === "appeal"
-        ? "Contestation envoyée. L'équipe vous répondra par notification."
-        : "Demande envoyée. L'équipe vous répondra par notification.",
+    message: parsed.data.kind === "appeal" ? texts.appealSent : texts.requestSent,
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { type KeyboardEvent, type PointerEvent, useId, useRef, useState } from "react";
+import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { barPercent, niceMax } from "../chart-scale";
 
@@ -26,6 +27,7 @@ type TrendColumnsProps = {
  * données reste accessible sans survol.
  */
 export function TrendColumns({ title, summary, points, unit }: TrendColumnsProps) {
+  const t = useT();
   const id = useId();
   const plotRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<number | null>(null);
@@ -72,7 +74,7 @@ export function TrendColumns({ title, summary, points, unit }: TrendColumnsProps
           ref={plotRef}
           tabIndex={0}
           role="group"
-          aria-label={`${title} : graphique, flèches gauche et droite pour lire chaque jour`}
+          aria-label={t.adminUi.trend.chartLabel(title)}
           aria-describedby={`${id}-live`}
           onPointerMove={(event) => setActive(indexAt(event))}
           onPointerLeave={() => setActive(null)}
@@ -95,7 +97,7 @@ export function TrendColumns({ title, summary, points, unit }: TrendColumnsProps
           ))}
           {empty ? (
             <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
-              Aucune activité sur la période
+              {t.adminUi.trend.empty}
             </p>
           ) : null}
           {active !== null ? (
@@ -130,7 +132,7 @@ export function TrendColumns({ title, summary, points, unit }: TrendColumnsProps
 
       <details className="text-sm">
         <summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">
-          Voir les données
+          {t.adminUi.trend.showData}
         </summary>
         <div
           className="mt-2 max-h-56 overflow-y-auto"
@@ -142,7 +144,7 @@ export function TrendColumns({ title, summary, points, unit }: TrendColumnsProps
             <thead className="text-muted-foreground">
               <tr>
                 <th scope="col" className="py-1 font-medium">
-                  Jour
+                  {t.adminUi.trend.day}
                 </th>
                 <th scope="col" className="py-1 text-right font-medium">
                   {unit}

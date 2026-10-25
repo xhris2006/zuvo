@@ -17,18 +17,19 @@ import { isCurrentUserAdmin } from "@/features/admin/queries";
 import { getCurrentProfile } from "@/features/profiles/queries";
 import { ThemeSwitch } from "@/features/theme/components/theme-switch";
 import { parseTheme, THEME_COOKIE } from "@/features/theme/theme";
-import { getDictionary } from "@/i18n";
+import { LanguageSwitch } from "@/features/language/components/language-switch";
+import { getT } from "@/i18n/server";
 import { isSupabaseConfigured } from "@/lib/env";
 
-export const metadata: Metadata = {
-  title: "Paramètres",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.settingsPage.title, robots: { index: false } };
+}
 
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
-  const t = getDictionary();
+  const t = await getT();
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   const [preferences, blockedUsers, profile, lastPush, isAdmin] = await Promise.all([
     getNotificationPreferences(),
@@ -40,16 +41,25 @@ export default async function SettingsPage() {
 
   return (
     <div className="container-page flex max-w-2xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
-      <PageHeader title="Paramètres" />
+      <PageHeader title={t.settingsPage.title} />
       <Card>
         <CardHeader>
-          <CardTitle>Compte</CardTitle>
+          <CardTitle>{t.settingsPage.account}</CardTitle>
           <CardDescription>
-            Adresse e-mail de connexion : <strong>{user.email ?? "non renseignée"}</strong>
+            {t.settingsPage.loginEmail} <strong>{user.email ?? t.settingsPage.emailMissing}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <SignOutButton variant="outline" />
+        </CardContent>
+      </Card>
+      <Card id="langue">
+        <CardHeader>
+          <CardTitle>{t.language.title}</CardTitle>
+          <CardDescription>{t.language.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LanguageSwitch />
         </CardContent>
       </Card>
       <Card id="apparence">
@@ -63,10 +73,8 @@ export default async function SettingsPage() {
       </Card>
       <Card id="notifications">
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
-            Choisissez les événements qui apparaissent dans vos notifications.
-          </CardDescription>
+          <CardTitle>{t.settingsPage.notifications}</CardTitle>
+          <CardDescription>{t.settingsPage.notificationsDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <PreferencesForm preferences={preferences} />
@@ -74,10 +82,8 @@ export default async function SettingsPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Notifications push</CardTitle>
-          <CardDescription>
-            Alertes sur votre téléphone ou votre ordinateur, même quand le site est fermé.
-          </CardDescription>
+          <CardTitle>{t.settingsPage.push}</CardTitle>
+          <CardDescription>{t.settingsPage.pushDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <PushSettings lastPush={lastPush} isAdmin={isAdmin} />
@@ -85,11 +91,8 @@ export default async function SettingsPage() {
       </Card>
       <Card id="blocages">
         <CardHeader>
-          <CardTitle>Utilisateurs bloqués</CardTitle>
-          <CardDescription>
-            Ils ne peuvent plus vous écrire ni vous suivre, et vous ne voyez plus leurs
-            notifications.
-          </CardDescription>
+          <CardTitle>{t.settingsPage.blocked}</CardTitle>
+          <CardDescription>{t.settingsPage.blockedDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <BlockedList users={blockedUsers} />
@@ -97,10 +100,8 @@ export default async function SettingsPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Mot de passe</CardTitle>
-          <CardDescription>
-            Pour votre sécurité, une reconnexion récente peut être demandée.
-          </CardDescription>
+          <CardTitle>{t.settingsPage.password}</CardTitle>
+          <CardDescription>{t.settingsPage.passwordDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <UpdatePasswordForm />
@@ -109,10 +110,8 @@ export default async function SettingsPage() {
       {profile ? (
         <Card id="suppression" className="border-danger/30">
           <CardHeader>
-            <CardTitle>Supprimer mon compte</CardTitle>
-            <CardDescription>
-              Suppression définitive de votre compte et de vos annonces.
-            </CardDescription>
+            <CardTitle>{t.settingsPage.deleteAccount}</CardTitle>
+            <CardDescription>{t.settingsPage.deleteAccountDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <DeleteAccountDialog username={profile.username} />

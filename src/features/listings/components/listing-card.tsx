@@ -4,8 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LinkPending } from "@/components/ui/link-pending";
 import { cityName } from "@/features/locations/queries";
-import { getDictionary } from "@/i18n";
-import { formatPrice } from "@/lib/format";
+import { getT } from "@/i18n/server";
 import { listingHref } from "../links";
 import type { ListingCardData } from "../types";
 import { ListingStatusBadge } from "./listing-status-badge";
@@ -19,7 +18,7 @@ type ListingCardProps = {
 };
 
 export async function ListingCard({ listing, action, priority = false }: ListingCardProps) {
-  const t = getDictionary();
+  const t = await getT();
   const city = await cityName(listing.citySlug);
   const showStatus = listing.status !== "active";
 
@@ -49,7 +48,7 @@ export async function ListingCard({ listing, action, priority = false }: Listing
 
       <div className="flex flex-col gap-0.5 px-0.5">
         <p className="text-base font-bold tracking-tight">
-          {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
+          {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
         </p>
         <h3 className="line-clamp-1 text-sm text-foreground">
           <Link

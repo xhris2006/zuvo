@@ -9,28 +9,26 @@ import { AntiSpamSettingsForm, BannedWordForm } from "@/features/admin/component
 import { removeBannedWordAction } from "@/features/admin/management-actions";
 import { getAntiSpamSettings, getBannedWords } from "@/features/admin/management-queries";
 import { requireAdmin } from "@/features/admin/queries";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Anti-spam" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.antiSpam };
+}
 
 export default async function AdminAntiSpamPage() {
   await requireAdmin(routes.adminAntiSpam);
+  const t = await getT();
   const [settings, words] = await Promise.all([getAntiSpamSettings(), getBannedWords()]);
 
   return (
     <>
-      <PageHeader
-        title="Anti-spam"
-        description="Règles appliquées par la base de données à chaque annonce. Chaque modification est inscrite au journal de configuration."
-      />
+      <PageHeader title={t.adminUi.nav.antiSpam} description={t.adminPages.antiSpam.description} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Nouveaux comptes</CardTitle>
-          <CardDescription>
-            Limite le nombre d&apos;annonces qu&apos;un compte récent peut publier en 24 heures.
-            Au-delà, l&apos;annonce reste en brouillon et le vendeur est invité à réessayer le
-            lendemain.
-          </CardDescription>
+          <CardTitle>{t.adminPages.antiSpam.newAccounts}</CardTitle>
+          <CardDescription>{t.adminPages.antiSpam.newAccountsDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <AntiSpamSettingsForm
@@ -42,18 +40,15 @@ export default async function AdminAntiSpamPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Mots interdits</CardTitle>
-          <CardDescription>
-            Une annonce dont le titre ou la description contient l&apos;un de ces mots (mot entier,
-            sans tenir compte des majuscules ni des accents) ne peut pas être enregistrée.
-          </CardDescription>
+          <CardTitle>{t.adminPages.antiSpam.bannedWords}</CardTitle>
+          <CardDescription>{t.adminPages.antiSpam.bannedWordsDescription}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <BannedWordForm />
           {words.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun mot interdit pour le moment.</p>
+            <p className="text-sm text-muted-foreground">{t.adminPages.antiSpam.noBannedWords}</p>
           ) : (
-            <ul className="flex flex-wrap gap-2" aria-label="Mots interdits">
+            <ul className="flex flex-wrap gap-2" aria-label={t.adminPages.antiSpam.bannedWords}>
               {words.map((word) => (
                 <li key={word.id}>
                   <form
@@ -66,7 +61,7 @@ export default async function AdminAntiSpamPage() {
                       variant="ghost"
                       size="sm"
                       className="size-7 rounded-full p-0"
-                      aria-label={`Retirer « ${word.word} »`}
+                      aria-label={t.adminPages.antiSpam.removeWord(word.word)}
                     >
                       <X aria-hidden="true" />
                     </SubmitButton>
@@ -80,11 +75,8 @@ export default async function AdminAntiSpamPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Doublons</CardTitle>
-          <CardDescription>
-            Les annonces en ligne au titre identique (même vendeur, ou même description chez des
-            vendeurs différents) sont listées pour l&apos;équipe de modération.
-          </CardDescription>
+          <CardTitle>{t.adminPages.antiSpam.duplicates}</CardTitle>
+          <CardDescription>{t.adminPages.antiSpam.duplicatesDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <Link
@@ -92,7 +84,7 @@ export default async function AdminAntiSpamPage() {
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
           >
             <Copy className="size-4" aria-hidden="true" />
-            Voir les doublons probables
+            {t.adminPages.antiSpam.seeDuplicates}
           </Link>
         </CardContent>
       </Card>

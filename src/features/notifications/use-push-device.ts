@@ -11,6 +11,7 @@ import {
   subscribeToPush,
   usesServerKey,
 } from "./push-client";
+import { useT } from "@/i18n/client";
 
 export type PushDeviceStatus =
   "checking" | "not_configured" | "unsupported" | "ios_install" | "denied" | "off" | "on";
@@ -60,6 +61,7 @@ async function detectStatus(publicKey: string | undefined): Promise<PushDeviceSt
  * L'autorisation du navigateur n'est demandée qu'au clic, jamais au chargement.
  */
 export function usePushDevice() {
+  const t = useT();
   const publicKey = publicEnv.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const [status, setStatus] = useState<PushDeviceStatus>("checking");
   const [busy, setBusy] = useState(false);
@@ -76,15 +78,13 @@ export function usePushDevice() {
 
   /** Renvoie un message d'erreur, ou null si tout s'est bien passé. */
   const enable = useCallback(async (): Promise<string | null> => {
-    if (!publicKey) return "Les notifications push ne sont pas encore disponibles.";
+    if (!publicKey) return t.push.notAvailable;
     setBusy(true);
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         setStatus(permission === "denied" ? "denied" : "off");
-        return permission === "denied"
-          ? "Notifications refusées : autorisez-les dans les réglages du navigateur."
-          : "Autorisation non accordée.";
+        return permission === "denied" ? t.push.refused : t.push.notGranted;
       }
       const subscription = await subscribeToPush(publicKey);
       const result = await savePushSubscriptionAction(subscription.toJSON());
@@ -92,11 +92,11 @@ export function usePushDevice() {
       setStatus("on");
       return null;
     } catch {
-      return "Votre navigateur n'a pas pu activer les notifications. Réessayez plus tard.";
+      return t.push.browserFailed;
     } finally {
       setBusy(false);
     }
-  }, [publicKey]);
+  }, [publicKey, t]);
 
   const disable = useCallback(async () => {
     setBusy(true);

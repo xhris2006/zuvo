@@ -23,6 +23,17 @@ export type CategorySummary = {
 };
 
 /**
+ * Nom d'une catégorie dans la langue de l'utilisateur : traduction des
+ * catégories initiales si elle existe, sinon le nom enregistré en base.
+ */
+export function localizedCategoryName(
+  names: Record<string, string>,
+  category: CategorySummary,
+): string {
+  return Object.hasOwn(names, category.slug) ? names[category.slug]! : category.name;
+}
+
+/**
  * Catégories initiales. La source de vérité sera la table `categories`
  * (supabase/seed.sql reprend exactement ces slugs) ; ce fichier sert à
  * l'affichage tant que la base n'est pas connectée et à associer une icône

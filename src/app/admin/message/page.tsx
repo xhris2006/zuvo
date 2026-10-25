@@ -15,23 +15,29 @@ import {
 import { type AdminAnnouncement, getAdminAnnouncements } from "@/features/admin/management-queries";
 import { requireAdmin } from "@/features/admin/queries";
 import { toCameroonDateTimeInput } from "@/features/admin/schemas";
-import { formatDateTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
+import type { ServerDictionary } from "@/i18n/server-dictionaries";
 
-export const metadata: Metadata = { title: "Message global" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.announcement };
+}
 
-function announcementState(item: AdminAnnouncement, now = Date.now()) {
-  if (!item.isActive) return { label: "Désactivé", variant: "neutral" as const };
+function announcementState(t: ServerDictionary, item: AdminAnnouncement, now = Date.now()) {
+  const labels = t.adminPages.announcements.states;
+  if (!item.isActive) return { label: labels.disabled, variant: "neutral" as const };
   if (item.startsAt && new Date(item.startsAt).getTime() > now) {
-    return { label: "Programmé", variant: "warning" as const };
+    return { label: labels.scheduled, variant: "warning" as const };
   }
   if (item.endsAt && new Date(item.endsAt).getTime() <= now) {
-    return { label: "Terminé", variant: "neutral" as const };
+    return { label: labels.ended, variant: "neutral" as const };
   }
-  return { label: "Affiché", variant: "success" as const };
+  return { label: labels.shown, variant: "success" as const };
 }
 
 export default async function AdminAnnouncementsPage(props: PageProps<"/admin/message">) {
   await requireAdmin(routes.adminAnnouncements);
+  const t = await getT();
   const editId = (await props.searchParams).modifier;
   const announcements = await getAdminAnnouncements();
   const editing = announcements.find((item) => item.id === editId);
@@ -39,17 +45,17 @@ export default async function AdminAnnouncementsPage(props: PageProps<"/admin/me
   return (
     <>
       <PageHeader
-        title="Message global"
-        description="Bandeau affiché sous l'en-tête pour tous les visiteurs : information ou maintenance, avec dates facultatives."
+        title={t.adminUi.nav.announcement}
+        description={t.adminPages.announcements.description}
       />
       <section aria-labelledby="announcement-form" className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <h2 id="announcement-form" className="text-lg font-bold tracking-tight">
-            {editing ? "Modifier le message" : "Nouveau message"}
+            {editing ? t.adminPages.announcements.edit : t.adminPages.announcements.create}
           </h2>
           {editing ? (
             <Button asChild variant="ghost" size="sm">
-              <Link href={routes.adminAnnouncements}>Annuler</Link>
+              <Link href={routes.adminAnnouncements}>{t.adminUi.cancel}</Link>
             </Button>
           ) : null}
         </div>
@@ -69,52 +75,62 @@ export default async function AdminAnnouncementsPage(props: PageProps<"/admin/me
 
       <section aria-labelledby="announcement-list" className="flex flex-col gap-3">
         <h2 id="announcement-list" className="text-lg font-bold tracking-tight">
-          Messages
+          {t.adminPages.announcements.messages}
         </h2>
         {announcements.length === 0 ? (
-          <EmptyState icon={Megaphone} headingLevel="h3" title="Aucun message publié" />
+          <EmptyState icon={Megaphone} headingLevel="h3" title={t.adminPages.announcements.empty} />
         ) : (
           <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
             {announcements.map((item) => {
-              const state = announcementState(item);
+              const state = announcementState(t, item);
               return (
                 <li key={item.id} className="flex flex-col gap-2 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant={state.variant}>{state.label}</Badge>
                     <Badge variant={item.kind === "maintenance" ? "warning" : "primary"}>
-                      {item.kind === "maintenance" ? "Maintenance" : "Information"}
+                      {item.kind === "maintenance"
+                        ? t.announcement.maintenance
+                        : t.announcement.info}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {item.startsAt ? `du ${formatDateTime(item.startsAt)} ` : ""}
-                      {item.endsAt ? `au ${formatDateTime(item.endsAt)}` : ""}
+                      {item.startsAt
+                        ? t.adminPages.announcements.from(t.format.dateTime(item.startsAt))
+                        : ""}
+                      {item.endsAt
+                        ? t.adminPages.announcements.to(t.format.dateTime(item.endsAt))
+                        : ""}
                       {!item.startsAt && !item.endsAt
-                        ? `créé le ${formatDateTime(item.createdAt)}`
+                        ? t.adminPages.announcements.created(t.format.dateTime(item.createdAt))
                         : ""}
                     </span>
                   </div>
                   <p className="text-sm break-words">{item.message}</p>
                   {item.linkUrl ? (
-                    <p className="truncate text-xs text-muted-foreground">Lien : {item.linkUrl}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {t.adminPages.announcements.link(item.linkUrl)}
+                    </p>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`${routes.adminAnnouncements}?modifier=${item.id}` as Route}>
                         <Pencil aria-hidden="true" />
-                        Modifier
+                        {t.adminPages.announcements.modify}
                       </Link>
                     </Button>
                     <form action={toggleAnnouncementAction}>
                       <input type="hidden" name="id" value={item.id} />
                       <input type="hidden" name="active" value={String(!item.isActive)} />
                       <SubmitButton variant="outline" size="sm">
-                        {item.isActive ? "Désactiver" : "Activer"}
+                        {item.isActive
+                          ? t.adminUi.rowActions.deactivate
+                          : t.adminUi.rowActions.activate}
                       </SubmitButton>
                     </form>
                     <form action={deleteAnnouncementAction}>
                       <input type="hidden" name="id" value={item.id} />
                       <SubmitButton variant="ghost" size="sm" className="text-danger">
                         <Trash2 aria-hidden="true" />
-                        Supprimer
+                        {t.adminPages.announcements.delete}
                       </SubmitButton>
                     </form>
                   </div>

@@ -12,9 +12,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LogoMark } from "@/components/layout/logo";
 import { BackButton } from "@/components/ui/back-button";
+import { LanguageToggle } from "@/features/language/components/language-switch";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
-import { getDictionary } from "@/i18n";
+import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 
 type AuthCardProps = {
@@ -47,8 +48,8 @@ const floatingItems: { icon: LucideIcon; className: string; delay: string }[] = 
  * application : panneau de marque illustré (en haut sur mobile, à gauche sur
  * ordinateur) et formulaire sur une feuille claire.
  */
-export function AuthCard({ title, description, children, footer }: AuthCardProps) {
-  const t = getDictionary();
+export async function AuthCard({ title, description, children, footer }: AuthCardProps) {
+  const t = await getT();
   const points = [t.home.values.freeTitle, t.home.values.noFeeTitle, t.home.values.directTitle];
 
   return (
@@ -113,7 +114,8 @@ export function AuthCard({ title, description, children, footer }: AuthCardProps
 
       <div className="relative z-10 -mt-8 flex flex-1 flex-col rounded-t-[1.75rem] bg-background px-5 pt-7 pb-[max(2.5rem,env(safe-area-inset-bottom))] sm:px-8 lg:mt-0 lg:items-center lg:justify-center lg:rounded-none lg:px-12 lg:py-12">
         <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-          <div className="flex flex-col gap-1.5">
+          <LanguageToggle className="self-end" />
+          <div className="-mt-3 flex flex-col gap-1.5">
             <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">
               {title}
             </h1>

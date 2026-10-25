@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vm } from "@/lib/forms/validation";
 import { CITY_SLUG_PATTERN, slugify } from "@/features/locations/names";
 
 /** Décalage horaire du Cameroun (UTC+1, sans heure d'été). */
@@ -22,11 +23,7 @@ export function toCameroonDateTimeInput(iso: string | null): string {
   return shifted.toISOString().slice(0, 16);
 }
 
-const name = z
-  .string()
-  .trim()
-  .min(2, "Indiquez un nom d'au moins 2 caractères.")
-  .max(60, "60 caractères au maximum.");
+const name = z.string().trim().min(2, vm("nameMin", 2)).max(60, vm("maxChars", 60));
 
 /** Identifiant facultatif : déduit du nom s'il est vide. */
 function withSlug<T extends { name: string; slug: string }>(value: T, ctx: z.RefinementCtx) {
@@ -35,7 +32,7 @@ function withSlug<T extends { name: string; slug: string }>(value: T, ctx: z.Ref
     ctx.addIssue({
       code: "custom",
       path: ["slug"],
-      message: "Identifiant invalide : lettres minuscules, chiffres et tirets.",
+      message: vm("slugInvalid"),
     });
     return z.NEVER;
   }
@@ -49,7 +46,7 @@ export const categoryFormSchema = z
 export const cityFormSchema = z
   .object({
     name,
-    region: z.string().trim().max(60, "60 caractères au maximum."),
+    region: z.string().trim().max(60, vm("maxChars", 60)),
     slug: z.string().trim().toLowerCase().max(60),
   })
   .transform(withSlug);
@@ -58,23 +55,19 @@ export const announcementKinds = ["info", "maintenance"] as const;
 
 export const announcementFormSchema = z
   .object({
-    kind: z.enum(announcementKinds, { error: "Type de message invalide." }),
-    message: z
-      .string()
-      .trim()
-      .min(3, "Le message doit contenir au moins 3 caractères.")
-      .max(300, "300 caractères au maximum."),
+    kind: z.enum(announcementKinds, { error: vm("announcementKindInvalid") }),
+    message: z.string().trim().min(3, vm("announcementMin", 3)).max(300, vm("maxChars", 300)),
     linkUrl: z
       .string()
       .trim()
       .max(300)
       .refine((value) => value === "" || /^(\/([^/\\].*)?|https:\/\/\S+)$/.test(value), {
-        message: "Lien invalide : une adresse du site (/aide) ou commençant par https://.",
+        message: vm("linkInvalid"),
       }),
     startsAt: z.string().transform((value, ctx) => {
       const date = parseCameroonDateTime(value);
       if (date === undefined) {
-        ctx.addIssue({ code: "custom", message: "Date de début invalide." });
+        ctx.addIssue({ code: "custom", message: vm("startInvalid") });
         return z.NEVER;
       }
       return date;
@@ -82,7 +75,7 @@ export const announcementFormSchema = z
     endsAt: z.string().transform((value, ctx) => {
       const date = parseCameroonDateTime(value);
       if (date === undefined) {
-        ctx.addIssue({ code: "custom", message: "Date de fin invalide." });
+        ctx.addIssue({ code: "custom", message: vm("endInvalid") });
         return z.NEVER;
       }
       return date;
@@ -91,7 +84,7 @@ export const announcementFormSchema = z
   })
   .refine((value) => !value.startsAt || !value.endsAt || value.endsAt > value.startsAt, {
     path: ["endsAt"],
-    message: "La fin doit être postérieure au début.",
+    message: vm("endBeforeStart"),
   });
 
 /**
@@ -114,15 +107,15 @@ export function normalizeBannedWord(value: string): string | null {
 
 export const antiSpamSettingsSchema = z.object({
   newAccountDays: z.coerce
-    .number({ error: "Indiquez un nombre." })
-    .int("Nombre entier attendu.")
-    .min(0, "0 au minimum (0 : aucune limite).")
-    .max(365, "365 au maximum."),
+    .number({ error: vm("numberRequired") })
+    .int(vm("integerRequired"))
+    .min(0, vm("minValueNoLimit"))
+    .max(365, vm("maxValue", 365)),
   newAccountDailyListings: z.coerce
-    .number({ error: "Indiquez un nombre." })
-    .int("Nombre entier attendu.")
-    .min(1, "1 au minimum.")
-    .max(100, "100 au maximum."),
+    .number({ error: vm("numberRequired") })
+    .int(vm("integerRequired"))
+    .min(1, vm("minValue", 1))
+    .max(100, vm("maxValue", 100)),
 });
 
 export type AntiSpamField = "newAccountDays" | "newAccountDailyListings" | "word";

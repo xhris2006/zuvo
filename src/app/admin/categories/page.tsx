@@ -15,30 +15,37 @@ import {
 } from "@/features/admin/management-actions";
 import { getAdminCategories } from "@/features/admin/management-queries";
 import { requireAdmin } from "@/features/admin/queries";
-import { formatCount } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Catégories" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminUi.nav.categories };
+}
 
 export default async function AdminCategoriesPage() {
   await requireAdmin(routes.adminCategories);
+  const t = await getT();
   const categories = await getAdminCategories();
 
   return (
     <>
       <PageHeader
-        title="Catégories"
-        description="Ordre d'affichage, noms et disponibilité des catégories. Une catégorie désactivée n'est plus proposée ; ses annonces restent en ligne."
+        title={t.adminUi.nav.categories}
+        description={t.adminPages.categories.description}
       />
       <section aria-labelledby="new-category" className="flex flex-col gap-3">
         <h2 id="new-category" className="text-lg font-bold tracking-tight">
-          Nouvelle catégorie
+          {t.adminPages.categories.newCategory}
         </h2>
-        <ReferenceCreateForm action={createCategoryAction} submitLabel="Ajouter la catégorie" />
+        <ReferenceCreateForm
+          action={createCategoryAction}
+          submitLabel={t.adminPages.categories.addCategory}
+        />
       </section>
 
       <section aria-labelledby="category-list" className="flex flex-col gap-3">
         <h2 id="category-list" className="text-lg font-bold tracking-tight">
-          {formatCount(categories.length)} catégories
+          {t.adminPages.categories.count(t.format.count(categories.length))}
         </h2>
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">
           {categories.map((category, index) => (
@@ -46,10 +53,14 @@ export default async function AdminCategoriesPage() {
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span className="font-mono">{category.slug}</span>
                 <span>
-                  · {formatCount(category.activeListings)} annonce
-                  {category.activeListings > 1 ? "s" : ""} en vente
+                  {t.adminPages.categories.activeListings(
+                    category.activeListings,
+                    t.format.count(category.activeListings),
+                  )}
                 </span>
-                {category.isActive ? null : <Badge variant="neutral">Désactivée</Badge>}
+                {category.isActive ? null : (
+                  <Badge variant="neutral">{t.adminPages.deactivated}</Badge>
+                )}
               </div>
               <div className="flex flex-wrap items-start gap-2">
                 <ReferenceEditForm

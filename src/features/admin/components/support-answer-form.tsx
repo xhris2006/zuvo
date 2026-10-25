@@ -7,6 +7,7 @@ import { Field } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import { answerSupportRequestAction, type SupportAnswerField } from "../actions";
 
@@ -14,6 +15,7 @@ const idle: FormState<SupportAnswerField> = { status: "idle" };
 
 /** Réponse de l'équipe à une demande d'assistance, avec clôture facultative. */
 export function SupportAnswerForm({ requestId }: { requestId: string }) {
+  const t = useT();
   const [state, formAction, pending] = useActionState(answerSupportRequestAction, idle);
   const id = useId();
   if (state.status === "success") return <FormMessage state={state} />;
@@ -23,7 +25,7 @@ export function SupportAnswerForm({ requestId }: { requestId: string }) {
       <FormMessage state={state} />
       <Field
         id={`${id}-response`}
-        label="Réponse (envoyée à l'utilisateur)"
+        label={t.adminUi.supportAnswer.response}
         error={state.fieldErrors?.response}
       >
         {(control) => (
@@ -39,11 +41,11 @@ export function SupportAnswerForm({ requestId }: { requestId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-sm">
           <Checkbox name="close" />
-          Clore la demande
+          {t.adminUi.supportAnswer.close}
         </label>
         <SubmitButton pending={pending} size="sm">
           <Send aria-hidden="true" />
-          Envoyer
+          {t.adminUi.supportAnswer.send}
         </SubmitButton>
       </div>
     </form>

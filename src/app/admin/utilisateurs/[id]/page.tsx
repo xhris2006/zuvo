@@ -41,10 +41,12 @@ import { ListingStatusBadge } from "@/features/listings/components/listing-statu
 import { listingHref } from "@/features/listings/links";
 import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
-import { getDictionary } from "@/i18n";
-import { formatDate, formatDateTime, formatPrice, formatRelativeTime } from "@/lib/format";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Fiche utilisateur", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.adminPages.user.title, robots: { index: false } };
+}
 
 function Stat({ label, value, alert = false }: { label: string; value: number; alert?: boolean }) {
   return (
@@ -83,7 +85,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
   const detail = await getAdminUserDetail(id);
   if (!detail) notFound();
 
-  const t = getDictionary();
+  const t = await getT();
   const { profile, overview, account } = detail;
   const city = await cityName(profile.city);
   const isSelf = profile.id === me.id;
@@ -98,7 +100,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
         className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
-        Tous les utilisateurs
+        {t.adminPages.user.back}
       </Link>
 
       <Card>
@@ -111,12 +113,13 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                 {profile.role ? (
                   <Badge variant="primary">{t.admin.roles[profile.role]}</Badge>
                 ) : null}
-                {suspended ? <Badge variant="danger">Suspendu</Badge> : null}
+                {suspended ? <Badge variant="danger">{t.adminPages.suspended}</Badge> : null}
                 {profile.verifiedAt ? <VerifiedBadge /> : null}
               </h1>
               <p className="text-sm text-muted-foreground">
                 @{profile.username}
-                {city ? ` · ${city}` : ""} · inscrit le {formatDate(profile.createdAt)}
+                {city ? ` · ${city}` : ""} ·{" "}
+                {t.adminPages.users.joined(t.format.date(profile.createdAt))}
               </p>
               {account ? (
                 <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -130,30 +133,33 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                     </a>
                   ) : null}
                   <span className="text-muted-foreground">
-                    {account.confirmed ? "Adresse confirmée" : "Adresse non confirmée"} · dernière
-                    connexion{" "}
-                    {account.lastSignInAt ? formatRelativeTime(account.lastSignInAt) : "inconnue"}
+                    {account.confirmed
+                      ? t.adminPages.user.emailConfirmed
+                      : t.adminPages.user.emailNotConfirmed}{" "}
+                    ·{" "}
+                    {account.lastSignInAt
+                      ? t.adminPages.user.lastSignIn(t.format.relativeTime(account.lastSignInAt))
+                      : t.adminPages.user.lastSignInUnknown}
                   </span>
                 </p>
               ) : myRole === "admin" ? (
                 <p className="text-xs text-muted-foreground">
-                  Adresse e-mail indisponible : clé serveur Supabase non configurée.
+                  {t.adminPages.user.emailUnavailable}
                 </p>
               ) : null}
               {suspended && profile.suspendedAt ? (
                 <p className="text-sm text-danger">
-                  Suspendu {formatRelativeTime(profile.suspendedAt)}
+                  {t.adminPages.user.suspendedSince(t.format.relativeTime(profile.suspendedAt))}
                   {profile.suspendedUntil
-                    ? `, jusqu'au ${formatDateTime(profile.suspendedUntil)} (levée automatique)`
-                    : ", sans date de fin"}
-                  .
+                    ? t.adminPages.user.suspendedUntil(t.format.dateTime(profile.suspendedUntil))
+                    : t.adminPages.user.suspendedForever}
                 </p>
               ) : null}
             </div>
             <Button asChild variant="ghost" size="sm" className="shrink-0">
               <Link href={publicProfileHref(profile.username)}>
                 <ExternalLink aria-hidden="true" />
-                <span className="sr-only sm:not-sr-only">Profil public</span>
+                <span className="sr-only sm:not-sr-only">{t.adminPages.user.publicProfile}</span>
               </Link>
             </Button>
           </div>
@@ -163,27 +169,31 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
             </p>
           ) : null}
           <dl className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            <Stat label="Annonces en ligne" value={overview.listings_active} />
-            <Stat label="Vendues" value={overview.listings_sold} />
-            <Stat label="Retirées" value={overview.listings_removed} alert />
-            <Stat label="Signalements reçus" value={overview.reports_received} alert />
-            <Stat label="Avertissements" value={overview.warnings} alert />
-            <Stat label="Bloqué par" value={overview.blocked_by} alert />
-            <Stat label="Conversations" value={overview.conversations} />
-            <Stat label="Messages (7 j)" value={overview.messages_sent_7d} />
-            <Stat label="Signalements faits" value={overview.reports_made} />
-            <Stat label="Brouillons" value={overview.listings_draft} />
+            <Stat label={t.adminPages.user.stats.active} value={overview.listings_active} />
+            <Stat label={t.adminPages.user.stats.sold} value={overview.listings_sold} />
+            <Stat label={t.adminPages.user.stats.removed} value={overview.listings_removed} alert />
+            <Stat
+              label={t.adminPages.user.stats.reportsReceived}
+              value={overview.reports_received}
+              alert
+            />
+            <Stat label={t.adminPages.user.stats.warnings} value={overview.warnings} alert />
+            <Stat label={t.adminPages.user.stats.blockedBy} value={overview.blocked_by} alert />
+            <Stat label={t.adminPages.user.stats.conversations} value={overview.conversations} />
+            <Stat label={t.adminPages.user.stats.messages} value={overview.messages_sent_7d} />
+            <Stat label={t.adminPages.user.stats.reportsMade} value={overview.reports_made} />
+            <Stat label={t.adminPages.user.stats.drafts} value={overview.listings_draft} />
           </dl>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Actions</CardTitle>
+          <CardTitle>{t.adminPages.user.actions}</CardTitle>
           <CardDescription>
             {protectedAccount
-              ? "Aucune action de modération n'est possible sur votre propre compte ou sur un membre de l'équipe."
-              : "Chaque action est inscrite au journal de modération."}
+              ? t.adminPages.user.protectedDescription
+              : t.adminPages.user.actionsDescription}
           </CardDescription>
         </CardHeader>
         {protectedAccount ? null : (
@@ -192,37 +202,37 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
               trigger={
                 <Button variant="outline" size="sm">
                   <ShieldAlert aria-hidden="true" />
-                  Avertir
+                  {t.adminPages.user.warn}
                 </Button>
               }
-              title={`Avertir ${profile.displayName}`}
-              description="L'utilisateur recevra ce texte en notification (et en notification push si elle est activée)."
-              confirmLabel="Envoyer l'avertissement"
+              title={t.adminPages.user.warnTitle(profile.displayName)}
+              description={t.adminPages.user.warnDescription}
+              confirmLabel={t.adminPages.user.warnConfirm}
               confirmVariant="primary"
               action={warnUserAction}
               fields={{ userId: profile.id }}
-              reasonLabel="Message à l'utilisateur"
+              reasonLabel={t.adminPages.user.warnLabel}
             />
             <ModerationDialog
               trigger={
                 <Button variant="outline" size="sm">
                   <UserRoundX aria-hidden="true" />
-                  Réinitialiser le profil
+                  {t.adminPages.user.resetProfile}
                 </Button>
               }
-              title="Réinitialiser le profil"
-              description="Pour un contenu inapproprié : les éléments cochés sont retirés immédiatement."
-              confirmLabel="Réinitialiser"
+              title={t.adminPages.user.resetProfile}
+              description={t.adminPages.user.resetDescription}
+              confirmLabel={t.adminPages.user.resetConfirm}
               action={resetProfileAction}
               fields={{ userId: profile.id }}
-              reasonLabel="Motif (consigné dans le journal)"
+              reasonLabel={t.adminUi.reasonForLog}
             >
               <fieldset className="flex flex-col gap-3">
-                <legend className="mb-2 text-sm font-medium">Éléments à retirer</legend>
-                <ResetChoice name="avatar" label="Photo de profil" />
-                <ResetChoice name="bio" label="Présentation" />
-                <ResetChoice name="displayName" label="Nom affiché">
-                  Remplacé par le nom d&apos;utilisateur (@{profile.username}).
+                <legend className="mb-2 text-sm font-medium">{t.adminPages.user.resetItems}</legend>
+                <ResetChoice name="avatar" label={t.adminPages.user.resetAvatar} />
+                <ResetChoice name="bio" label={t.adminPages.user.resetBio} />
+                <ResetChoice name="displayName" label={t.adminPages.user.resetDisplayName}>
+                  {t.adminPages.user.resetDisplayNameHint(profile.username)}
                 </ResetChoice>
               </fieldset>
             </ModerationDialog>
@@ -231,12 +241,12 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                 trigger={
                   <Button variant="outline" size="sm" className="text-danger">
                     <PackageX aria-hidden="true" />
-                    Retirer ses {onlineListings} annonce{onlineListings > 1 ? "s" : ""}
+                    {t.adminPages.user.removeAll(onlineListings)}
                   </Button>
                 }
-                title="Retirer toutes ses annonces en ligne ?"
-                description="Elles seront masquées immédiatement ; le vendeur est prévenu pour chacune avec le motif indiqué."
-                confirmLabel="Tout retirer"
+                title={t.adminPages.user.removeAllTitle}
+                description={t.adminPages.user.removeAllDescription}
+                confirmLabel={t.adminPages.user.removeAllConfirm}
                 action={removeUserListingsAction}
                 fields={{ userId: profile.id }}
               />
@@ -248,15 +258,15 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                 trigger={
                   <Button variant="destructive" size="sm">
                     <UserX aria-hidden="true" />
-                    Suspendre
+                    {t.adminPages.suspend}
                   </Button>
                 }
-                title={`Suspendre ${profile.displayName} ?`}
-                description="Son profil et ses annonces seront masqués ; il ne pourra plus publier ni envoyer de messages."
-                confirmLabel="Suspendre"
+                title={t.adminPages.suspendTitle(profile.displayName)}
+                description={t.adminPages.suspendDescription}
+                confirmLabel={t.adminPages.suspend}
                 action={setUserSuspensionAction}
                 fields={{ userId: profile.id, suspended: "true" }}
-                reasonLabel="Motif (consigné dans le journal)"
+                reasonLabel={t.adminUi.reasonForLog}
               >
                 <SuspensionFields />
               </ModerationDialog>
@@ -268,11 +278,8 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
       {myRole === "admin" && !isSelf ? (
         <Card>
           <CardHeader>
-            <CardTitle>Rôle et compte</CardTitle>
-            <CardDescription>
-              Réservé aux administrateurs. Un modérateur traite signalements, annonces et comptes,
-              sans accès aux catégories, aux villes, à l&apos;équipe ni à la configuration.
-            </CardDescription>
+            <CardTitle>{t.adminPages.user.roleAndAccount}</CardTitle>
+            <CardDescription>{t.adminPages.user.roleAndAccountDescription}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-start gap-2">
             {profile.role === "admin" ? (
@@ -280,7 +287,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                 userId={profile.id}
                 role="admin"
                 grant={false}
-                label="Retirer le rôle administrateur"
+                label={t.adminPages.user.revokeAdmin}
                 variant="destructive"
               />
             ) : (
@@ -290,13 +297,23 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                     userId={profile.id}
                     role="moderator"
                     grant={false}
-                    label="Retirer le rôle modérateur"
+                    label={t.adminPages.user.revokeModerator}
                   />
                 ) : suspended ? null : (
-                  <RoleForm userId={profile.id} role="moderator" grant label="Nommer modérateur" />
+                  <RoleForm
+                    userId={profile.id}
+                    role="moderator"
+                    grant
+                    label={t.adminPages.team.makeModerator}
+                  />
                 )}
                 {suspended ? null : (
-                  <RoleForm userId={profile.id} role="admin" grant label="Nommer administrateur" />
+                  <RoleForm
+                    userId={profile.id}
+                    role="admin"
+                    grant
+                    label={t.adminPages.team.makeAdmin}
+                  />
                 )}
               </>
             )}
@@ -312,11 +329,11 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
 
       <Card>
         <CardHeader>
-          <CardTitle>Annonces ({detail.listings.length})</CardTitle>
+          <CardTitle>{t.adminPages.user.listings(detail.listings.length)}</CardTitle>
         </CardHeader>
         <CardContent>
           {detail.listings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucune annonce.</p>
+            <p className="text-sm text-muted-foreground">{t.adminPages.user.noListings}</p>
           ) : (
             <ul className="divide-y divide-border">
               {detail.listings.map((listing) => (
@@ -329,13 +346,15 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                       {listing.title}
                     </Link>
                     <span className="text-xs text-muted-foreground">
-                      {listing.price === null ? "Prix à définir" : formatPrice(listing.price)} ·
-                      créée {formatRelativeTime(listing.createdAt)}
-                      {listing.removedReason ? ` · retirée : ${listing.removedReason}` : ""}
+                      {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}{" "}
+                      · {t.adminPages.listings.created(t.format.relativeTime(listing.createdAt))}
+                      {listing.removedReason
+                        ? t.adminPages.user.removedWithReason(listing.removedReason)
+                        : ""}
                     </span>
                   </span>
                   {listing.removedAt ? (
-                    <Badge variant="danger">Retirée</Badge>
+                    <Badge variant="danger">{t.adminPages.listings.removed}</Badge>
                   ) : (
                     <ListingStatusBadge status={listing.status} />
                   )}
@@ -344,7 +363,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                       <input type="hidden" name="listingId" value={listing.id} />
                       <SubmitButton variant="ghost" size="sm">
                         <RotateCcw aria-hidden="true" />
-                        Restaurer
+                        {t.adminPages.user.restore}
                       </SubmitButton>
                     </form>
                   ) : listing.status === "draft" || protectedAccount ? null : (
@@ -352,12 +371,12 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                       trigger={
                         <Button variant="ghost" size="sm" className="text-danger">
                           <Ban aria-hidden="true" />
-                          Retirer
+                          {t.adminPages.remove}
                         </Button>
                       }
-                      title={`Retirer « ${listing.title} » ?`}
-                      description="L'annonce sera masquée immédiatement et le vendeur prévenu avec le motif indiqué."
-                      confirmLabel="Retirer"
+                      title={t.adminPages.removeTitle(listing.title)}
+                      description={t.adminPages.removeDescription}
+                      confirmLabel={t.adminPages.remove}
                       action={removeListingAction}
                       fields={{ listingId: listing.id }}
                     />
@@ -372,12 +391,12 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Signalements le concernant</CardTitle>
-            <CardDescription>Sur son compte ou sur ses annonces.</CardDescription>
+            <CardTitle>{t.adminPages.user.reportsAbout}</CardTitle>
+            <CardDescription>{t.adminPages.user.reportsAboutDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             {detail.reports.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun signalement.</p>
+              <p className="text-sm text-muted-foreground">{t.adminPages.user.noReports}</p>
             ) : (
               <ul className="divide-y divide-border text-sm">
                 {detail.reports.map((report) => (
@@ -385,7 +404,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                     <span className="font-medium">{t.reports.reasons[report.reason]}</span>
                     <span className="text-muted-foreground">
                       · {t.reports.targets[report.targetType].toLowerCase()} ·{" "}
-                      {formatRelativeTime(report.createdAt)}
+                      {t.format.relativeTime(report.createdAt)}
                     </span>
                     <Badge
                       variant={report.status === "pending" ? "warning" : "neutral"}
@@ -402,11 +421,11 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
 
         <Card>
           <CardHeader>
-            <CardTitle>Historique de modération</CardTitle>
+            <CardTitle>{t.adminPages.user.history}</CardTitle>
           </CardHeader>
           <CardContent>
             {detail.history.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucune action.</p>
+              <p className="text-sm text-muted-foreground">{t.adminPages.user.noHistory}</p>
             ) : (
               <ul className="divide-y divide-border text-sm">
                 {detail.history.map((entry) => (
@@ -416,8 +435,8 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                       <span className="break-words text-muted-foreground">{entry.note}</span>
                     ) : null}
                     <span className="text-xs text-muted-foreground">
-                      {formatRelativeTime(entry.createdAt)}
-                      {entry.adminUsername ? ` · par @${entry.adminUsername}` : ""}
+                      {t.format.relativeTime(entry.createdAt)}
+                      {entry.adminUsername ? t.adminPages.by(entry.adminUsername) : ""}
                     </span>
                   </li>
                 ))}

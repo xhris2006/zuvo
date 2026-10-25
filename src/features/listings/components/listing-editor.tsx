@@ -20,9 +20,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { listingLimits } from "@/config/limits";
 import { type City, cities as defaultCities } from "@/config/locations";
 import { getCategoryIcon } from "@/features/categories/data";
-import { getDictionary } from "@/i18n";
-import { formatPrice } from "@/lib/format";
+import { useT } from "@/i18n/client";
 import { fieldErrorsFrom } from "@/lib/forms/form-state";
+import { translateValidation } from "@/lib/forms/validation";
 import { ImageProcessingError, resizeImage } from "@/lib/images/resize";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -84,7 +84,7 @@ export function ListingEditor({
   defaultCity,
   listing,
 }: ListingEditorProps) {
-  const t = getDictionary();
+  const t = useT();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const uploadedPaths = useRef(new Map<string, string>());
@@ -139,8 +139,13 @@ export function ListingEditor({
     const fields = STEP_FIELDS[STEPS[index]!];
     const parsed = readFields();
     const all: Partial<Record<EditorField, string>> = parsed.success
-      ? publicationErrors(parsed.data)
-      : fieldErrorsFrom<ListingField>(parsed.error);
+      ? Object.fromEntries(
+          Object.entries(publicationErrors(parsed.data)).map(([field, code]) => [
+            field,
+            translateValidation(code, t.validation),
+          ]),
+        )
+      : fieldErrorsFrom<ListingField>(parsed.error, t);
     if (images.length === 0) all.images = t.sell.photosRequired;
     const errors = Object.fromEntries(
       fields.flatMap((field) => (all[field] ? [[field, all[field]]] : [])),
@@ -171,7 +176,8 @@ export function ListingEditor({
       description: text("description"),
       category: categories.find((category) => category.slug === text("category"))?.name ?? null,
       condition: t.listing.conditions[condition] ?? null,
-      price: parsed.success && parsed.data.price !== null ? formatPrice(parsed.data.price) : null,
+      price:
+        parsed.success && parsed.data.price !== null ? t.format.price(parsed.data.price) : null,
       city: cities.find((city) => city.slug === text("city"))?.name ?? null,
     };
   }
@@ -209,7 +215,7 @@ export function ListingEditor({
     for (const file of files) {
       try {
         if (!file.type.startsWith("image/") || file.size > MAX_INPUT_BYTES) {
-          throw new ImageProcessingError("Image non prise en charge ou trop volumineuse.");
+          throw new ImageProcessingError("tooLarge");
         }
         const blob = await resizeImage(file, {
           maxSize: listingLimits.imageMaxDimension,
@@ -225,9 +231,7 @@ export function ListingEditor({
         setFieldErrors((errors) => ({
           ...errors,
           images:
-            error instanceof ImageProcessingError
-              ? error.message
-              : "Une photo n'a pas pu être traitée.",
+            error instanceof ImageProcessingError ? t.images[error.code] : t.images.photoFailed,
         }));
       } finally {
         setProcessing((count) => count - 1);
@@ -266,7 +270,7 @@ export function ListingEditor({
       setMessage(null);
       setFieldErrors({});
       if (intent === "publish" && images.length === 0) {
-        setFieldErrors({ images: "Ajoutez au moins une photo pour publier." });
+        setFieldErrors({ images: t.editor.photosToPublish });
         showStep(0);
         return;
       }
@@ -277,7 +281,7 @@ export function ListingEditor({
       if (saved.status === "error") {
         const errors = saved.fieldErrors ?? {};
         setFieldErrors(errors);
-        setMessage(saved.message ?? (saved.fieldErrors ? "Corrigez les champs indiqués." : null));
+        setMessage(saved.message ?? (saved.fieldErrors ? t.editor.fixFields : null));
         const fields = Object.keys(errors) as ListingField[];
         const target = fields.length > 0 ? Math.min(...fields.map(stepOfField)) : -1;
         if (target >= 0 && target !== step) showStep(target);
@@ -287,7 +291,7 @@ export function ListingEditor({
 
       const payload = await uploadNewImages(saved.listingId);
       if (!payload) {
-        setMessage("L'envoi des photos a échoué. Vos informations sont enregistrées : réessayez.");
+        setMessage(t.editor.uploadFailed);
         return;
       }
 
@@ -343,7 +347,7 @@ export function ListingEditor({
             </button>
           )}
         </div>
-        <ol className="grid grid-cols-5 gap-1.5" aria-label="Étapes">
+        <ol className="grid grid-cols-5 gap-1.5" aria-label={t.editor.steps}>
           {STEPS.map((key, index) => (
             <li key={key}>
               <button
@@ -351,7 +355,7 @@ export function ListingEditor({
                 onClick={() => goTo(index)}
                 disabled={index > maxStep || pending}
                 aria-current={index === step ? "step" : undefined}
-                aria-label={`${index + 1}. ${t.sell.steps[key].title}`}
+                aria-label={t.editor.stepLabel(index + 1, t.sell.steps[key].title)}
                 className="group block w-full py-2 disabled:cursor-default"
               >
                 <span
@@ -413,14 +417,14 @@ export function ListingEditor({
 
           {key === "description" ? (
             <Card>
-              <Field id="title" label="Titre" error={fieldErrors.title} required>
+              <Field id="title" label={t.editor.title} error={fieldErrors.title} required>
                 {(control) => (
                   <Input
                     {...control}
                     name="title"
                     maxLength={listingLimits.titleMax}
                     defaultValue={listing?.title}
-                    placeholder="Ex. : Robe en wax taille M"
+                    placeholder={t.editor.titlePlaceholder}
                     autoComplete="off"
                     enterKeyHint="next"
                     required
@@ -429,8 +433,8 @@ export function ListingEditor({
               </Field>
               <Field
                 id="description"
-                label="Description"
-                hint="Taille, marque, couleur, défauts éventuels, raison de la vente…"
+                label={t.editor.description}
+                hint={t.editor.descriptionHint}
                 error={fieldErrors.description}
                 required
               >
@@ -452,7 +456,7 @@ export function ListingEditor({
               <Card>
                 <ChoiceGroup
                   name="category"
-                  legend="Catégorie"
+                  legend={t.editor.category}
                   error={fieldErrors.category}
                   defaultValue={listing?.categorySlug ?? null}
                   columns="grid-cols-2 sm:grid-cols-3"
@@ -466,7 +470,7 @@ export function ListingEditor({
               <Card>
                 <ChoiceGroup
                   name="condition"
-                  legend="État"
+                  legend={t.editor.condition}
                   error={fieldErrors.condition}
                   defaultValue={listing?.condition ?? null}
                   columns="grid-cols-1 sm:grid-cols-2"
@@ -482,7 +486,7 @@ export function ListingEditor({
 
           {key === "price" ? (
             <Card>
-              <Field id="price" label="Prix" error={fieldErrors.price} required>
+              <Field id="price" label={t.editor.price} error={fieldErrors.price} required>
                 {(control) => (
                   <div className="relative">
                     <Input
@@ -492,7 +496,7 @@ export function ListingEditor({
                       autoComplete="off"
                       enterKeyHint="next"
                       defaultValue={listing?.price ?? ""}
-                      placeholder="Ex. : 15000"
+                      placeholder={t.editor.pricePlaceholder}
                       className="h-14 pr-20 text-2xl font-bold"
                     />
                     <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
@@ -501,14 +505,14 @@ export function ListingEditor({
                   </div>
                 )}
               </Field>
-              <Field id="city" label="Ville" error={fieldErrors.city} required>
+              <Field id="city" label={t.editor.city} error={fieldErrors.city} required>
                 {(control) => (
                   <Select
                     {...control}
                     name="city"
                     defaultValue={listing?.city ?? defaultCity ?? ""}
                   >
-                    <option value="">Choisir…</option>
+                    <option value="">{t.editor.chooseCity}</option>
                     {cities.map((city) => (
                       <option key={city.slug} value={city.slug}>
                         {city.name}
@@ -540,7 +544,7 @@ export function ListingEditor({
               size="lg"
               onClick={goBack}
               disabled={pending}
-              aria-label={`${t.sell.back} : ${t.sell.steps[STEPS[step - 1]!].title}`}
+              aria-label={t.editor.backTo(t.sell.back, t.sell.steps[STEPS[step - 1]!].title)}
             >
               <ArrowLeft aria-hidden="true" />
               <span className="hidden sm:inline">{t.sell.back}</span>
@@ -576,7 +580,7 @@ export function ListingEditor({
         </div>
       </div>
       <p className="sr-only" aria-live="polite">
-        {t.sell.stepOf(step + 1, STEPS.length)} : {stepTitle}
+        {t.editor.stepAnnouncement(t.sell.stepOf(step + 1, STEPS.length), stepTitle)}
       </p>
     </form>
   );
@@ -677,24 +681,20 @@ function ReviewCard({
   photoCount: number;
   onEdit: (step: StepKey) => void;
 }) {
-  const t = getDictionary();
+  const t = useT();
   const rows: { label: string; value: string | null; step: StepKey }[] = [
-    {
-      label: "Photos",
-      value: photoCount > 1 ? `${photoCount} photos` : `${photoCount} photo`,
-      step: "photos",
-    },
-    { label: "Prix", value: summary.price, step: "price" },
-    { label: "Catégorie", value: summary.category, step: "details" },
-    { label: "État", value: summary.condition, step: "details" },
-    { label: "Ville", value: summary.city, step: "price" },
+    { label: t.editor.photos, value: t.editor.photoCount(photoCount), step: "photos" },
+    { label: t.editor.price, value: summary.price, step: "price" },
+    { label: t.editor.category, value: summary.category, step: "details" },
+    { label: t.editor.condition, value: summary.condition, step: "details" },
+    { label: t.editor.city, value: summary.city, step: "price" },
   ];
   const editButton = (label: string, step: StepKey) => (
     <button
       type="button"
       onClick={() => onEdit(step)}
       className="shrink-0 rounded-md px-1 py-1 text-sm font-semibold text-primary hover:text-primary-hover"
-      aria-label={`${t.sell.edit} : ${label}`}
+      aria-label={t.editor.editLabel(t.sell.edit, label)}
     >
       {t.sell.edit}
     </button>
@@ -709,10 +709,10 @@ function ReviewCard({
           ) : null}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <p className="text-xl font-bold tracking-tight">{summary.price ?? "Prix à définir"}</p>
-          <p className="line-clamp-2 font-medium">{summary.title || "Sans titre"}</p>
+          <p className="text-xl font-bold tracking-tight">{summary.price ?? t.listing.priceTbd}</p>
+          <p className="line-clamp-2 font-medium">{summary.title || t.editor.untitled}</p>
         </div>
-        {editButton("Titre", "description")}
+        {editButton(t.editor.title, "description")}
       </div>
       <dl className="divide-y divide-border border-t border-border text-sm">
         {rows.map((row) => (
@@ -724,8 +724,8 @@ function ReviewCard({
         ))}
         <div className="flex flex-col gap-1 px-4 py-3">
           <div className="flex items-center gap-3">
-            <dt className="flex-1 text-muted-foreground">Description</dt>
-            {editButton("Description", "description")}
+            <dt className="flex-1 text-muted-foreground">{t.editor.description}</dt>
+            {editButton(t.editor.description, "description")}
           </div>
           <dd className="line-clamp-4 whitespace-pre-line text-foreground/90">
             {summary.description || "—"}

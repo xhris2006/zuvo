@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vm } from "@/lib/forms/validation";
 
 export const SUBJECT_MAX = 120;
 export const MESSAGE_MAX = 2000;
@@ -13,17 +14,17 @@ export const supportRequestSchema = z
     subject: z
       .string()
       .trim()
-      .min(3, "Indiquez un objet d'au moins 3 caractères.")
-      .max(SUBJECT_MAX, `${SUBJECT_MAX} caractères au maximum.`),
+      .min(3, vm("subjectMin", 3))
+      .max(SUBJECT_MAX, vm("maxChars", SUBJECT_MAX)),
     message: z
       .string()
       .trim()
-      .min(10, "Décrivez votre demande en au moins 10 caractères.")
-      .max(MESSAGE_MAX, `${MESSAGE_MAX} caractères au maximum.`),
+      .min(10, vm("requestMin", 10))
+      .max(MESSAGE_MAX, vm("maxChars", MESSAGE_MAX)),
   })
   .refine((value) => value.kind === "contact" || value.listingId !== null, {
     path: ["listingId"],
-    message: "Annonce à contester introuvable.",
+    message: vm("appealListingMissing"),
   });
 
 export type SupportField = "subject" | "message" | "listingId";

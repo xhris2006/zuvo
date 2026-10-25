@@ -20,24 +20,24 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { routes } from "@/config/routes";
 import { signInHref } from "@/features/auth/links";
-import { getDictionary } from "@/i18n";
+import { useT } from "@/i18n/client";
 import type { FormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { cn } from "@/lib/utils";
 import { createReportAction, type ReportField } from "../actions";
 import { REPORT_DETAILS_MAX, type ReportTargetType, reasonsByTarget } from "../schemas";
 
-const buttonLabels: Record<ReportTargetType, string> = {
-  listing: "Signaler l'annonce",
-  user: "Signaler",
-  message: "Signaler",
-};
+const buttonLabels = {
+  listing: "reportListingButton",
+  user: "report",
+  message: "report",
+} as const satisfies Record<ReportTargetType, string>;
 
-const titles: Record<ReportTargetType, string> = {
-  listing: "Signaler cette annonce",
-  user: "Signaler cet utilisateur",
-  message: "Signaler ce message",
-};
+const titles = {
+  listing: "reportListing",
+  user: "reportUser",
+  message: "reportMessage",
+} as const satisfies Record<ReportTargetType, string>;
 
 type ReportDialogProps = {
   targetType: ReportTargetType;
@@ -56,7 +56,7 @@ type ReportDialogProps = {
 const idle: FormState<ReportField> = { status: "idle" };
 
 function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetType" | "targetId">) {
-  const t = getDictionary();
+  const t = useT();
   const [state, formAction, pending] = useActionState(createReportAction, idle);
   const formRef = useRef<HTMLFormElement>(null);
   const groupId = useId();
@@ -67,16 +67,15 @@ function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetTyp
       <div className="flex flex-col gap-4">
         <FormMessage state={state} />
         <p className="text-sm text-muted-foreground">
-          Nous examinons chaque signalement. Si vous vous sentez en danger, bloquez
-          l&apos;utilisateur et consultez nos{" "}
+          {t.moderation.reportedBody}{" "}
           <Link href={routes.safety} className="font-medium underline">
-            conseils de sécurité
+            {t.moderation.safetyTips}
           </Link>
           .
         </p>
         <DialogFooter>
           <DialogClose asChild>
-            <Button>Fermer</Button>
+            <Button>{t.moderation.close}</Button>
           </DialogClose>
         </DialogFooter>
       </div>
@@ -99,7 +98,7 @@ function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetTyp
         className="flex flex-col gap-2 outline-none"
       >
         <p id={`${groupId}-legend`} className="mb-1 text-sm font-medium">
-          Motif
+          {t.moderation.reason}
         </p>
         {reasonsByTarget[targetType].map((reason) => (
           <label
@@ -124,8 +123,8 @@ function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetTyp
       </div>
       <Field
         id={`${groupId}-details`}
-        label="Précisions (facultatif)"
-        hint="Ne communiquez pas de données personnelles inutiles."
+        label={t.moderation.details}
+        hint={t.moderation.detailsHint}
         error={state.fieldErrors?.details}
       >
         {(control) => (
@@ -141,11 +140,11 @@ function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetTyp
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="ghost">
-            Annuler
+            {t.moderation.cancel}
           </Button>
         </DialogClose>
         <SubmitButton pending={pending} variant="destructive">
-          Envoyer le signalement
+          {t.moderation.sendReport}
         </SubmitButton>
       </DialogFooter>
     </form>
@@ -164,12 +163,13 @@ export function ReportDialog({
   onOpenChange,
   returnFocusRef,
 }: ReportDialogProps) {
+  const t = useT();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const open = controlledOpen ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
   // Nouveau formulaire à chaque ouverture (après un envoi réussi notamment).
   const [formKey, setFormKey] = useState(0);
-  const label = titles[targetType];
+  const label = t.moderation[titles[targetType]];
 
   const trigger =
     variant === "icon" ? (
@@ -187,7 +187,7 @@ export function ReportDialog({
     ) : (
       <Button variant="ghost" size="sm" className={cn("text-muted-foreground", className)}>
         <Flag aria-hidden="true" />
-        {buttonLabels[targetType]}
+        {t.moderation[buttonLabels[targetType]]}
       </Button>
     );
 
@@ -202,7 +202,7 @@ export function ReportDialog({
         )}
       >
         <Flag aria-hidden="true" />
-        Signaler
+        {t.moderation.report}
       </Link>
     );
   }
@@ -225,10 +225,7 @@ export function ReportDialog({
       >
         <DialogHeader>
           <DialogTitle>{label}</DialogTitle>
-          <DialogDescription>
-            Votre signalement est confidentiel : la personne concernée ne saura pas qui l&apos;a
-            envoyé.
-          </DialogDescription>
+          <DialogDescription>{t.moderation.confidential}</DialogDescription>
         </DialogHeader>
         <ReportForm key={formKey} targetType={targetType} targetId={targetId} />
       </DialogContent>

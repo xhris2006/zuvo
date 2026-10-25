@@ -13,6 +13,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
+import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,8 +25,11 @@ import { ListingResults } from "@/features/listings/components/listing-results";
 import { getOwnListings } from "@/features/listings/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { AvatarQuickEdit } from "@/features/profiles/components/avatar-quick-edit";
+import { OwnProfileMenu } from "@/features/profiles/components/own-profile-menu";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
+import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
+import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -49,6 +53,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
   // Profil absent : compte supprimé entre-temps ou incohérence ; on repart de zéro.
   if (!profile) redirect(routes.signIn);
   const [stats, listings] = await Promise.all([getProfileStats(user.id), getOwnListings(user.id)]);
+  const t = getDictionary();
 
   const menu = [
     { href: routes.feed, icon: Rss, label: "Mon fil", description: "Annonces des profils suivis" },
@@ -72,8 +77,12 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
             userId={user.id}
             name={profile.display_name}
             currentUrl={avatarUrl(profile.avatar_path)}
+            avatarClassName="size-24 text-2xl sm:size-28 sm:text-3xl"
+            messageClassName="top-auto bottom-1 left-full ml-3"
           />
         }
+        back={<BackButton fallbackHref={routes.home} />}
+        menu={<OwnProfileMenu username={profile.username} />}
         actions={
           <>
             <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
@@ -93,19 +102,23 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
       />
 
       <section aria-labelledby="my-listings" className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 id="my-listings" className="text-lg font-bold tracking-tight sm:text-xl">
-            Mes annonces
-          </h2>
-          {listings.length > 0 ? (
-            <Button asChild size="sm">
-              <Link href={routes.sell}>
-                <Plus aria-hidden="true" />
-                Vendre
-              </Link>
-            </Button>
-          ) : null}
-        </div>
+        <ProfileTabs
+          labelledBy="my-listings"
+          tabs={[
+            { key: "listings", label: t.profile.myListings, count: listings.length, current: true },
+            { key: "favorites", label: t.profile.favorites, href: routes.favorites },
+          ]}
+          trailing={
+            listings.length > 0 ? (
+              <Button asChild size="sm">
+                <Link href={routes.sell}>
+                  <Plus aria-hidden="true" />
+                  <span className="max-[359px]:sr-only">Vendre</span>
+                </Link>
+              </Button>
+            ) : null
+          }
+        />
         {searchParams.annonce === "supprimee" ? (
           <Alert variant="success">L&apos;annonce a été supprimée.</Alert>
         ) : null}

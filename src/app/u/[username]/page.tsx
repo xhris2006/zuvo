@@ -2,6 +2,7 @@ import { PackageOpen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
@@ -18,8 +19,10 @@ import { UserActionsMenu } from "@/features/moderation/components/user-actions-m
 import { hasBlocked } from "@/features/moderation/queries";
 import { FollowButton } from "@/features/profiles/components/follow-button";
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
+import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileByUsername, getProfileStats, isFollowing } from "@/features/profiles/queries";
 import { USERNAME_PATTERN } from "@/features/profiles/username";
+import { getDictionary } from "@/i18n";
 
 async function loadProfile(rawUsername: string) {
   const username = decodeURIComponent(rawUsername).toLowerCase();
@@ -63,8 +66,10 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   ]);
   const profilePath = publicProfileHref(profile.username);
   const pageCount = Math.ceil(listings.total / searchLimits.pageSize);
+  const t = getDictionary();
 
   let actions;
+  let menu;
   if (isOwnProfile) {
     actions = (
       <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
@@ -72,46 +77,52 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
       </Button>
     );
   } else if (viewer) {
-    actions = (
-      <>
-        {blocked ? null : (
-          <FollowButton
-            profileId={profile.id}
-            username={profile.username}
-            initialFollowing={following}
-            className="flex-1 sm:flex-none"
-          />
-        )}
-        <UserActionsMenu
-          user={{ id: profile.id, username: profile.username, displayName: profile.display_name }}
-          initialBlocked={blocked}
-          returnTo={profilePath}
-        />
-      </>
+    actions = blocked ? null : (
+      <FollowButton
+        profileId={profile.id}
+        username={profile.username}
+        initialFollowing={following}
+        className="flex-1 sm:flex-none"
+      />
+    );
+    menu = (
+      <UserActionsMenu
+        user={{ id: profile.id, username: profile.username, displayName: profile.display_name }}
+        initialBlocked={blocked}
+        returnTo={profilePath}
+      />
     );
   } else {
     actions = (
-      <>
-        <Button asChild className="flex-1 sm:flex-none">
-          <Link href={signInHref(profilePath)}>Suivre</Link>
-        </Button>
-        <ReportDialog
-          targetType="user"
-          targetId={profile.id}
-          signedIn={false}
-          returnTo={profilePath}
-        />
-      </>
+      <Button asChild className="flex-1 sm:flex-none">
+        <Link href={signInHref(profilePath)}>Suivre</Link>
+      </Button>
+    );
+    menu = (
+      <ReportDialog
+        targetType="user"
+        targetId={profile.id}
+        signedIn={false}
+        returnTo={profilePath}
+        className="h-10 rounded-full px-3.5 text-foreground hover:bg-muted"
+      />
     );
   }
 
   return (
     <div className="container-page flex max-w-4xl flex-col gap-8 pt-5 sm:gap-10 sm:pt-10">
-      <ProfileHeader profile={profile} stats={stats} actions={actions} />
+      <ProfileHeader
+        profile={profile}
+        stats={stats}
+        actions={actions}
+        menu={menu}
+        back={<BackButton fallbackHref={routes.explore} />}
+      />
       <section aria-labelledby="profile-listings" className="flex flex-col gap-4">
-        <h2 id="profile-listings" className="text-lg font-bold tracking-tight sm:text-xl">
-          Articles en vente
-        </h2>
+        <ProfileTabs
+          labelledBy="profile-listings"
+          tabs={[{ key: "on-sale", label: t.profile.onSale, count: listings.total, current: true }]}
+        />
         {listings.items.length > 0 ? (
           <>
             <ListingResults listings={listings.items} />

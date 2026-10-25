@@ -289,6 +289,7 @@ export const en: Dictionary = {
       listing_removed: "Listing removed",
       moderation_warning: "Moderation warning",
       support_reply: "Support reply",
+      admin_message: "Message from the team",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -307,6 +308,7 @@ export const en: Dictionary = {
         subject
           ? `The team replied to your request ${quote(subject)}.`
           : "The team replied to your request.",
+      admin_message: (note: string | null) => note ?? "",
     },
     unread: "Unread",
   },
@@ -352,6 +354,7 @@ export const en: Dictionary = {
       seller_verified: "Verified seller badge granted",
       seller_unverified: "Verified seller badge removed",
       support_answered: "Support request handled",
+      user_messaged: "Message sent",
     },
     roles: { admin: "Administrator", moderator: "Moderator" },
     entities: {
@@ -361,6 +364,7 @@ export const en: Dictionary = {
       banned_word: "Banned word",
       setting: "Setting",
       user_search: "Account search",
+      broadcast: "Message to all members",
     } as Record<string, string>,
     settings: {
       new_account_days: "Length of a new account (days)",
@@ -686,7 +690,8 @@ export const en: Dictionary = {
     followedListing: "New listings from profiles I follow",
     followedListingHint: "When a seller you follow publishes a listing.",
     legend: "Notify me about",
-    alwaysRemoval: "You are always notified when the moderators remove a listing.",
+    alwaysRemoval:
+      "You are always notified of messages from the team and of listings removed by the moderators.",
     save: "Save",
   },
   messaging: {
@@ -787,6 +792,8 @@ export const en: Dictionary = {
       space: "Administration area",
       closeMenu: "Close the menu",
       sections: "Sections of the administration area",
+      notify: "Messages to members",
+      backToSite: (site: string) => `Back to ${site}`,
     },
     close: "Close",
     cancel: "Cancel",
@@ -870,6 +877,8 @@ export const en: Dictionary = {
       active: "Enabled",
       saveChanges: "Save changes",
       publish: "Publish the message",
+      notifyMembers: "Also send this message as a notification to all members",
+      notifyMembersHint: "One notification per member, in addition to the banner.",
     },
     antiSpam: {
       days: "An account is “new” for (days)",
@@ -897,6 +906,18 @@ export const en: Dictionary = {
         "Keys generated in this browser only: they are neither sent nor stored. Copy them into Vercel now. Never share the private key with anyone.",
       publicHint: "Public key: can be exposed to the browser.",
       privateHint: "Private key: tick “Sensitive” in Vercel. Do not share it with anyone.",
+    },
+    teamMessage: {
+      recipients: "Recipients",
+      oneMember: "One member",
+      allMembers: "All members",
+      username: "Recipient's username",
+      usernamePlaceholder: "@username",
+      message: "Message",
+      messageHint:
+        "Received in notifications (and as a push notification if enabled). 500 characters maximum.",
+      send: "Send the message",
+      sendAll: "Send to all members",
     },
   },
 };

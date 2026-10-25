@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { sendTeamMessageAction } from "@/features/admin/actions";
 import { toggleFavoriteAction } from "@/features/favorites/actions";
 import { finalizeListingAction, saveListingAction } from "@/features/listings/actions";
 import {
@@ -7,8 +8,16 @@ import {
   sendMessageAction,
   startConversationAction,
 } from "@/features/messaging/actions";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { toggleFollowAction } from "@/features/profiles/actions";
-import { asOwner, asUser, createActiveListing, createUser, suspendUser } from "../support/db";
+import {
+  asOwner,
+  asUser,
+  createActiveListing,
+  createUser,
+  makeAdmin,
+  suspendUser,
+} from "../support/db";
 import { actAs } from "./support/context";
 import { flushAfter, RedirectError } from "./support/setup";
 
@@ -157,6 +166,49 @@ describe("notifications push envoyées par l'application", () => {
     expect(pushesTo(fanDevice)).toEqual([
       expect.objectContaining({ title: "Nouvelle annonce", url: `/annonces/${saved.listingId}` }),
     ]);
+  });
+
+  it("envoie en push les messages de l'équipe", async () => {
+    const admin = await createUser();
+    await makeAdmin(admin.id);
+    const member = await createUser();
+    const other = await createUser();
+    const memberDevice = await registerDevice(member.id);
+    const otherDevice = await registerDevice(other.id);
+
+    actAs(admin);
+    const one = await sendTeamMessageAction(
+      { status: "idle" },
+      form({ recipients: "one", username: member.username, message: "Bienvenue sur Zuvo !" }),
+    );
+    expect(one.status).toBe("success");
+    await flushAfter();
+    expect(pushesTo(memberDevice)).toEqual([
+      expect.objectContaining({
+        title: "Message de l'équipe",
+        body: "Bienvenue sur Zuvo !",
+        url: "/notifications",
+      }),
+    ]);
+    expect(pushesTo(otherDevice)).toEqual([]);
+
+    // Message à tous : la fonction SQL crée une notification par compte (voir
+    // supabase/tests/admin-messages.test.ts). Pour ne pas prévenir les comptes
+    // des autres tests exécutés en parallèle, on crée ici ces notifications pour
+    // deux membres seulement, puis on vérifie leur envoi push.
+    await asOwner((sql) =>
+      sql(
+        `insert into public.notifications (user_id, type, note)
+         select unnest($1::uuid[]), 'admin_message', $2`,
+        [[member.id, other.id], "Maintenance ce soir de 22 h à 23 h."],
+      ),
+    );
+    schedulePushDispatch({ type: "admin_message" });
+    await flushAfter();
+    expect(pushesTo(otherDevice)).toEqual([
+      expect.objectContaining({ body: "Maintenance ce soir de 22 h à 23 h." }),
+    ]);
+    expect(pushesTo(memberDevice)).toHaveLength(2);
   });
 
   it("n'envoie rien si le push est désactivé ou si l'auteur est suspendu", async () => {

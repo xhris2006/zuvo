@@ -14,7 +14,7 @@ export type NotificationSubject = {
   listingId: string | null;
   listingTitle: string | null;
   conversationId: string | null;
-  /** Texte d'un avertissement de la modération. */
+  /** Texte d'un avertissement ou d'un message de l'équipe. */
   note?: string | null;
 };
 
@@ -57,6 +57,8 @@ export function describeNotification(
         title,
         body: copy.bodies.support_reply(subject.note ? shorten(subject.note) : null),
       };
+    case "admin_message":
+      return { title, body: copy.bodies.admin_message(subject.note ?? null) };
   }
 }
 
@@ -74,6 +76,7 @@ export function notificationHref(
     case "listing_removed":
       return subject.listingId ? listingHref(subject.listingId) : routes.notifications;
     case "moderation_warning":
+    case "admin_message":
       return routes.notifications;
     case "support_reply":
       return routes.support;

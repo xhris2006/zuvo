@@ -87,19 +87,19 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
             <span className="rounded-[0.7rem] bg-white p-0.5 shadow-raised">
               <LogoMark className="size-8" />
             </span>
-            <span className="text-xl font-extrabold tracking-tight">{siteConfig.name}</span>
+            <span className="text-xl font-bold tracking-tight">{siteConfig.name}</span>
           </Link>
           <span className="size-10 lg:hidden" aria-hidden="true" />
         </div>
 
         <div className="relative mt-7 flex max-w-[16rem] flex-col gap-2 sm:max-w-sm lg:mt-0 lg:max-w-lg lg:gap-5">
-          <p className="text-[1.625rem] leading-[1.1] font-extrabold tracking-tight text-balance lg:text-5xl">
+          <p className="text-[1.375rem] leading-[1.15] font-bold tracking-tight text-balance lg:text-4xl">
             {t.auth.heroTitle}
           </p>
           <p className="text-sm text-white/90 lg:text-lg">{t.auth.heroBody}</p>
           <ul className="mt-2 hidden flex-col gap-3 lg:flex">
             {points.map((point) => (
-              <li key={point} className="flex items-center gap-3 text-base font-semibold">
+              <li key={point} className="flex items-center gap-3 text-base font-medium">
                 <BadgeCheck className="size-5 shrink-0 text-brand-200" aria-hidden="true" />
                 {point}
               </li>
@@ -116,12 +116,8 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
         <div className="mx-auto flex w-full max-w-md flex-col gap-6">
           <LanguageToggle className="self-end" />
           <div className="-mt-3 flex flex-col gap-1.5">
-            <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">
-              {title}
-            </h1>
-            {description ? (
-              <p className="text-[0.9375rem] text-muted-foreground">{description}</p>
-            ) : null}
+            <h1 className="text-2xl leading-tight font-bold tracking-tight sm:text-3xl">{title}</h1>
+            {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
           </div>
           {children}
           {footer ? (

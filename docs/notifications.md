@@ -26,8 +26,20 @@ créer via l'API.
 | `listing_removed`       | annonce retirée par la modération                                  | toujours envoyée                                                  |
 | `moderation_warning`    | avertissement de la modération                                     | toujours envoyée                                                  |
 | `support_reply`         | réponse de l'équipe à une demande d'assistance ou une contestation | toujours envoyée                                                  |
+| `admin_message`         | message de l'équipe à un membre, ou d'un administrateur à tous     | toujours envoyée                                                  |
 
 Aucune notification n'est créée entre deux utilisateurs qui se sont bloqués.
+
+Messages de l'équipe (Administration → Messages aux membres, ou « Envoyer un
+message » sur la fiche d'un utilisateur) : fonctions `admin_message_user`
+(administrateurs et modérateurs, inscrite au journal de modération) et
+`admin_broadcast_message` (administrateurs, une notification par compte non
+suspendu, inscrite au journal de configuration, un envoi à tous par minute et
+par administrateur). Le message global peut aussi être envoyé à tous en
+notification (case à cocher du formulaire). Pour un envoi à tous, le push part
+par lots, quelques appareils à la fois ; avec plusieurs milliers d'appareils,
+l'envoi peut dépasser la durée maximale d'une fonction de l'hébergeur : les
+notifications restent alors visibles dans l'application.
 Les notifications de message servent à l'envoi push : elles n'apparaissent pas
 dans la page Notifications (les messages ont leur propre boîte de réception et
 leur propre compteur) et sont marquées comme lues à l'ouverture de la

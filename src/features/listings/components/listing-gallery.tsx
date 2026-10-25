@@ -57,7 +57,10 @@ export function ListingGallery({ images, title, overlay }: ListingGalleryProps) 
       <div className="relative">
         <div
           ref={trackRef}
-          className="flex aspect-[4/5] snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto rounded-3xl bg-muted sm:aspect-[4/3] sm:rounded-2xl [&::-webkit-scrollbar]:hidden"
+          // Zone défilante atteignable au clavier (flèches gauche et droite).
+          tabIndex={0}
+          role="region"
+          className="flex aspect-[4/5] snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto rounded-3xl bg-muted outline-offset-2 sm:aspect-[4/3] sm:rounded-2xl [&::-webkit-scrollbar]:hidden"
           onScroll={(event) => {
             const track = event.currentTarget;
             setActive(Math.round(track.scrollLeft / Math.max(track.clientWidth, 1)));

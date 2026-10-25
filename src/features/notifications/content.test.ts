@@ -39,6 +39,23 @@ describe("describeNotification", () => {
     ).toBe("Votre annonce «\u00a0iPhone 12\u00a0» a été retirée par la modération.");
   });
 
+  it("reprend le texte d'un message de l'équipe", () => {
+    expect(
+      describeNotification({
+        type: "admin_message",
+        actorName: null,
+        listingTitle: null,
+        note: "Maintenance ce soir de 22 h à 23 h.",
+      }),
+    ).toEqual({ title: "Message de l'équipe", body: "Maintenance ce soir de 22 h à 23 h." });
+    expect(
+      describe_(
+        { type: "admin_message", actorName: null, listingTitle: null, note: "Hello" },
+        getDictionary("en"),
+      ).title,
+    ).toBe("Message from the team");
+  });
+
   it("remplace un auteur ou une annonce indisponible", () => {
     expect(
       describeNotification({ type: "listing_favorited", actorName: null, listingTitle: null }).body,

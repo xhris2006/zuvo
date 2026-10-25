@@ -394,7 +394,7 @@ export function ChatView({
                 rows={1}
                 maxLength={MESSAGE_MAX_LENGTH}
                 placeholder={photo ? t.messaging.addMessage : t.messaging.writeMessage}
-                className="field-sizing-content max-h-36 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-card px-4 py-2.5 text-base focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
+                className="field-sizing-content max-h-36 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-card px-4 py-2.5 text-control focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm"
               />
               <Button
                 type="submit"

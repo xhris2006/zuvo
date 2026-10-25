@@ -50,7 +50,7 @@ type SidebarNavProps = {
 };
 
 const itemClass =
-  "group relative flex h-11 items-center gap-3.5 rounded-xl px-3 text-[0.9375rem] transition-colors";
+  "group relative flex h-11 items-center gap-3.5 rounded-xl px-3 text-sm transition-colors";
 
 /** Liens de la barre latérale (ordinateur), avec l'état actif et les compteurs. */
 export function SidebarNav({ account, isStaff }: SidebarNavProps) {
@@ -118,7 +118,7 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
       <div className="px-3 pt-4">
         <Link
           href={routes.sell}
-          className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[0.9375rem] font-semibold text-primary-foreground shadow-raised transition-colors hover:bg-primary-hover"
+          className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-raised transition-colors hover:bg-primary-hover"
         >
           <Plus className="size-5" strokeWidth={2.4} aria-hidden="true" />
           {t.nav.sellCta}

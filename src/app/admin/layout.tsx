@@ -20,11 +20,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { role } = await requireStaff(routes.admin);
   const t = await getT();
   return (
-    <div className="container-page flex max-w-6xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-8">
-      <div className="z-30 lg:sticky lg:top-4">
-        <AdminNav role={role} roleLabel={t.admin.roles[role]} />
+    // data-admin : l'en-tête, la barre latérale et la navigation du bas du site
+    // sont masqués (globals.css) ; la barre latérale de l'administration les remplace.
+    <div data-admin className="flex flex-col">
+      <AdminNav role={role} roleLabel={t.admin.roles[role]} />
+      <div className="container-page flex max-w-6xl min-w-0 flex-col gap-4 pt-4 pb-12 sm:gap-6 sm:pt-6 lg:pt-8">
+        {children}
       </div>
-      <div className="flex min-w-0 flex-col gap-4 sm:gap-6">{children}</div>
     </div>
   );
 }

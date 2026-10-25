@@ -30,6 +30,34 @@ export type DispatchSummary = {
 /** Au-delà, une notification n'est plus envoyée en push (évite les rattrapages tardifs). */
 const MAX_AGE_MS = 10 * 60 * 1000;
 
+/**
+ * Message de l'équipe à tous les membres : une notification par compte. Les
+ * filtres « in » sont découpés en lots (longueur des requêtes) et les envois
+ * menés quelques-uns à la fois.
+ */
+const BATCH_SIZE = 200;
+const CONCURRENCY = 8;
+
+function batches<T>(items: T[]): T[][] {
+  const result: T[][] = [];
+  for (let index = 0; index < items.length; index += BATCH_SIZE) {
+    result.push(items.slice(index, index + BATCH_SIZE));
+  }
+  return result;
+}
+
+/** Applique `task` à chaque élément, au plus CONCURRENCY à la fois. */
+async function forEachLimited<T>(items: T[], task: (item: T) => Promise<void>) {
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const item = items[next++]!;
+      await task(item);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, items.length) }, worker));
+}
+
 const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id, note,
   actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at, suspended_until),
   listing:listings(title)`;
@@ -76,18 +104,24 @@ export async function dispatchPendingPush(
 
   if (deliverable.length > 0) {
     const userIds = [...new Set(deliverable.map((notification) => notification.user_id))];
-    const [{ data: preferences }, { data: subscriptions }] = await Promise.all([
-      admin.from("notification_preferences").select("user_id, push_enabled").in("user_id", userIds),
-      admin
-        .from("push_subscriptions")
-        .select("id, user_id, endpoint, p256dh, auth")
-        .in("user_id", userIds),
-    ]);
+    const preferences: { user_id: string; push_enabled: boolean }[] = [];
+    const subscriptions: (StoredSubscription & { user_id: string })[] = [];
+    for (const ids of batches(userIds)) {
+      const [{ data: preferenceRows }, { data: subscriptionRows }] = await Promise.all([
+        admin.from("notification_preferences").select("user_id, push_enabled").in("user_id", ids),
+        admin
+          .from("push_subscriptions")
+          .select("id, user_id, endpoint, p256dh, auth")
+          .in("user_id", ids),
+      ]);
+      preferences.push(...(preferenceRows ?? []));
+      subscriptions.push(...(subscriptionRows ?? []));
+    }
     const pushEnabled = new Set(
-      (preferences ?? []).filter((row) => row.push_enabled).map((row) => row.user_id),
+      preferences.filter((row) => row.push_enabled).map((row) => row.user_id),
     );
     const devicesByUser = new Map<string, StoredSubscription[]>();
-    for (const subscription of subscriptions ?? []) {
+    for (const subscription of subscriptions) {
       const devices = devicesByUser.get(subscription.user_id) ?? [];
       devices.push(subscription);
       devicesByUser.set(subscription.user_id, devices);
@@ -95,14 +129,14 @@ export async function dispatchPendingPush(
 
     const sentIds: string[] = [];
     const expiredIds: string[] = [];
-    for (const notification of deliverable) {
+    await forEachLimited(deliverable, async (notification) => {
       const devices = devicesByUser.get(notification.user_id) ?? [];
       if (!pushEnabled.has(notification.user_id) || devices.length === 0) {
         summary.skipped += 1;
         outcomes.set(notification.id, {
           status: pushEnabled.has(notification.user_id) ? "no_device" : "disabled",
         });
-        continue;
+        return;
       }
       const subject: NotificationSubject = {
         type: notification.type,
@@ -140,16 +174,16 @@ export async function dispatchPendingPush(
                 result.errors[0] ?? (result.expired.length > 0 ? "abonnement expiré" : undefined),
             },
       );
-    }
+    });
 
-    if (expiredIds.length > 0) {
-      await admin.from("push_subscriptions").delete().in("id", expiredIds);
+    for (const ids of batches(expiredIds)) {
+      await admin.from("push_subscriptions").delete().in("id", ids);
     }
-    if (sentIds.length > 0) {
+    for (const ids of batches([...new Set(sentIds)])) {
       await admin
         .from("push_subscriptions")
         .update({ last_used_at: new Date().toISOString() })
-        .in("id", [...new Set(sentIds)]);
+        .in("id", ids);
     }
   }
 
@@ -172,11 +206,13 @@ async function recordOutcomes(
     groups.set(key, group);
   }
   await Promise.all(
-    [...groups.values()].map(({ status, detail, ids }) =>
-      admin
-        .from("notifications")
-        .update({ push_status: status, push_detail: detail })
-        .in("id", ids),
+    [...groups.values()].flatMap(({ status, detail, ids }) =>
+      batches(ids).map((batch) =>
+        admin
+          .from("notifications")
+          .update({ push_status: status, push_detail: detail })
+          .in("id", batch),
+      ),
     ),
   );
 }

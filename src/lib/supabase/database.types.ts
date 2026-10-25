@@ -934,6 +934,7 @@ export type Database = {
         Args: { p_close?: boolean; p_request_id: string; p_response: string };
         Returns: undefined;
       };
+      admin_broadcast_message: { Args: { p_message: string }; Returns: number };
       admin_check_user_deletion: { Args: { p_user_id: string }; Returns: string };
       admin_find_duplicate_listings: {
         Args: { p_limit?: number };
@@ -996,6 +997,7 @@ export type Database = {
         Args: { p_reason: string; p_user_id: string; p_username: string };
         Returns: undefined;
       };
+      admin_message_user: { Args: { p_message: string; p_user_id: string }; Returns: undefined };
       admin_remove_listing: {
         Args: { p_listing_id: string; p_reason: string; p_report_id?: string };
         Returns: undefined;
@@ -1111,7 +1113,8 @@ export type Database = {
         | "user_deleted"
         | "seller_verified"
         | "seller_unverified"
-        | "support_answered";
+        | "support_answered"
+        | "user_messaged";
       notification_type:
         | "new_message"
         | "new_follower"
@@ -1119,7 +1122,8 @@ export type Database = {
         | "listing_favorited"
         | "listing_removed"
         | "moderation_warning"
-        | "support_reply";
+        | "support_reply"
+        | "admin_message";
       report_reason:
         | "scam"
         | "prohibited_item"
@@ -1270,6 +1274,7 @@ export const Constants = {
         "seller_verified",
         "seller_unverified",
         "support_answered",
+        "user_messaged",
       ],
       notification_type: [
         "new_message",
@@ -1279,6 +1284,7 @@ export const Constants = {
         "listing_removed",
         "moderation_warning",
         "support_reply",
+        "admin_message",
       ],
       report_reason: [
         "scam",

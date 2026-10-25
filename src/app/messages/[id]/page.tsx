@@ -65,7 +65,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
           </Link>
           <Avatar name={name} src={avatarUrl(other?.avatar_path)} size="sm" />
           <div className="flex min-w-0 flex-1 flex-col">
-            <h1 className="truncate text-[0.95rem] leading-tight font-semibold">
+            <h1 className="truncate text-sm leading-tight font-semibold">
               {other ? (
                 <Link href={publicProfileHref(other.username)} className="hover:underline">
                   {name}

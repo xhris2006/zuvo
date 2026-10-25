@@ -116,6 +116,15 @@ export function AnnouncementForm({ defaults }: { defaults: AnnouncementDefaults 
         <Checkbox name="isActive" defaultChecked={defaults.isActive} />
         {t.adminUi.announcementForm.active}
       </label>
+      <label className="flex items-start gap-3 text-sm">
+        <Checkbox name="notifyMembers" className="mt-0.5" />
+        <span className="flex flex-col">
+          <span className="font-medium">{t.adminUi.announcementForm.notifyMembers}</span>
+          <span className="text-xs text-muted-foreground">
+            {t.adminUi.announcementForm.notifyMembersHint}
+          </span>
+        </span>
+      </label>
       <SubmitButton pending={pending} className="self-start">
         <Megaphone aria-hidden="true" />
         {defaults.id ? t.adminUi.announcementForm.saveChanges : t.adminUi.announcementForm.publish}

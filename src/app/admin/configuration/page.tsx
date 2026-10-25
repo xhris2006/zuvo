@@ -12,7 +12,10 @@ import {
   getPushActivity,
   getPushServerStatus,
 } from "@/features/notifications/push/diagnostics";
+import { getAuthSettings } from "@/features/auth/settings";
 import { getDictionary } from "@/i18n";
+import { getSiteUrl } from "@/lib/env";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import { formatRelativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +77,13 @@ function failureHint(detail: string | null): string | null {
 export default async function AdminConfigurationPage() {
   await requireAdmin(routes.adminConfig);
   const t = getDictionary();
-  const [status, activity] = await Promise.all([getPushServerStatus(), getPushActivity()]);
+  const [status, activity, authSettings] = await Promise.all([
+    getPushServerStatus(),
+    getPushActivity(),
+    getAuthSettings(),
+  ]);
+  const siteUrl = getSiteUrl();
+  const supabaseUrl = getSupabaseConfig()?.url ?? "https://<ref>.supabase.co";
   const pushReady =
     status.vapidPublicKey &&
     status.vapidPrivateKey &&
@@ -158,6 +167,66 @@ export default async function AdminConfigurationPage() {
               )}
             </Check>
           </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Connexion avec Google</CardTitle>
+          <CardDescription>
+            {authSettings?.googleEnabled
+              ? "Le bouton « Continuer avec Google » est affiché sur les pages de connexion et d'inscription."
+              : "Le bouton « Continuer avec Google » apparaîtra automatiquement (sous 5 minutes) dès que le fournisseur Google sera activé dans Supabase."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <ul className="divide-y divide-border">
+            <Check
+              state={
+                authSettings === null ? "error" : authSettings.googleEnabled ? "ok" : "warning"
+              }
+              label={
+                authSettings === null
+                  ? "Réglages de Supabase Auth illisibles"
+                  : authSettings.googleEnabled
+                    ? "Fournisseur Google activé"
+                    : "Fournisseur Google non activé"
+              }
+            />
+          </ul>
+          {authSettings?.googleEnabled ? null : (
+            <div className="flex flex-col gap-3">
+              <h2 className="text-base font-semibold">Mise en place</h2>
+              <ol className="ml-5 flex list-decimal flex-col gap-2 text-sm text-muted-foreground">
+                <li>
+                  Google Cloud Console → APIs et services → Écran de consentement OAuth : type «
+                  Externe », nom de l&apos;application, e-mail d&apos;assistance.
+                </li>
+                <li>
+                  Identifiants → Créer des identifiants → ID client OAuth → « Application Web » :
+                  <ul className="mt-1 ml-4 flex list-disc flex-col gap-1">
+                    <li>
+                      Origine JavaScript autorisée : <EnvName>{siteUrl}</EnvName>
+                    </li>
+                    <li>
+                      URI de redirection autorisé :{" "}
+                      <EnvName>{`${supabaseUrl}/auth/v1/callback`}</EnvName>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  Supabase → Authentication → Sign In / Providers → Google : activez, puis collez
+                  l&apos;ID client et le code secret (ne les envoyez à personne).
+                </li>
+                <li>
+                  Supabase → Authentication → URL Configuration : Site URL{" "}
+                  <EnvName>{siteUrl}</EnvName> et, dans Redirect URLs,{" "}
+                  <EnvName>{`${siteUrl}/auth/callback`}</EnvName>.
+                </li>
+                <li>Revenez sur cette page : le point ci-dessus doit être vert.</li>
+              </ol>
+            </div>
+          )}
         </CardContent>
       </Card>
 

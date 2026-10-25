@@ -241,6 +241,7 @@ export const fr = {
     safety: "Conseils de sécurité",
     reports: "Signalements et blocage",
     contact: "Aide et contact",
+    support: "Assistance",
     rights: "Tous droits réservés.",
   },
   legal: {

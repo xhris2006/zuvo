@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { routes } from "@/config/routes";
-import { siteConfig } from "@/config/site";
+import { formatSupportPhone, siteConfig } from "@/config/site";
 import { getDictionary } from "@/i18n";
 import { LogoMark } from "./logo";
 
@@ -33,6 +33,15 @@ export function SiteFooter() {
             <span className="text-lg font-bold tracking-tight">{siteConfig.name}</span>
           </div>
           <p className="max-w-xs text-sm text-muted-foreground">{t.footer.about}</p>
+          <p className="text-sm text-muted-foreground">
+            {t.footer.support} :{" "}
+            <a
+              href={`tel:${siteConfig.supportPhone}`}
+              className="font-medium text-foreground hover:text-primary"
+            >
+              {formatSupportPhone()}
+            </a>
+          </p>
         </div>
         {groups.map((group) => (
           <nav key={group.title} aria-label={group.title}>

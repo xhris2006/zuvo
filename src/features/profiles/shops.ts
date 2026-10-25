@@ -51,7 +51,10 @@ export async function searchShops({
           })
           .eq("has_sale.status", "active")
           .limit(1, { referencedTable: "has_sale" });
-  query = query.is("suspended_at", null).eq("on_sale.status", "active");
+  // Comptes suspendus exclus (une suspension temporaire expirée n'en est plus une).
+  query = query
+    .or(`suspended_at.is.null,suspended_until.lte.${new Date().toISOString()}`)
+    .eq("on_sale.status", "active");
   // Mots nettoyés (lettres, chiffres, point, tiret) : sans danger dans `.or(...)`.
   for (const token of tokens) {
     query = query.or(`display_name.ilike.%${token}%,username.ilike.%${token}%`);

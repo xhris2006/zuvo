@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
-import { cities } from "@/config/locations";
+import { type City, cities as defaultCities } from "@/config/locations";
 import type { FormState } from "@/lib/forms/form-state";
 import { useFocusFirstError } from "@/lib/forms/use-focus-first-error";
 import { updateProfileAction } from "../actions";
@@ -18,9 +18,11 @@ import { AvatarUploader } from "./avatar-uploader";
 type ProfileFormProps = {
   profile: PublicProfile;
   avatarUrl: string | null;
+  /** Villes proposées (base de données) ; liste initiale par défaut. */
+  cities?: readonly City[];
 };
 
-export function ProfileForm({ profile, avatarUrl }: ProfileFormProps) {
+export function ProfileForm({ profile, avatarUrl, cities = defaultCities }: ProfileFormProps) {
   const initialState: FormState = {
     status: "idle",
     values: {

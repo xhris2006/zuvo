@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { listingLimits } from "@/config/limits";
-import { cities, getCity } from "@/config/locations";
+import { type City, cities as defaultCities } from "@/config/locations";
 import { getCategoryIcon } from "@/features/categories/data";
 import { getDictionary } from "@/i18n";
 import { formatPrice } from "@/lib/format";
@@ -71,11 +71,19 @@ export type EditableListing = {
 type ListingEditorProps = {
   userId: string;
   categories: { slug: string; name: string }[];
+  /** Villes proposées (base de données) ; liste initiale par défaut. */
+  cities?: readonly City[];
   defaultCity?: string | null;
   listing?: EditableListing;
 };
 
-export function ListingEditor({ userId, categories, defaultCity, listing }: ListingEditorProps) {
+export function ListingEditor({
+  userId,
+  categories,
+  cities = defaultCities,
+  defaultCity,
+  listing,
+}: ListingEditorProps) {
   const t = getDictionary();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -164,7 +172,7 @@ export function ListingEditor({ userId, categories, defaultCity, listing }: List
       category: categories.find((category) => category.slug === text("category"))?.name ?? null,
       condition: t.listing.conditions[condition] ?? null,
       price: parsed.success && parsed.data.price !== null ? formatPrice(parsed.data.price) : null,
-      city: getCity(text("city"))?.name ?? null,
+      city: cities.find((city) => city.slug === text("city"))?.name ?? null,
     };
   }
 

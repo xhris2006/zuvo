@@ -138,24 +138,49 @@ décrites dans [`notifications.md`](notifications.md).
 Renseignez-les dans `.env.local` (développement) et dans **Vercel → Settings →
 Environment Variables** (production et prévisualisation).
 
-### 1.6 Désigner un administrateur
+### 1.6 Désigner le premier administrateur
 
-Le rôle administrateur ne peut être attribué que depuis l'éditeur SQL (ou avec
-la clé secrète), jamais depuis l'application :
+Le **premier** administrateur se désigne depuis l'éditeur SQL (aucun compte ne
+peut encore le faire depuis l'application) :
 
 ```sql
 insert into public.user_roles (user_id, role)
 select id, 'admin' from auth.users where email = 'adresse@exemple.com';
 ```
 
-Pour le retirer : `delete from public.user_roles where user_id = '<uuid>';`
+Ensuite, les administrateurs nomment ou retirent les autres membres de l'équipe
+depuis **Administration → Équipe** (ou la fiche d'un utilisateur). Cette
+attribution passe par la fonction `admin_set_role`, qui vérifie en base que
+l'appelant est administrateur, refuse toute modification de son propre rôle
+et inscrit chaque changement au journal. La table `user_roles` reste sans
+aucun droit d'écriture via l'API : un rôle envoyé par le navigateur n'est
+jamais pris en compte.
 
-L'espace `/admin` (tableau de bord, signalements, utilisateurs, journal)
-n'apparaît qu'aux administrateurs ; les autres reçoivent une page 404. Chaque
-action passe par une fonction `admin_*` qui vérifie elle-même le rôle en base et
-s'inscrit dans `moderation_actions` (journal non modifiable). Les messages
-privés ne sont jamais lisibles par l'administration, sauf le message précis
-visé par un signalement, et chaque consultation est journalisée.
+Deux rôles existent :
+
+| Rôle        | Accès                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------- |
+| `admin`     | Tout l'espace `/admin`, dont l'équipe, les catégories, les villes, le message global et la configuration |
+| `moderator` | Tableau de bord, signalements, annonces, utilisateurs (sans adresse e-mail) et journal de modération     |
+
+L'espace `/admin` renvoie une page 404 à tout autre utilisateur. Chaque action
+passe par une fonction `admin_*` qui vérifie elle-même le rôle en base et
+s'inscrit dans `moderation_actions` (journal non modifiable) ; les
+modifications des catégories, des villes et du message global sont inscrites
+dans `admin_activity` (journal de configuration). Personne ne peut agir sur
+son propre compte ni sur un membre de l'équipe. Les messages privés ne sont
+jamais lisibles par l'administration, sauf le message précis visé par un
+signalement, et chaque consultation est journalisée.
+
+### 1.7 Appliquer une nouvelle migration avec l'éditeur SQL
+
+Exécutez chaque nouveau fichier **dans l'ordre des noms**, un par un. Un
+fichier qui ajoute une valeur à un type énuméré (`*_types.sql`, `ALTER TYPE …
+ADD VALUE`) doit être exécuté **seul et en premier** : la valeur n'est
+utilisable qu'une fois sa transaction terminée. Les autres fichiers sont
+encadrés par `begin` / `commit` et peuvent être réexécutés sans effet de bord.
+Vérifiez ensuite la version dans **Administration → Configuration**
+(`select public.app_schema_version();`).
 
 ---
 
@@ -165,7 +190,7 @@ visé par un signalement, et chaque consultation est journalisée.
 | -------------------------- | -------------------------------------------------------------------- |
 | `profiles`                 | Profil public (nom d'utilisateur, nom affiché, avatar, bio, ville)   |
 | `profile_private`          | Coordonnées privées (téléphone), visibles par leur seul propriétaire |
-| `user_roles`               | Rôles (`admin`), attribués uniquement en SQL                         |
+| `user_roles`               | Rôles (`admin`, `moderator`), attribués par `admin_set_role`         |
 | `notification_preferences` | Préférences de notification                                          |
 | `categories`               | Catégories (15 catégories initiales, hiérarchie possible)            |
 | `listings`                 | Annonces : prix entier en XAF, état, ville, statut                   |
@@ -178,7 +203,10 @@ visé par un signalement, et chaque consultation est journalisée.
 | `notifications`            | Notifications internes                                               |
 | `push_subscriptions`       | Abonnements Web Push par navigateur                                  |
 | `reports`                  | Signalements (annonce, utilisateur, message) et leur traitement      |
-| `moderation_actions`       | Journal des actions de modération (lecture réservée aux admins)      |
+| `moderation_actions`       | Journal des actions de modération (lecture réservée à l'équipe)      |
+| `admin_activity`           | Journal de configuration (catégories, villes, message global)        |
+| `cities`                   | Villes proposées (reprend la liste initiale de l'application)        |
+| `site_announcements`       | Message global : information ou maintenance, dates facultatives      |
 
 ### Écarts justifiés par rapport au cahier des charges
 
@@ -188,8 +216,12 @@ visé par un signalement, et chaque consultation est journalisée.
 - **`profile_private`**, **`user_roles`**, **`notification_preferences`** :
   tables ajoutées, car RLS protège des lignes et non des colonnes ; les données
   privées et les rôles doivent donc vivre dans des tables distinctes.
-- **`profiles.suspended_at`**, **`listings.removed_at` / `removed_reason`** :
-  état de modération, modifiable uniquement par l'administration.
+- **`profiles.suspended_at` / `suspended_until`**, **`listings.removed_at` /
+  `removed_reason`** : état de modération, modifiable uniquement par l'équipe.
+  Une suspension temporaire cesse d'avoir effet à `suspended_until`, sans
+  tâche planifiée (`private.is_suspended` et les politiques RLS en tiennent
+  compte) ; `admin_lift_expired_suspensions` nettoie ensuite les colonnes et
+  l'inscrit au journal.
 - **`country_code`** sur profils et annonces : prépare l'ouverture à d'autres pays.
 - **`listings.search_vector`** : colonne calculée pour la recherche plein texte
   en français, insensible aux accents (configuration `french_unaccent`).

@@ -21,23 +21,32 @@ celui des notifications push dans [`notifications.md`](notifications.md).
 
 ## Rôle administrateur
 
-- Attribué **uniquement en SQL** par le propriétaire du projet (table
-  `user_roles`, aucun droit d'écriture via l'API) : voir
-  [`supabase.md` §1.6](supabase.md#16-désigner-un-administrateur).
+- Le premier administrateur est désigné **en SQL** par le propriétaire du
+  projet ; les suivants (administrateurs et modérateurs) le sont depuis
+  l'interface par un administrateur, via la fonction `admin_set_role` qui
+  vérifie le rôle **en base**, interdit de modifier son propre rôle et
+  journalise chaque changement. La table `user_roles` n'a aucun droit
+  d'écriture via l'API : voir
+  [`supabase.md` §1.6](supabase.md#16-désigner-le-premier-administrateur).
+- Le rôle **modérateur** traite signalements, annonces et comptes ; il n'a
+  accès ni aux catégories, ni aux villes, ni à l'équipe, ni à la
+  configuration, ni aux adresses e-mail (refus vérifiés par la base et testés).
 - Les actions de modération passent par les fonctions `admin_*`, qui vérifient
   le rôle **en base** à chaque appel ; l'interface `/admin` renvoie une 404
-  aux autres utilisateurs. Un administrateur ne peut agir (suspension,
-  avertissement, réinitialisation du profil, retrait de toutes les annonces)
-  ni sur son propre compte ni sur un autre administrateur. Aucune fonction ne
-  permet d'attribuer ou de retirer le rôle administrateur.
+  aux autres utilisateurs. Personne ne peut agir (suspension, avertissement,
+  réinitialisation du profil, retrait des annonces, suppression du compte)
+  sur son propre compte ni sur un membre de l'équipe.
+- La suppression d'un compte par un administrateur est vérifiée par la base,
+  exécutée côté serveur avec la clé service_role (compte, données par
+  cascade, photos du Storage) puis journalisée.
 - Chaque action est inscrite dans un journal non modifiable
   (`moderation_actions`). Les messages privés ne sont lisibles par
   l'administration que pour le message signalé (photo comprise, par un lien
   signé de 5 minutes), et chaque consultation est journalisée. La fiche d'un
   utilisateur ne montre que des nombres sur sa messagerie, jamais de contenu.
 - L'adresse e-mail et la dernière connexion d'un compte sont lues côté
-  serveur (clé service_role), uniquement pour la fiche utilisateur de
-  l'administration.
+  serveur (clé service_role), uniquement pour la fiche utilisateur et
+  uniquement pour un administrateur.
 
 ## Secrets
 

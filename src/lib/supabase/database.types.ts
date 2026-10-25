@@ -6,6 +6,45 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      admin_activity: {
+        Row: {
+          action: string;
+          admin_id: string | null;
+          created_at: string;
+          entity: string;
+          entity_id: string;
+          id: string;
+          summary: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          admin_id?: string | null;
+          created_at?: string;
+          entity: string;
+          entity_id: string;
+          id?: string;
+          summary?: string | null;
+        };
+        Update: {
+          action?: string;
+          admin_id?: string | null;
+          created_at?: string;
+          entity?: string;
+          entity_id?: string;
+          id?: string;
+          summary?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_activity_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       blocks: {
         Row: {
           blocked_id: string;
@@ -81,6 +120,34 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      cities: {
+        Row: {
+          created_at: string;
+          is_active: boolean;
+          name: string;
+          region: string;
+          slug: string;
+          sort_order: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          is_active?: boolean;
+          name: string;
+          region?: string;
+          slug: string;
+          sort_order?: number;
+        };
+        Update: {
+          created_at?: string;
+          is_active?: boolean;
+          name?: string;
+          region?: string;
+          slug?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
       };
       conversations: {
         Row: {
@@ -552,6 +619,7 @@ export type Database = {
           display_name: string;
           id: string;
           suspended_at: string | null;
+          suspended_until: string | null;
           updated_at: string;
           username: string;
         };
@@ -565,6 +633,7 @@ export type Database = {
           display_name: string;
           id: string;
           suspended_at?: string | null;
+          suspended_until?: string | null;
           updated_at?: string;
           username: string;
         };
@@ -577,6 +646,7 @@ export type Database = {
           display_name?: string;
           id?: string;
           suspended_at?: string | null;
+          suspended_until?: string | null;
           updated_at?: string;
           username?: string;
         };
@@ -682,6 +752,43 @@ export type Database = {
           },
         ];
       };
+      site_announcements: {
+        Row: {
+          created_at: string;
+          ends_at: string | null;
+          id: string;
+          is_active: boolean;
+          kind: string;
+          link_url: string | null;
+          message: string;
+          starts_at: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          ends_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          kind?: string;
+          link_url?: string | null;
+          message: string;
+          starts_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          ends_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          kind?: string;
+          link_url?: string | null;
+          message?: string;
+          starts_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       user_roles: {
         Row: {
           granted_at: string;
@@ -714,6 +821,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_check_user_deletion: { Args: { p_user_id: string }; Returns: string };
       admin_get_reported_message: {
         Args: { p_report_id: string };
         Returns: {
@@ -728,6 +836,7 @@ export type Database = {
       };
       admin_get_stats: { Args: Record<PropertyKey, never>; Returns: Json };
       admin_get_user_overview: { Args: { p_user_id: string }; Returns: Json };
+      admin_lift_expired_suspensions: { Args: Record<PropertyKey, never>; Returns: number };
       admin_list_reports: {
         Args: {
           p_limit?: number;
@@ -748,6 +857,10 @@ export type Database = {
           target_type: Database["public"]["Enums"]["report_target_type"];
           total_count: number;
         }[];
+      };
+      admin_log_user_deletion: {
+        Args: { p_reason: string; p_user_id: string; p_username: string };
+        Returns: undefined;
       };
       admin_remove_listing: {
         Args: { p_listing_id: string; p_reason: string; p_report_id?: string };
@@ -771,8 +884,22 @@ export type Database = {
         Args: { p_listing_id: string; p_note?: string };
         Returns: undefined;
       };
+      admin_set_role: {
+        Args: {
+          p_granted: boolean;
+          p_role: Database["public"]["Enums"]["app_role"];
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
       admin_set_user_suspension: {
-        Args: { p_reason?: string; p_report_id?: string; p_suspended: boolean; p_user_id: string };
+        Args: {
+          p_reason?: string;
+          p_report_id?: string;
+          p_suspended: boolean;
+          p_until?: string;
+          p_user_id: string;
+        };
         Returns: undefined;
       };
       admin_update_report: {
@@ -825,7 +952,7 @@ export type Database = {
       sync_listing_images: { Args: { p_images: Json; p_listing_id: string }; Returns: string[] };
     };
     Enums: {
-      app_role: "admin";
+      app_role: "admin" | "moderator";
       listing_condition:
         "new_with_tags" | "new_without_tags" | "very_good" | "good" | "fair" | "for_parts";
       listing_status: "draft" | "active" | "reserved" | "sold" | "withdrawn";
@@ -840,7 +967,10 @@ export type Database = {
         | "message_viewed"
         | "user_warned"
         | "profile_reset"
-        | "user_listings_removed";
+        | "user_listings_removed"
+        | "role_granted"
+        | "role_revoked"
+        | "user_deleted";
       notification_type:
         | "new_message"
         | "new_follower"
@@ -970,7 +1100,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin"],
+      app_role: ["admin", "moderator"],
       listing_condition: [
         "new_with_tags",
         "new_without_tags",
@@ -992,6 +1122,9 @@ export const Constants = {
         "user_warned",
         "profile_reset",
         "user_listings_removed",
+        "role_granted",
+        "role_revoked",
+        "user_deleted",
       ],
       notification_type: [
         "new_message",

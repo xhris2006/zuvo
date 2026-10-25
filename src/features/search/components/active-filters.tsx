@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import Link from "next/link";
-import { getCity } from "@/config/locations";
 import { exploreHref } from "@/config/routes";
+import { cityName } from "@/features/locations/queries";
 import { getDictionary } from "@/i18n";
 import { formatPrice } from "@/lib/format";
 import { type SearchFilters, toSearchParams } from "../schema";
@@ -12,7 +12,7 @@ type ActiveFiltersProps = {
 };
 
 /** Filtres appliqués, chacun retirable d'un clic (liens, sans JavaScript). */
-export function ActiveFilters({ filters, categories }: ActiveFiltersProps) {
+export async function ActiveFilters({ filters, categories }: ActiveFiltersProps) {
   const t = getDictionary();
   const without = (...keys: (keyof SearchFilters)[]) => {
     const next: Partial<SearchFilters> = { ...filters, page: 1 };
@@ -27,7 +27,7 @@ export function ActiveFilters({ filters, categories }: ActiveFiltersProps) {
     chips.push({ label: name ?? filters.category, href: without("category") });
   }
   if (filters.city) {
-    chips.push({ label: getCity(filters.city)?.name ?? filters.city, href: without("city") });
+    chips.push({ label: (await cityName(filters.city)) ?? filters.city, href: without("city") });
   }
   if (filters.condition) {
     chips.push({ label: t.listing.conditions[filters.condition], href: without("condition") });

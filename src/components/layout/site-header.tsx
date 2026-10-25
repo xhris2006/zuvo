@@ -4,7 +4,7 @@ import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { isCurrentUserAdmin } from "@/features/admin/queries";
+import { isCurrentUserStaff } from "@/features/admin/queries";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
@@ -48,7 +48,8 @@ function IconLink({
 export async function SiteHeader() {
   const t = getDictionary();
   const profile = await getCurrentProfile();
-  const isAdmin = profile ? await isCurrentUserAdmin() : false;
+  // Lien « Administration » pour toute l'équipe (administrateurs et modérateurs).
+  const isAdmin = profile ? await isCurrentUserStaff() : false;
 
   return (
     <header

@@ -31,6 +31,7 @@ import {
   toSearchParams,
 } from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
+import { getCities } from "@/features/locations/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
 
@@ -148,7 +149,13 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
   if (parseExploreTab(searchParams.type) === "boutiques") {
     return <ShopsExplorer searchParams={searchParams} />;
   }
-  const filters = parseSearchParams(searchParams);
+  const parsedFilters = parseSearchParams(searchParams);
+  const cities = await getCities();
+  // Ville inconnue ou désactivée : filtre ignoré, comme toute valeur invalide.
+  const filters =
+    parsedFilters.city && !cities.some((city) => city.slug === parsedFilters.city)
+      ? { ...parsedFilters, city: undefined }
+      : parsedFilters;
   const activeCount = countActiveFilters(filters);
   const configured = isSupabaseConfigured();
   // Une panne de la base ne doit pas rendre la page inutilisable : on garde
@@ -185,7 +192,12 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
       <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
         <aside aria-label={t.explore.filters} className="hidden lg:block">
           <div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-card">
-            <FiltersForm filters={filters} categories={categories} idPrefix="desktop" />
+            <FiltersForm
+              filters={filters}
+              categories={categories}
+              cities={cities}
+              idPrefix="desktop"
+            />
           </div>
         </aside>
 
@@ -208,7 +220,12 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
               description={t.explore.description}
               activeCount={activeCount}
             >
-              <FiltersForm filters={filters} categories={categories} idPrefix="mobile" />
+              <FiltersForm
+                filters={filters}
+                categories={categories}
+                cities={cities}
+                idPrefix="mobile"
+              />
             </MobileFilters>
           </div>
           <ActiveFilters filters={filters} categories={categories} />

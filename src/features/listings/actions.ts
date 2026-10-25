@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { fieldErrorsFrom, formText } from "@/lib/forms/form-state";
+import { isAvailableCity } from "@/features/locations/queries";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LISTING_IMAGE_BUCKET } from "./image-url";
@@ -111,6 +112,9 @@ export async function saveListingAction(
       .maybeSingle();
     if (!category) return { status: "error", fieldErrors: { category: "Catégorie invalide." } };
     categoryId = category.id;
+  }
+  if (fields.city && !(await isAvailableCity(fields.city))) {
+    return { status: "error", fieldErrors: { city: "Ville invalide." } };
   }
 
   const values = {

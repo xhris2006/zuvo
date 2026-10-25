@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { publicProfileHref, routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
+import { isAvailableCity } from "@/features/locations/queries";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
 import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -42,6 +43,9 @@ export async function updateProfileAction(
   const removeAvatar = avatarPath === "-";
   if (avatarPath && !removeAvatar && !isOwnAvatarPath(user.id, avatarPath)) {
     return { status: "error", fieldErrors: { avatarPath: "Photo de profil invalide." }, values };
+  }
+  if (city && !(await isAvailableCity(city))) {
+    return { status: "error", fieldErrors: { city: "Ville invalide." }, values };
   }
 
   const { data: current } = await supabase

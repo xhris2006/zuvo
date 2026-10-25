@@ -8,6 +8,7 @@ import { getCategories } from "@/features/listings/queries";
 import { getProfileById } from "@/features/profiles/queries";
 import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getCities } from "@/features/locations/queries";
 
 export const metadata: Metadata = {
   title: "Vendre un article",
@@ -26,7 +27,11 @@ export default async function SellPage() {
   }
 
   const { user } = await requireUser(routes.sell);
-  const [categories, profile] = await Promise.all([getCategories(), getProfileById(user.id)]);
+  const [categories, profile, cities] = await Promise.all([
+    getCategories(),
+    getProfileById(user.id),
+    getCities(),
+  ]);
 
   return (
     <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
@@ -39,7 +44,12 @@ export default async function SellPage() {
           </span>
         }
       />
-      <ListingEditor userId={user.id} categories={categories} defaultCity={profile?.city} />
+      <ListingEditor
+        userId={user.id}
+        categories={categories}
+        cities={cities}
+        defaultCity={profile?.city}
+      />
     </div>
   );
 }

@@ -45,7 +45,7 @@ describe("profileSchema", () => {
   });
 
   it("refuse une ville inconnue et une bio trop longue", () => {
-    expect(profileSchema.safeParse({ ...base, city: "paris" }).success).toBe(false);
+    expect(profileSchema.safeParse({ ...base, city: "Paris !" }).success).toBe(false);
     expect(profileSchema.safeParse({ ...base, bio: "a".repeat(501) }).success).toBe(false);
   });
 });

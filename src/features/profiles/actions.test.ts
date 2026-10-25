@@ -23,6 +23,12 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(async () => supabase),
 }));
 vi.mock("@/features/auth/session", () => ({ getCurrentUser: vi.fn(async () => currentUser) }));
+vi.mock("@/features/locations/queries", async () => {
+  const { cities } = await import("@/config/locations");
+  return {
+    isAvailableCity: vi.fn(async (slug: string) => cities.some((city) => city.slug === slug)),
+  };
+});
 
 const { toggleFollowAction, updatePrivateContactAction, updateProfileAction } =
   await import("./actions");
@@ -42,6 +48,12 @@ beforeEach(() => {
 });
 
 describe("updateProfileAction", () => {
+  it("refuse une ville qui n'est pas proposée", async () => {
+    const state = await updateProfileAction(idle, formData({ ...profileFields, city: "paris" }));
+    expect(state.fieldErrors).toEqual({ city: "Ville invalide." });
+    expect(supabase!.from).not.toHaveBeenCalled();
+  });
+
   it("exige une session", async () => {
     currentUser = null;
     const state = await updateProfileAction(idle, formData(profileFields));

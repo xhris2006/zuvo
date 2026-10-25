@@ -6,6 +6,7 @@ import { requireUser } from "@/features/auth/session";
 import { ListingEditor } from "@/features/listings/components/listing-editor";
 import { editListingHref } from "@/features/listings/links";
 import { getCategories, getListingDetail } from "@/features/listings/queries";
+import { getCities } from "@/features/locations/queries";
 
 export const metadata: Metadata = {
   title: "Modifier l'annonce",
@@ -15,7 +16,11 @@ export const metadata: Metadata = {
 export default async function EditListingPage(props: PageProps<"/annonces/[id]/modifier">) {
   const { id } = await props.params;
   const { user } = await requireUser(editListingHref(id));
-  const [listing, categories] = await Promise.all([getListingDetail(id), getCategories()]);
+  const [listing, categories, cities] = await Promise.all([
+    getListingDetail(id),
+    getCategories(),
+    getCities(),
+  ]);
   if (!listing || listing.seller_id !== user.id) notFound();
 
   return (
@@ -31,6 +36,7 @@ export default async function EditListingPage(props: PageProps<"/annonces/[id]/m
         </Alert>
       ) : (
         <ListingEditor
+          cities={cities}
           userId={user.id}
           categories={categories}
           listing={{

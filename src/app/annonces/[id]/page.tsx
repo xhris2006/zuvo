@@ -6,7 +6,6 @@ import { SectionHeader } from "@/components/layout/section-header";
 import { Alert } from "@/components/ui/alert";
 import { BackButton } from "@/components/ui/back-button";
 import { ShareButton } from "@/components/ui/share-button";
-import { getCity } from "@/config/locations";
 import { exploreHref, routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { getCurrentUser } from "@/features/auth/session";
@@ -21,6 +20,7 @@ import { listingHref } from "@/features/listings/links";
 import { getFavoriteIds, getListingDetail, getSimilarListings } from "@/features/listings/queries";
 import { ContactSellerButton } from "@/features/messaging/components/contact-seller-button";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
+import { cityName } from "@/features/locations/queries";
 import { toSearchParams } from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
@@ -62,7 +62,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
     (listing.status === "active" || listing.status === "reserved") &&
     !listing.removed_at &&
     Boolean(listing.seller);
-  const city = listing.city ? (getCity(listing.city)?.name ?? listing.city) : null;
+  const city = await cityName(listing.city);
   const [similar, favorites] = await Promise.all([
     getSimilarListings(listing.id, listing.category?.id ?? null),
     getFavoriteIds(viewer?.id ?? null, [listing.id]),

@@ -194,6 +194,7 @@ body:has([data-immersive]) [data-site-footer] {
  */
 @media (width < 48rem) {
   body:has([data-immersive]) [data-site-header],
+  body:has([data-immersive]) [data-site-banner],
   body:has([data-immersive]) [data-bottom-nav],
   body:has([data-hide-bottom-nav]) [data-bottom-nav] {
     display: none;

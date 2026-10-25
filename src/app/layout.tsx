@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { siteConfig } from "@/config/site";
+import { SiteAnnouncementBanner } from "@/features/announcements/components/site-announcement";
 import { getCurrentUser } from "@/features/auth/session";
 import { PushSync } from "@/features/notifications/components/push-sync";
 import { UnreadCountsProvider } from "@/features/notifications/components/unread-counts";
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         <UnreadCountsProvider userId={user?.id ?? null} initial={unread}>
           <SiteHeader />
+          <SiteAnnouncementBanner />
           <main
             id="contenu"
             tabIndex={-1}

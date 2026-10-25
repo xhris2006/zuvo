@@ -174,7 +174,7 @@ e2e/                   Tests Playwright
 
 ## Sécurité
 
-RLS sur toutes les tables, rôle administrateur attribué uniquement en SQL,
+RLS sur toutes les tables, rôles de l'équipe attribués par une fonction réservée aux administrateurs,
 validation serveur de toutes les entrées, CSP stricte à nonce, secrets
 uniquement côté serveur, aucune page privée en cache. Détails et tests :
 [`docs/security.md`](docs/security.md).
@@ -200,7 +200,8 @@ faite depuis le code) :
 1. Créer le projet Supabase, appliquer les migrations, régler
    l'authentification et un **fournisseur SMTP**.
 2. Créer le projet Vercel et renseigner les variables d'environnement.
-3. Désigner au moins un administrateur (SQL).
+3. Désigner le premier administrateur (SQL) ; les suivants et les modérateurs
+   se nomment ensuite depuis Administration → Équipe.
 4. Faire relire et compléter les **pages juridiques** (brouillons) par un
    professionnel du droit.
 5. Facultatif : connexion Google ; notifications push (clés VAPID et clé

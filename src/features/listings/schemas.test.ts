@@ -44,7 +44,7 @@ describe("listingFieldsSchema", () => {
     ["price", "200000000", "Prix trop élevé."],
     ["title", "ab", "Au moins 3 caractères."],
     ["condition", "cassé", "État invalide."],
-    ["city", "paris", "Ville invalide."],
+    ["city", "Paris !", "Ville invalide."],
   ])("refuse %s = %j", (field, value, message) => {
     const result = listingFieldsSchema.safeParse({ ...base, [field]: value });
     expect(result.error?.issues[0]?.message).toBe(message);

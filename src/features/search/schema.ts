@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { listingLimits, searchLimits } from "@/config/limits";
-import { citySlugs } from "@/config/locations";
+import { CITY_SLUG_PATTERN } from "@/features/locations/names";
 import { listingConditions } from "@/features/listings/constants";
 
 export const sortOptions = ["newest", "price_asc", "price_desc"] as const;
@@ -27,7 +27,8 @@ const searchFiltersSchema = z.object({
     .regex(/^[a-z0-9-]{1,60}$/)
     .optional()
     .catch(undefined),
-  city: z.enum(citySlugs).optional().catch(undefined),
+  // Format seulement : une ville inconnue est ignorée par la page Explorer.
+  city: z.string().regex(CITY_SLUG_PATTERN).optional().catch(undefined),
   condition: z.enum(listingConditions).optional().catch(undefined),
   minPrice: price.optional().catch(undefined),
   maxPrice: price.optional().catch(undefined),

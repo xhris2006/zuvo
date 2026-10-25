@@ -16,7 +16,9 @@ import {
 import { ModerationDialog } from "@/features/admin/components/moderation-dialog";
 import { ReportStatusForm } from "@/features/admin/components/report-status-form";
 import { ReportedMessage } from "@/features/admin/components/reported-message";
-import { type AdminReport, getAdminReports, requireAdmin } from "@/features/admin/queries";
+import { SuspensionFields } from "@/features/admin/components/suspension-fields";
+import { type AdminReport, getAdminReports, requireStaff } from "@/features/admin/queries";
+import { isSuspensionActive } from "@/features/admin/suspension";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
 import { listingHref } from "@/features/listings/links";
 import type { ReportStatus } from "@/features/moderation/schemas";
@@ -91,15 +93,16 @@ function Target({ report }: { report: AdminReport }) {
     );
   }
   if (target.kind === "user") {
+    const suspended = isSuspensionActive(target.suspendedAt, target.suspendedUntil);
     return (
       <div className="flex flex-col gap-3">
         <p className="flex flex-wrap items-center gap-2">
           <Link href={adminUserHref(target.id)} className="font-medium hover:underline">
             {target.displayName} (@{target.username})
           </Link>
-          {target.suspendedAt ? <Badge variant="danger">Suspendu</Badge> : null}
+          {suspended ? <Badge variant="danger">Suspendu</Badge> : null}
         </p>
-        {target.suspendedAt ? null : (
+        {suspended ? null : (
           <ModerationDialog
             trigger={
               <Button variant="destructive" size="sm" className="self-start">
@@ -113,7 +116,9 @@ function Target({ report }: { report: AdminReport }) {
             action={setUserSuspensionAction}
             fields={{ userId: target.id, suspended: "true", reportId: report.id }}
             reasonLabel="Motif (consigné dans le journal)"
-          />
+          >
+            <SuspensionFields />
+          </ModerationDialog>
         )}
       </div>
     );
@@ -122,7 +127,7 @@ function Target({ report }: { report: AdminReport }) {
 }
 
 export default async function AdminReportsPage(props: PageProps<"/admin/signalements">) {
-  await requireAdmin(routes.adminReports);
+  await requireStaff(routes.adminReports);
   const t = getDictionary();
   const searchParams = await props.searchParams;
   const requested = typeof searchParams.statut === "string" ? searchParams.statut : "pending";

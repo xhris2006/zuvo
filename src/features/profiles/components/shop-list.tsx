@@ -1,19 +1,21 @@
 import { ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
-import { getCity } from "@/config/locations";
 import { publicProfileHref } from "@/config/routes";
+import { cityNameFrom } from "@/features/locations/names";
+import { getCityNames } from "@/features/locations/queries";
 import { getDictionary } from "@/i18n";
 import { avatarUrl } from "../avatar-url";
 import type { ShopSummary } from "../shops";
 
 /** Résultats de recherche de boutiques : photo, nom, pseudo, ville et annonces en vente. */
-export function ShopList({ shops }: { shops: ShopSummary[] }) {
+export async function ShopList({ shops }: { shops: ShopSummary[] }) {
   const t = getDictionary();
+  const cityNames = await getCityNames();
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {shops.map((shop) => {
-        const city = shop.city ? (getCity(shop.city)?.name ?? shop.city) : null;
+        const city = cityNameFrom(shop.city, cityNames);
         return (
           <li key={shop.id}>
             <Link

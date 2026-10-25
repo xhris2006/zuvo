@@ -10,6 +10,7 @@ import { PrivateContactForm } from "@/features/profiles/components/private-conta
 import { ProfileForm } from "@/features/profiles/components/profile-form";
 import { getOwnPrivateContact, getProfileById } from "@/features/profiles/queries";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getCities } from "@/features/locations/queries";
 
 export const metadata: Metadata = {
   title: "Modifier mon profil",
@@ -43,7 +44,11 @@ export default async function EditProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ProfileForm profile={profile} avatarUrl={avatarUrl(profile.avatar_path)} />
+          <ProfileForm
+            profile={profile}
+            avatarUrl={avatarUrl(profile.avatar_path)}
+            cities={await getCities()}
+          />
         </CardContent>
       </Card>
       <Card>

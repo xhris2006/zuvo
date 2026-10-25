@@ -4,8 +4,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { LinkPending } from "@/components/ui/link-pending";
-import { getCity } from "@/config/locations";
 import { publicProfileHref } from "@/config/routes";
+import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getDictionary } from "@/i18n";
 import { formatPrice, formatRelativeTime } from "@/lib/format";
@@ -22,9 +22,9 @@ type FeedCardProps = {
 };
 
 /** Carte du fil : grande photo, vendeur à cheval sur la photo, prix et détails. */
-export function FeedCard({ listing, action, priority = false }: FeedCardProps) {
+export async function FeedCard({ listing, action, priority = false }: FeedCardProps) {
   const t = getDictionary();
-  const city = listing.citySlug ? (getCity(listing.citySlug)?.name ?? listing.citySlug) : null;
+  const city = await cityName(listing.citySlug);
   const details = [city, listing.condition ? t.listing.conditions[listing.condition] : null]
     .filter(Boolean)
     .join(" · ");

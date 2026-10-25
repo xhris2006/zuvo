@@ -1,4 +1,5 @@
 import "server-only";
+import { isSuspensionActive } from "@/features/admin/suspension";
 import type { TypedSupabaseClient } from "@/lib/supabase/server";
 import {
   describeNotification,
@@ -29,7 +30,7 @@ export type DispatchSummary = {
 const MAX_AGE_MS = 10 * 60 * 1000;
 
 const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id, note,
-  actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at),
+  actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at, suspended_until),
   listing:listings(title)`;
 
 /**
@@ -60,7 +61,12 @@ export async function dispatchPendingPush(
   const outcomes = new Map<string, { status: PushStatus; detail?: string }>();
   // Lecture en service_role : RLS ne masque pas les comptes suspendus.
   const deliverable = (notifications ?? []).filter((notification) => {
-    const keep = !notification.is_read && !notification.actor?.suspended_at;
+    const keep =
+      !notification.is_read &&
+      !isSuspensionActive(
+        notification.actor?.suspended_at ?? null,
+        notification.actor?.suspended_until ?? null,
+      );
     if (!keep) outcomes.set(notification.id, { status: "skipped" });
     return keep;
   });

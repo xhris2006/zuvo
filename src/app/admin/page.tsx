@@ -3,13 +3,13 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { routes } from "@/config/routes";
-import { getAdminStats, requireAdmin } from "@/features/admin/queries";
+import { getAdminStats, requireStaff } from "@/features/admin/queries";
 import { formatCount } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
 export default async function AdminDashboardPage() {
-  await requireAdmin(routes.admin);
+  await requireStaff(routes.admin);
   const stats = await getAdminStats();
   const tiles: Array<{
     label: string;

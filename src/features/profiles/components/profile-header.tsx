@@ -3,8 +3,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
-import { getCity } from "@/config/locations";
 import { followersHref, followingHref } from "@/config/routes";
+import { cityName } from "@/features/locations/queries";
 import { getDictionary } from "@/i18n";
 import { formatCount, formatMonthYear } from "@/lib/format";
 import { avatarUrl } from "../avatar-url";
@@ -23,9 +23,16 @@ type ProfileHeaderProps = {
   menu?: ReactNode;
 };
 
-export function ProfileHeader({ profile, stats, actions, avatar, back, menu }: ProfileHeaderProps) {
+export async function ProfileHeader({
+  profile,
+  stats,
+  actions,
+  avatar,
+  back,
+  menu,
+}: ProfileHeaderProps) {
   const t = getDictionary();
-  const city = profile.city ? (getCity(profile.city)?.name ?? profile.city) : null;
+  const city = await cityName(profile.city);
   const items: { key: string; label: string; value: number; href?: Route }[] = [
     {
       key: "followers",

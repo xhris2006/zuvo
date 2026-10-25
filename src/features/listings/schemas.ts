@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { listingLimits } from "@/config/limits";
-import { citySlugs } from "@/config/locations";
+import { CITY_SLUG_PATTERN } from "@/features/locations/names";
 import { listingConditions } from "./constants";
 
 const optionalText = z
@@ -46,7 +46,8 @@ export const listingFieldsSchema = z.object({
   ),
   condition: optionalText.pipe(z.enum(listingConditions, { error: "État invalide." }).nullable()),
   price: priceSchema,
-  city: optionalText.pipe(z.enum(citySlugs, { error: "Ville invalide." }).nullable()),
+  // Format seulement : la ville doit en plus être proposée (vérifié par l'action serveur).
+  city: optionalText.pipe(z.string().regex(CITY_SLUG_PATTERN, "Ville invalide.").nullable()),
 });
 
 export type ListingFields = z.infer<typeof listingFieldsSchema>;

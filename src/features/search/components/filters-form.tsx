@@ -5,7 +5,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { listingLimits } from "@/config/limits";
-import { cities } from "@/config/locations";
+import { type City, cities as defaultCities } from "@/config/locations";
 import { routes } from "@/config/routes";
 import type { CategorySummary } from "@/features/categories/data";
 import { listingConditions } from "@/features/listings/constants";
@@ -15,6 +15,8 @@ import { type SearchFilters, sortOptions } from "../schema";
 type FiltersFormProps = {
   filters: SearchFilters;
   categories: readonly CategorySummary[];
+  /** Villes proposées (base de données) ; liste initiale par défaut. */
+  cities?: readonly City[];
   /** Préfixe des identifiants, pour afficher plusieurs formulaires sur une page. */
   idPrefix: string;
 };
@@ -23,7 +25,12 @@ type FiltersFormProps = {
  * Formulaire de filtres en GET : il fonctionne sans JavaScript et produit
  * une URL partageable. Les valeurs sont revalidées côté serveur.
  */
-export function FiltersForm({ filters, categories, idPrefix }: FiltersFormProps) {
+export function FiltersForm({
+  filters,
+  categories,
+  cities = defaultCities,
+  idPrefix,
+}: FiltersFormProps) {
   const t = getDictionary();
   const id = (name: string) => `${idPrefix}-${name}`;
 

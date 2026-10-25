@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LinkPending } from "@/components/ui/link-pending";
-import { getCity } from "@/config/locations";
+import { cityName } from "@/features/locations/queries";
 import { getDictionary } from "@/i18n";
 import { formatPrice } from "@/lib/format";
 import { listingHref } from "../links";
@@ -18,9 +18,9 @@ type ListingCardProps = {
   priority?: boolean;
 };
 
-export function ListingCard({ listing, action, priority = false }: ListingCardProps) {
+export async function ListingCard({ listing, action, priority = false }: ListingCardProps) {
   const t = getDictionary();
-  const city = listing.citySlug ? (getCity(listing.citySlug)?.name ?? listing.citySlug) : null;
+  const city = await cityName(listing.citySlug);
   const showStatus = listing.status !== "active";
 
   return (

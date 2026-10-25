@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { getCity } from "@/config/locations";
 import { adminUserHref, publicProfileHref, routes } from "@/config/routes";
 import {
   removeListingAction,
@@ -29,14 +28,19 @@ import {
   setUserSuspensionAction,
   warnUserAction,
 } from "@/features/admin/actions";
+import { DeleteUserDialog } from "@/features/admin/components/delete-user-dialog";
 import { ModerationDialog } from "@/features/admin/components/moderation-dialog";
+import { RoleForm } from "@/features/admin/components/role-form";
+import { SuspensionFields } from "@/features/admin/components/suspension-fields";
 import { UnsuspendButton } from "@/features/admin/components/unsuspend-button";
-import { getAdminUserDetail, requireAdmin } from "@/features/admin/queries";
+import { getAdminUserDetail, requireStaff } from "@/features/admin/queries";
+import { isSuspensionActive } from "@/features/admin/suspension";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
 import { listingHref } from "@/features/listings/links";
+import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getDictionary } from "@/i18n";
-import { formatDate, formatPrice, formatRelativeTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatPrice, formatRelativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Fiche utilisateur", robots: { index: false } };
 
@@ -73,15 +77,17 @@ function ResetChoice({
 
 export default async function AdminUserPage(props: PageProps<"/admin/utilisateurs/[id]">) {
   const { id } = await props.params;
-  const { user: me } = await requireAdmin(adminUserHref(id));
+  const { user: me, role: myRole } = await requireStaff(adminUserHref(id));
   const detail = await getAdminUserDetail(id);
   if (!detail) notFound();
 
   const t = getDictionary();
   const { profile, overview, account } = detail;
-  const city = profile.city ? (getCity(profile.city)?.name ?? profile.city) : null;
-  const protectedAccount = detail.isAdmin || profile.id === me.id;
+  const city = await cityName(profile.city);
+  const isSelf = profile.id === me.id;
+  const protectedAccount = profile.role !== null || isSelf;
   const onlineListings = overview.listings_active;
+  const suspended = isSuspensionActive(profile.suspendedAt, profile.suspendedUntil);
 
   return (
     <>
@@ -100,8 +106,10 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold tracking-tight">
                 <span className="truncate">{profile.displayName}</span>
-                {detail.isAdmin ? <Badge variant="primary">Administrateur</Badge> : null}
-                {profile.suspendedAt ? <Badge variant="danger">Suspendu</Badge> : null}
+                {profile.role ? (
+                  <Badge variant="primary">{t.admin.roles[profile.role]}</Badge>
+                ) : null}
+                {suspended ? <Badge variant="danger">Suspendu</Badge> : null}
               </h1>
               <p className="text-sm text-muted-foreground">
                 @{profile.username}
@@ -124,14 +132,18 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                     {account.lastSignInAt ? formatRelativeTime(account.lastSignInAt) : "inconnue"}
                   </span>
                 </p>
-              ) : (
+              ) : myRole === "admin" ? (
                 <p className="text-xs text-muted-foreground">
                   Adresse e-mail indisponible : clé serveur Supabase non configurée.
                 </p>
-              )}
-              {profile.suspendedAt ? (
+              ) : null}
+              {suspended && profile.suspendedAt ? (
                 <p className="text-sm text-danger">
-                  Suspendu {formatRelativeTime(profile.suspendedAt)}.
+                  Suspendu {formatRelativeTime(profile.suspendedAt)}
+                  {profile.suspendedUntil
+                    ? `, jusqu'au ${formatDateTime(profile.suspendedUntil)} (levée automatique)`
+                    : ", sans date de fin"}
+                  .
                 </p>
               ) : null}
             </div>
@@ -167,7 +179,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
           <CardTitle>Actions</CardTitle>
           <CardDescription>
             {protectedAccount
-              ? "Aucune action n'est possible sur votre propre compte ou sur un autre administrateur."
+              ? "Aucune action de modération n'est possible sur votre propre compte ou sur un membre de l'équipe."
               : "Chaque action est inscrite au journal de modération."}
           </CardDescription>
         </CardHeader>
@@ -226,7 +238,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                 fields={{ userId: profile.id }}
               />
             ) : null}
-            {profile.suspendedAt ? (
+            {suspended ? (
               <UnsuspendButton userId={profile.id} />
             ) : (
               <ModerationDialog
@@ -242,11 +254,55 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                 action={setUserSuspensionAction}
                 fields={{ userId: profile.id, suspended: "true" }}
                 reasonLabel="Motif (consigné dans le journal)"
-              />
+              >
+                <SuspensionFields />
+              </ModerationDialog>
             )}
           </CardContent>
         )}
       </Card>
+
+      {myRole === "admin" && !isSelf ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Rôle et compte</CardTitle>
+            <CardDescription>
+              Réservé aux administrateurs. Un modérateur traite signalements, annonces et comptes,
+              sans accès aux catégories, aux villes, à l&apos;équipe ni à la configuration.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-start gap-2">
+            {profile.role === "admin" ? (
+              <RoleForm
+                userId={profile.id}
+                role="admin"
+                grant={false}
+                label="Retirer le rôle administrateur"
+                variant="destructive"
+              />
+            ) : (
+              <>
+                {profile.role === "moderator" ? (
+                  <RoleForm
+                    userId={profile.id}
+                    role="moderator"
+                    grant={false}
+                    label="Retirer le rôle modérateur"
+                  />
+                ) : suspended ? null : (
+                  <RoleForm userId={profile.id} role="moderator" grant label="Nommer modérateur" />
+                )}
+                {suspended ? null : (
+                  <RoleForm userId={profile.id} role="admin" grant label="Nommer administrateur" />
+                )}
+              </>
+            )}
+            {protectedAccount ? null : (
+              <DeleteUserDialog userId={profile.id} username={profile.username} />
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

@@ -9,33 +9,19 @@ import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { MESSAGE_PHOTO_BUCKET } from "@/features/messaging/schemas";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isCurrentUserAdmin } from "./queries";
-
-const FORBIDDEN = "Action réservée à l'administration.";
-
-type RpcError = { code?: string } | null;
-
-function errorMessage(error: RpcError): string {
-  switch (error?.code) {
-    case "42501":
-      return FORBIDDEN;
-    case "P0002":
-      return "Élément introuvable ou déjà traité.";
-    case "22023":
-      return "Indiquez un motif d'au moins 3 caractères.";
-    default:
-      return "L'action a échoué. Veuillez réessayer.";
-  }
-}
+import { adminErrorMessage as errorMessage, FORBIDDEN } from "./errors";
+import { getCurrentStaffRole } from "./queries";
+import { suspensionEnd } from "./suspension";
 
 /**
- * Contexte d'une action d'administration. Le rôle est vérifié ici pour un
- * message clair, puis de nouveau par la base de données (seule garantie).
+ * Contexte d'une action de modération (administrateur ou modérateur). Le rôle
+ * est vérifié ici pour un message clair, puis de nouveau par la base de
+ * données (seule garantie).
  */
-async function adminContext() {
+async function staffContext() {
   const supabase = await createSupabaseServerClient();
   const user = await getCurrentUser();
-  if (!supabase || !user || !(await isCurrentUserAdmin())) return null;
+  if (!supabase || !user || !(await getCurrentStaffRole())) return null;
   return supabase;
 }
 
@@ -72,7 +58,7 @@ export async function removeListingAction(
       values: { reason: formText(formData, "reason") },
     };
   }
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
 
   const { error } = await supabase.rpc("admin_remove_listing", {
@@ -89,11 +75,43 @@ export async function removeListingAction(
 
 export async function restoreListingAction(formData: FormData): Promise<void> {
   const listingId = z.uuid().safeParse(formText(formData, "listingId"));
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!listingId.success || !supabase) return;
   await supabase.rpc("admin_restore_listing", { p_listing_id: listingId.data });
   revalidateAdmin();
   revalidatePath(`/annonces/${listingId.data}`);
+}
+
+/** Rétablit une annonce retirée, avec un motif inscrit au journal. */
+export async function restoreListingWithReasonAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const parsed = removeListingSchema.safeParse({
+    listingId: formText(formData, "listingId"),
+    reason: formText(formData, "reason"),
+    reportId: "",
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      fieldErrors: { reason: parsed.error.issues[0]?.message ?? "Motif invalide." },
+      values: { reason: formText(formData, "reason") },
+    };
+  }
+  const supabase = await staffContext();
+  if (!supabase) return { status: "error", message: FORBIDDEN };
+  const { error } = await supabase.rpc("admin_restore_listing", {
+    p_listing_id: parsed.data.listingId,
+    p_note: parsed.data.reason,
+  });
+  if (error) return { status: "error", message: errorMessage(error) };
+  revalidateAdmin();
+  revalidatePath(`/annonces/${parsed.data.listingId}`);
+  return {
+    status: "success",
+    message: "Annonce rétablie. Son vendeur peut la remettre en vente.",
+  };
 }
 
 const suspensionSchema = z.object({
@@ -101,6 +119,8 @@ const suspensionSchema = z.object({
   suspended: z.enum(["true", "false"]).transform((value) => value === "true"),
   reason: z.string().trim().max(500),
   reportId: optionalUuid,
+  duration: z.string().max(20),
+  until: z.string().max(20),
 });
 
 export async function setUserSuspensionAction(
@@ -112,6 +132,8 @@ export async function setUserSuspensionAction(
     suspended: formText(formData, "suspended"),
     reason: formText(formData, "reason"),
     reportId: formText(formData, "reportId"),
+    duration: formText(formData, "duration") || "permanent",
+    until: formText(formData, "until"),
   });
   if (!parsed.success) return { status: "error", message: "Requête invalide." };
   if (parsed.data.suspended && parsed.data.reason.length < 3) {
@@ -120,7 +142,13 @@ export async function setUserSuspensionAction(
       fieldErrors: { reason: "Indiquez un motif d'au moins 3 caractères." },
     };
   }
-  const supabase = await adminContext();
+  const end = parsed.data.suspended
+    ? suspensionEnd(parsed.data.duration, parsed.data.until)
+    : ({ ok: true, until: null } as const);
+  if (!end.ok) {
+    return { status: "error", message: end.message, values: { reason: parsed.data.reason } };
+  }
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
 
   const { error } = await supabase.rpc("admin_set_user_suspension", {
@@ -128,12 +156,17 @@ export async function setUserSuspensionAction(
     p_suspended: parsed.data.suspended,
     p_reason: parsed.data.reason || undefined,
     p_report_id: parsed.data.reportId ?? undefined,
+    p_until: end.until?.toISOString(),
   });
   if (error) return { status: "error", message: errorMessage(error) };
   revalidateAdmin();
   return {
     status: "success",
-    message: parsed.data.suspended ? "Compte suspendu." : "Compte réactivé.",
+    message: !parsed.data.suspended
+      ? "Compte réactivé."
+      : end.until
+        ? "Compte suspendu temporairement. La suspension sera levée automatiquement."
+        : "Compte suspendu.",
   };
 }
 
@@ -153,7 +186,7 @@ export async function updateReportStatusAction(
     note: formText(formData, "note"),
   });
   if (!parsed.success) return { status: "error", message: "Requête invalide." };
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
 
   const { error } = await supabase.rpc("admin_update_report", {
@@ -182,7 +215,7 @@ export async function viewReportedMessageAction(
 > {
   if (!z.uuid().safeParse(reportId).success)
     return { status: "error", message: "Requête invalide." };
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
   const { data, error } = await supabase.rpc("admin_get_reported_message", {
     p_report_id: reportId,
@@ -242,7 +275,7 @@ export async function warnUserAction(
   const reason = reasonSchema.safeParse(formText(formData, "reason"));
   if (!userId.success) return { status: "error", message: "Requête invalide." };
   if (!reason.success) return invalidReason(formData, reason.error.issues[0]?.message);
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
 
   const { error } = await supabase.rpc("admin_warn_user", {
@@ -274,7 +307,7 @@ export async function resetProfileAction(
     };
   }
   if (!reason.success) return invalidReason(formData, reason.error.issues[0]?.message);
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
 
   const { data: oldAvatar, error } = await supabase.rpc("admin_reset_profile", {
@@ -301,7 +334,7 @@ export async function removeUserListingsAction(
   const reason = reasonSchema.safeParse(formText(formData, "reason"));
   if (!userId.success) return { status: "error", message: "Requête invalide." };
   if (!reason.success) return invalidReason(formData, reason.error.issues[0]?.message);
-  const supabase = await adminContext();
+  const supabase = await staffContext();
   if (!supabase) return { status: "error", message: FORBIDDEN };
 
   const { data: count, error } = await supabase.rpc("admin_remove_user_listings", {

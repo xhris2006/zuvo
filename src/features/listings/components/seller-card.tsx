@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
-import { getCity } from "@/config/locations";
 import { publicProfileHref } from "@/config/routes";
+import { cityName } from "@/features/locations/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { formatMonthYear } from "@/lib/format";
 
@@ -18,8 +18,8 @@ type SellerCardProps = {
   compact?: boolean;
 };
 
-export function SellerCard({ seller, compact = false }: SellerCardProps) {
-  const city = seller.city ? (getCity(seller.city)?.name ?? null) : null;
+export async function SellerCard({ seller, compact = false }: SellerCardProps) {
+  const city = await cityName(seller.city);
   if (compact) {
     return (
       <Link

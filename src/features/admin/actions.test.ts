@@ -14,7 +14,10 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(async () => supabase),
 }));
 vi.mock("@/features/auth/session", () => ({ getCurrentUser: vi.fn(async () => currentUser) }));
-vi.mock("./queries", () => ({ isCurrentUserAdmin: vi.fn(async () => admin) }));
+vi.mock("./queries", () => ({
+  isCurrentUserAdmin: vi.fn(async () => admin),
+  getCurrentStaffRole: vi.fn(async () => (admin ? "admin" : null)),
+}));
 
 const {
   removeListingAction,

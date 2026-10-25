@@ -23,7 +23,7 @@ import { FeedResults } from "@/features/listings/components/feed-results";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { ListingViewToggle, parseListingView } from "@/features/listings/components/listing-view";
 import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
-import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
+import { getCategories, getFollowedFeed, getRecentListings } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
@@ -86,7 +86,11 @@ export default async function HomePage(props: PageProps<"/">) {
   const accountDeleted = searchParams.compte === "supprime";
   const view = parseListingView(searchParams.vue);
   const user = await getCurrentUser().catch(() => null);
-  const { recent, recentFeed, followed } = await loadHomeListings(user?.id ?? null);
+  const [{ recent, recentFeed, followed }, categories] = await Promise.all([
+    loadHomeListings(user?.id ?? null),
+    // Catégories gérées par l'administration ; liste initiale si la base ne répond pas.
+    getCategories().catch(() => defaultCategories),
+  ]);
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
     { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
@@ -139,7 +143,7 @@ export default async function HomePage(props: PageProps<"/">) {
 
       <section aria-labelledby="categories-title" className="container-page">
         <SectionHeader id="categories-title" title={t.home.categoriesTitle} href={routes.explore} />
-        <CategoryList categories={defaultCategories} />
+        <CategoryList categories={categories} />
       </section>
 
       {followed.length > 0 ? (

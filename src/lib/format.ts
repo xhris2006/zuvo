@@ -30,6 +30,17 @@ export function formatDate(date: Date | string): string {
   return dateFormatter.format(typeof date === "string" ? new Date(date) : date);
 }
 
+const dayMonthFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** « 25 oct. » pour un jour calendaire au format AAAA-MM-JJ (sans décalage horaire). */
+export function formatDayMonth(day: string): string {
+  return dayMonthFormatter.format(new Date(`${day}T12:00:00Z`));
+}
+
 const dateTimeFormatter = new Intl.DateTimeFormat(siteConfig.intlLocale, {
   day: "numeric",
   month: "short",

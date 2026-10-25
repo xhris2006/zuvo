@@ -207,6 +207,8 @@ Vérifiez ensuite la version dans **Administration → Configuration**
 | `admin_activity`           | Journal de configuration (catégories, villes, message global)        |
 | `cities`                   | Villes proposées (reprend la liste initiale de l'application)        |
 | `site_announcements`       | Message global : information ou maintenance, dates facultatives      |
+| `banned_words`             | Mots interdits dans les annonces (administrateurs)                   |
+| `app_settings`             | Réglages anti-spam (limite de publication des comptes récents)       |
 
 ### Écarts justifiés par rapport au cahier des charges
 

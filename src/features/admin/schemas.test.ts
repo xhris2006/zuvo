@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   announcementFormSchema,
+  antiSpamSettingsSchema,
+  normalizeBannedWord,
   categoryFormSchema,
   cityFormSchema,
   parseCameroonDateTime,
@@ -75,5 +77,34 @@ describe("message global", () => {
       endsAt: "",
     });
     expect(parsed).toMatchObject({ linkUrl: "", startsAt: null, endsAt: null });
+  });
+});
+
+describe("anti-spam", () => {
+  it("normalise un mot interdit comme en base", () => {
+    expect(normalizeBannedWord("  Contrefaçon ")).toBe("contrefacon");
+    expect(normalizeBannedWord("Faux  Billets")).toBe("faux billets");
+    expect(normalizeBannedWord("anti - vol")).toBe("anti-vol");
+    expect(normalizeBannedWord("C'est")).toBe("c est");
+  });
+
+  it("refuse un mot vide, trop court ou trop long", () => {
+    expect(normalizeBannedWord("!!")).toBeNull();
+    expect(normalizeBannedWord("a")).toBeNull();
+    expect(normalizeBannedWord("x".repeat(41))).toBeNull();
+  });
+
+  it("valide les réglages des nouveaux comptes", () => {
+    expect(
+      antiSpamSettingsSchema.parse({ newAccountDays: "7", newAccountDailyListings: "5" }),
+    ).toEqual({ newAccountDays: 7, newAccountDailyListings: 5 });
+    expect(
+      antiSpamSettingsSchema.safeParse({ newAccountDays: "-1", newAccountDailyListings: "5" })
+        .success,
+    ).toBe(false);
+    expect(
+      antiSpamSettingsSchema.safeParse({ newAccountDays: "7", newAccountDailyListings: "0" })
+        .success,
+    ).toBe(false);
   });
 });

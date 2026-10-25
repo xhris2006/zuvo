@@ -1,4 +1,4 @@
-import { Ban, ImageOff, PackageSearch, RotateCcw, Search } from "lucide-react";
+import { Ban, Copy, ImageOff, PackageSearch, RotateCcw, Search } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import {
   type AdminListingFilters,
   adminListingStatuses,
   getAdminListings,
+  getDuplicateListings,
   parseAdminListingFilters,
 } from "@/features/admin/management-queries";
 import { requireStaff } from "@/features/admin/queries";
@@ -26,6 +27,7 @@ import { cityNameFrom } from "@/features/locations/names";
 import { getCities, getCityNames } from "@/features/locations/queries";
 import { getDictionary } from "@/i18n";
 import { formatCount, formatPrice, formatRelativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Annonces" };
 
@@ -42,10 +44,111 @@ function listHref(filters: AdminListingFilters, page = 1): Route {
   return (query ? `${routes.adminListings}?${query}` : routes.adminListings) as Route;
 }
 
+function ListingTabs({ current }: { current: "toutes" | "doublons" }) {
+  const tabs = [
+    { key: "toutes", label: "Toutes les annonces", href: routes.adminListings },
+    {
+      key: "doublons",
+      label: "Doublons probables",
+      href: `${routes.adminListings}?vue=doublons` as Route,
+    },
+  ] as const;
+  return (
+    <nav aria-label="Vues des annonces" className="flex flex-wrap gap-2">
+      {tabs.map((tab) => (
+        <Link
+          key={tab.key}
+          href={tab.href}
+          aria-current={tab.key === current ? "page" : undefined}
+          className={cn(
+            "rounded-full px-3.5 py-1.5 text-sm font-medium",
+            tab.key === current
+              ? "bg-foreground text-background"
+              : "border border-border bg-card hover:bg-muted",
+          )}
+        >
+          {tab.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+/** Annonces en ligne au titre identique : même vendeur, ou même description. */
+async function Duplicates() {
+  const t = getDictionary();
+  const groups = await getDuplicateListings();
+  if (groups.length === 0) {
+    return <EmptyState icon={Copy} title="Aucun doublon probable parmi les annonces en ligne" />;
+  }
+  return (
+    <ul className="flex flex-col gap-3">
+      {groups.map((group) => (
+        <li
+          key={group.title}
+          className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-card"
+        >
+          <p className="text-sm">
+            <span className="font-semibold">« {group.title} »</span>{" "}
+            <span className="text-muted-foreground">
+              · {group.listings.length} annonces ·{" "}
+              {group.sellerCount === 1 ? "même vendeur" : `${group.sellerCount} vendeurs`}
+            </span>
+          </p>
+          <ul className="flex flex-col divide-y divide-border">
+            {group.listings.map((listing) => (
+              <li key={listing.id} className="flex flex-wrap items-center gap-2 py-2">
+                <Link
+                  href={listingHref(listing.id)}
+                  className="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
+                >
+                  {listing.title}
+                </Link>
+                <span className="text-xs text-muted-foreground">
+                  {listing.sellerUsername ? `@${listing.sellerUsername}` : ""}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t.listing.statuses[listing.status]}
+                </span>
+                <ModerationDialog
+                  trigger={
+                    <Button variant="ghost" size="sm" className="text-danger">
+                      <Ban aria-hidden="true" />
+                      Retirer
+                    </Button>
+                  }
+                  title={`Retirer « ${listing.title} » ?`}
+                  description="L'annonce sera masquée immédiatement et le vendeur prévenu avec le motif indiqué."
+                  confirmLabel="Retirer"
+                  action={removeListingAction}
+                  fields={{ listingId: listing.id }}
+                />
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function AdminListingsPage(props: PageProps<"/admin/annonces">) {
   await requireStaff(routes.adminListings);
   const t = getDictionary();
-  const filters = parseAdminListingFilters(await props.searchParams);
+  const searchParams = await props.searchParams;
+  if (searchParams.vue === "doublons") {
+    return (
+      <>
+        <PageHeader
+          title="Annonces"
+          description="Doublons probables : même titre chez un même vendeur, ou même texte chez plusieurs vendeurs."
+        />
+        <ListingTabs current="doublons" />
+        <Duplicates />
+      </>
+    );
+  }
+  const filters = parseAdminListingFilters(searchParams);
   const [result, categories, cities, cityNames] = await Promise.all([
     getAdminListings(filters),
     getCategories(),
@@ -61,6 +164,7 @@ export default async function AdminListingsPage(props: PageProps<"/admin/annonce
         title="Annonces"
         description="Toutes les annonces, y compris brouillons et annonces retirées."
       />
+      <ListingTabs current="toutes" />
 
       <form
         action={routes.adminListings}

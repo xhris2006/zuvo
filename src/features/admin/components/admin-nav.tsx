@@ -10,6 +10,7 @@ import {
   Megaphone,
   Package,
   Settings2,
+  ShieldBan,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const administration: Item[] = [
   { href: routes.adminCategories, label: "Catégories", icon: FolderTree },
   { href: routes.adminCities, label: "Villes", icon: Building2 },
   { href: routes.adminAnnouncements, label: "Message global", icon: Megaphone },
+  { href: routes.adminAntiSpam, label: "Anti-spam", icon: ShieldBan },
   { href: routes.adminConfig, label: "Configuration", icon: Settings2 },
 ];
 

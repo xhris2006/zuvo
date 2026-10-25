@@ -45,6 +45,44 @@ export type Database = {
           },
         ];
       };
+      app_settings: {
+        Row: {
+          key: string;
+          updated_at: string;
+          value: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          key: string;
+          updated_at?: string;
+          value: number;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          value?: number;
+        };
+        Relationships: [];
+      };
+      banned_words: {
+        Row: {
+          created_at: string;
+          id: string;
+          word: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          word: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          word?: string;
+        };
+        Relationships: [];
+      };
       blocks: {
         Row: {
           blocked_id: string;
@@ -822,6 +860,26 @@ export type Database = {
     };
     Functions: {
       admin_check_user_deletion: { Args: { p_user_id: string }; Returns: string };
+      admin_find_duplicate_listings: {
+        Args: { p_limit?: number };
+        Returns: {
+          listing_count: number;
+          listing_ids: string[];
+          normalized_title: string;
+          seller_count: number;
+        }[];
+      };
+      admin_find_users: {
+        Args: { p_query: string };
+        Returns: {
+          created_at: string;
+          display_name: string;
+          email: string;
+          id: string;
+          phone: string;
+          username: string;
+        }[];
+      };
       admin_get_reported_message: {
         Args: { p_report_id: string };
         Returns: {
@@ -835,6 +893,7 @@ export type Database = {
         }[];
       };
       admin_get_stats: { Args: Record<PropertyKey, never>; Returns: Json };
+      admin_get_trends: { Args: { p_days?: number }; Returns: Json };
       admin_get_user_overview: { Args: { p_user_id: string }; Returns: Json };
       admin_lift_expired_suspensions: { Args: Record<PropertyKey, never>; Returns: number };
       admin_list_reports: {

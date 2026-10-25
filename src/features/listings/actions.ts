@@ -40,6 +40,12 @@ function listingErrorMessage(error: DbError): string {
   if (message.includes("listing_cannot_return_to_draft")) {
     return "Une annonce publiée ne peut pas redevenir un brouillon.";
   }
+  if (message.includes("listing_banned_word")) {
+    return "Votre annonce contient un terme interdit par les règles du site. Modifiez le titre ou la description.";
+  }
+  if (message.includes("new_account_publication_limit")) {
+    return "Votre compte est récent : vous avez atteint le nombre de publications autorisé pour aujourd'hui. Votre annonce est enregistrée en brouillon, réessayez demain.";
+  }
   if (error?.code === "23514") return "Certaines informations sont incomplètes ou invalides.";
   return GENERIC_ERROR;
 }

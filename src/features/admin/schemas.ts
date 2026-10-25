@@ -94,5 +94,38 @@ export const announcementFormSchema = z
     message: "La fin doit être postérieure au début.",
   });
 
+/**
+ * Mot interdit sous la forme stockée en base : minuscules sans accents,
+ * lettres et chiffres séparés par une espace ou un tiret. null si invalide.
+ */
+export function normalizeBannedWord(value: string): string | null {
+  const word = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 -]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/ ?- ?/g, "-")
+    .trim();
+  return /^[a-z0-9]+([ -][a-z0-9]+)*$/.test(word) && word.length >= 2 && word.length <= 40
+    ? word
+    : null;
+}
+
+export const antiSpamSettingsSchema = z.object({
+  newAccountDays: z.coerce
+    .number({ error: "Indiquez un nombre." })
+    .int("Nombre entier attendu.")
+    .min(0, "0 au minimum (0 : aucune limite).")
+    .max(365, "365 au maximum."),
+  newAccountDailyListings: z.coerce
+    .number({ error: "Indiquez un nombre." })
+    .int("Nombre entier attendu.")
+    .min(1, "1 au minimum.")
+    .max(100, "100 au maximum."),
+});
+
+export type AntiSpamField = "newAccountDays" | "newAccountDailyListings" | "word";
+
 export type AnnouncementField = "kind" | "message" | "linkUrl" | "startsAt" | "endsAt";
 export type ReferenceField = "name" | "slug" | "region";

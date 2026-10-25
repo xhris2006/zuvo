@@ -280,6 +280,11 @@ export const fr = {
       announcement: "Message global",
       banned_word: "Mot interdit",
       setting: "Réglage",
+      user_search: "Recherche de compte",
+    } as Record<string, string>,
+    settings: {
+      new_account_days: "Durée d'un compte récent (jours)",
+      new_account_daily_listings: "Publications par 24 h d'un compte récent",
     } as Record<string, string>,
     fields: {
       name: "nom",
@@ -291,11 +296,13 @@ export const fr = {
       link_url: "lien",
       starts_at: "début",
       ends_at: "fin",
+      value: "valeur",
     } as Record<string, string>,
     changes: {
       created: "ajout",
       updated: "modification",
       deleted: "suppression",
+      viewed: "consultation",
     } as Record<string, string>,
   },
   announcement: {

@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 
 /** Version attendue de la base (dernière migration), voir public.app_schema_version(). */
-export const EXPECTED_SCHEMA_VERSION = "20261025100100";
+export const EXPECTED_SCHEMA_VERSION = "20261025110000";
 
 export type PushServerStatus = {
   supabase: boolean;

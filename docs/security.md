@@ -44,6 +44,16 @@ celui des notifications push dans [`notifications.md`](notifications.md).
   l'administration que pour le message signalé (photo comprise, par un lien
   signé de 5 minutes), et chaque consultation est journalisée. La fiche d'un
   utilisateur ne montre que des nombres sur sa messagerie, jamais de contenu.
+- La recherche d'un compte par e-mail ou téléphone passe par
+  `admin_find_users`, réservée aux administrateurs (3 caractères au moins,
+  20 résultats au plus) ; chaque recherche est inscrite au journal de
+  configuration, sans le terme recherché.
+- L'export CSV du tableau de bord ne contient que des nombres agrégés ;
+  les cellules de texte commençant par `=`, `+`, `-` ou `@` sont neutralisées
+  (injection de formules) et la réponse n'est jamais mise en cache.
+- Anti-spam appliqué par la base : mots interdits (titre et description,
+  mot entier, sans accents), nombre de publications par 24 h limité pour
+  les comptes récents (réglable), doublons probables signalés à l'équipe.
 - L'adresse e-mail et la dernière connexion d'un compte sont lues côté
   serveur (clé service_role), uniquement pour la fiche utilisateur et
   uniquement pour un administrateur.

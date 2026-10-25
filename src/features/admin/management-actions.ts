@@ -14,9 +14,12 @@ import { adminErrorMessage, FORBIDDEN } from "./errors";
 import { isCurrentUserAdmin } from "./queries";
 import {
   type AnnouncementField,
+  type AntiSpamField,
   announcementFormSchema,
+  antiSpamSettingsSchema,
   categoryFormSchema,
   cityFormSchema,
+  normalizeBannedWord,
   type ReferenceField,
 } from "./schemas";
 
@@ -430,4 +433,68 @@ export async function deleteAnnouncementAction(formData: FormData): Promise<void
   if (!id.success || !context) return;
   await context.supabase.from("site_announcements").delete().eq("id", id.data);
   revalidatePath("/", "layout");
+}
+
+// -----------------------------------------------------------------------------
+// Anti-spam
+// -----------------------------------------------------------------------------
+export async function saveAntiSpamSettingsAction(
+  _previous: FormState<AntiSpamField>,
+  formData: FormData,
+): Promise<FormState<AntiSpamField>> {
+  const values = {
+    newAccountDays: formText(formData, "newAccountDays"),
+    newAccountDailyListings: formText(formData, "newAccountDailyListings"),
+  };
+  const parsed = antiSpamSettingsSchema.safeParse(values);
+  if (!parsed.success) {
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error), values };
+  }
+  const context = await adminContext();
+  if (!context) return { status: "error", message: FORBIDDEN };
+  for (const [key, value] of [
+    ["new_account_days", parsed.data.newAccountDays],
+    ["new_account_daily_listings", parsed.data.newAccountDailyListings],
+  ] as const) {
+    const { error } = await context.supabase.from("app_settings").update({ value }).eq("key", key);
+    if (error) return { status: "error", message: adminErrorMessage(error), values };
+  }
+  revalidatePath(routes.adminAntiSpam);
+  return { status: "success", message: "Réglages enregistrés." };
+}
+
+export async function addBannedWordAction(
+  _previous: FormState<AntiSpamField>,
+  formData: FormData,
+): Promise<FormState<AntiSpamField>> {
+  const raw = formText(formData, "word");
+  const word = normalizeBannedWord(raw);
+  if (!word) {
+    return {
+      status: "error",
+      fieldErrors: { word: "De 2 à 40 lettres ou chiffres (espaces et tirets acceptés)." },
+      values: { word: raw },
+    };
+  }
+  const context = await adminContext();
+  if (!context) return { status: "error", message: FORBIDDEN };
+  const { error } = await context.supabase.from("banned_words").insert({ word });
+  if (error) {
+    return {
+      status: "error",
+      message:
+        error.code === "23505" ? `« ${word} » est déjà dans la liste.` : adminErrorMessage(error),
+      values: { word: raw },
+    };
+  }
+  revalidatePath(routes.adminAntiSpam);
+  return { status: "success", message: `« ${word} » ajouté à la liste.` };
+}
+
+export async function removeBannedWordAction(formData: FormData): Promise<void> {
+  const id = z.uuid().safeParse(formText(formData, "id"));
+  const context = await adminContext();
+  if (!id.success || !context) return;
+  await context.supabase.from("banned_words").delete().eq("id", id.data);
+  revalidatePath(routes.adminAntiSpam);
 }

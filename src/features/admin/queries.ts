@@ -4,7 +4,7 @@ import { cache } from "react";
 import { z } from "zod";
 import { getCurrentUser, requireUser } from "@/features/auth/session";
 import type { ReportStatus, ReportTargetType } from "@/features/moderation/schemas";
-import type { Database } from "@/lib/supabase/database.types";
+import { Constants, type Database } from "@/lib/supabase/database.types";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -470,19 +470,82 @@ export type ModerationLogEntry = {
   admin: { username: string; displayName: string } | null;
 };
 
+export type ModerationLogFilters = {
+  action: ModerationActionType | null;
+  targetType: ReportTargetType | null;
+  /** Nom d'utilisateur du membre de l'équipe. */
+  admin: string | null;
+  /** Jours au format AAAA-MM-JJ (heure du Cameroun). */
+  from: string | null;
+  to: string | null;
+};
+
+type ModerationActionType = Database["public"]["Enums"]["moderation_action_type"];
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Filtres du journal lus dans l'URL (valeurs invalides ignorées). */
+export function parseModerationLogFilters(
+  raw: Record<string, string | string[] | undefined>,
+): ModerationLogFilters {
+  const first = (key: string) => {
+    const value = raw[key];
+    const text = (Array.isArray(value) ? value[0] : value)?.trim();
+    return text ? text : null;
+  };
+  const action = first("action");
+  const target = first("cible");
+  const admin = first("membre")?.replace(/^@/, "").toLowerCase() ?? null;
+  const from = first("du");
+  const to = first("au");
+  return {
+    action: Constants.public.Enums.moderation_action_type.find((value) => value === action) ?? null,
+    targetType: Constants.public.Enums.report_target_type.find((value) => value === target) ?? null,
+    admin: admin && /^[a-z0-9_]{1,30}$/.test(admin) ? admin : null,
+    from: from && DAY.test(from) ? from : null,
+    to: to && DAY.test(to) ? to : null,
+  };
+}
+
+const noFilters: ModerationLogFilters = {
+  action: null,
+  targetType: null,
+  admin: null,
+  from: null,
+  to: null,
+};
+
 export async function getModerationLog(
   page: number,
+  filters: ModerationLogFilters = noFilters,
 ): Promise<{ items: ModerationLogEntry[]; total: number; pageSize: number }> {
   const pageSize = ADMIN_PAGE_SIZE * 2;
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new AdminQueryError();
-  const from = (page - 1) * pageSize;
-  const { data, error, count } = await supabase
+
+  let query = supabase
     .from("moderation_actions")
     .select(
       "id, action, target_type, target_id, note, created_at, admin:profiles!moderation_actions_admin_id_fkey(username, display_name)",
       { count: "exact" },
-    )
+    );
+  if (filters.action) query = query.eq("action", filters.action);
+  if (filters.targetType) query = query.eq("target_type", filters.targetType);
+  // Jours entiers à l'heure du Cameroun (UTC+1).
+  if (filters.from) query = query.gte("created_at", `${filters.from}T00:00:00+01:00`);
+  if (filters.to) query = query.lte("created_at", `${filters.to}T23:59:59.999+01:00`);
+  if (filters.admin) {
+    const { data: member } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", filters.admin)
+      .maybeSingle();
+    if (!member) return { items: [], total: 0, pageSize };
+    query = query.eq("admin_id", member.id);
+  }
+
+  const from = (page - 1) * pageSize;
+  const { data, error, count } = await query
     .order("created_at", { ascending: false })
     .range(from, from + pageSize - 1);
   if (error && error.code !== "PGRST103") throw new AdminQueryError();

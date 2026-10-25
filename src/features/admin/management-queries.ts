@@ -325,3 +325,131 @@ export async function getConfigActivity(page: number): Promise<Page<ConfigActivi
     pageSize,
   };
 }
+
+// -----------------------------------------------------------------------------
+// Tendances (équipe)
+// -----------------------------------------------------------------------------
+export const trendPeriods = [7, 30, 90] as const;
+export type TrendPeriod = (typeof trendPeriods)[number];
+
+/** Période demandée dans l'URL (`?jours=7|30|90`), 30 jours par défaut. */
+export function parseTrendPeriod(value: string | string[] | undefined): TrendPeriod {
+  const raw = Number(Array.isArray(value) ? value[0] : value);
+  return trendPeriods.find((period) => period === raw) ?? 30;
+}
+
+const trendsSchema = z.object({
+  days: z.array(
+    z.object({
+      day: z.string(),
+      users: z.number(),
+      listings: z.number(),
+      reports: z.number(),
+    }),
+  ),
+  cities: z.array(z.object({ city: z.string(), active_listings: z.number(), users: z.number() })),
+  categories: z.array(
+    z.object({ slug: z.string(), name: z.string(), active_listings: z.number() }),
+  ),
+});
+
+export type AdminTrends = z.infer<typeof trendsSchema>;
+
+export async function getAdminTrends(days: TrendPeriod): Promise<AdminTrends> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("admin_get_trends", { p_days: days });
+  const parsed = trendsSchema.safeParse(data);
+  if (error || !parsed.success) throw new ManagementQueryError();
+  return parsed.data;
+}
+
+// -----------------------------------------------------------------------------
+// Recherche par e-mail ou téléphone (administrateurs, journalisée par la base)
+// -----------------------------------------------------------------------------
+export type ContactSearchResult = {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string | null;
+  phone: string | null;
+  createdAt: string;
+};
+
+export async function findUsersByContact(query: string): Promise<ContactSearchResult[]> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("admin_find_users", { p_query: query });
+  if (error) throw new ManagementQueryError();
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    username: row.username,
+    displayName: row.display_name,
+    email: row.email,
+    phone: row.phone,
+    createdAt: row.created_at,
+  }));
+}
+
+// -----------------------------------------------------------------------------
+// Anti-spam
+// -----------------------------------------------------------------------------
+export type DuplicateGroup = {
+  title: string;
+  listings: { id: string; title: string; sellerUsername: string | null; status: ListingStatus }[];
+  sellerCount: number;
+};
+
+/** Doublons probables (même titre normalisé, même vendeur ou même description). */
+export async function getDuplicateListings(): Promise<DuplicateGroup[]> {
+  const supabase = await client();
+  const { data, error } = await supabase.rpc("admin_find_duplicate_listings", { p_limit: 50 });
+  if (error) throw new ManagementQueryError();
+  const groups = data ?? [];
+  const ids = groups.flatMap((group) => group.listing_ids);
+  if (ids.length === 0) return [];
+  const { data: rows } = await supabase
+    .from("listings")
+    .select("id, title, status, seller:profiles!listings_seller_id_fkey(username)")
+    .in("id", ids);
+  const byId = new Map((rows ?? []).map((row) => [row.id, row]));
+  return groups.map((group) => ({
+    title: group.normalized_title,
+    sellerCount: group.seller_count,
+    listings: group.listing_ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row
+        ? [
+            {
+              id,
+              title: row.title,
+              sellerUsername: row.seller?.username ?? null,
+              status: row.status,
+            },
+          ]
+        : [];
+    }),
+  }));
+}
+
+export type AntiSpamSettings = { newAccountDays: number; newAccountDailyListings: number };
+
+export async function getAntiSpamSettings(): Promise<AntiSpamSettings> {
+  const supabase = await client();
+  const { data, error } = await supabase.from("app_settings").select("key, value");
+  if (error) throw new ManagementQueryError();
+  const value = (key: string, fallback: number) =>
+    data.find((row) => row.key === key)?.value ?? fallback;
+  return {
+    newAccountDays: value("new_account_days", 7),
+    newAccountDailyListings: value("new_account_daily_listings", 5),
+  };
+}
+
+export async function getBannedWords(): Promise<{ id: string; word: string; createdAt: string }[]> {
+  const supabase = await client();
+  const { data, error } = await supabase
+    .from("banned_words")
+    .select("id, word, created_at")
+    .order("word");
+  if (error) throw new ManagementQueryError();
+  return data.map((row) => ({ id: row.id, word: row.word, createdAt: row.created_at }));
+}

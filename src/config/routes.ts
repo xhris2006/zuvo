@@ -35,6 +35,7 @@ export const routes = {
   adminCities: "/admin/villes",
   adminTeam: "/admin/equipe",
   adminAnnouncements: "/admin/message",
+  adminAntiSpam: "/admin/anti-spam",
 } as const satisfies Record<string, Route>;
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */

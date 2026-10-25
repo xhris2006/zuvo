@@ -1,9 +1,10 @@
-import { ShieldCheck } from "lucide-react";
+import { BadgeCheck, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Alert } from "@/components/ui/alert";
+import { BackButton } from "@/components/ui/back-button";
 import { ShareButton } from "@/components/ui/share-button";
 import { getCity } from "@/config/locations";
 import { exploreHref, routes } from "@/config/routes";
@@ -68,7 +69,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
   ]);
   const url = `${getSiteUrl()}${listingHref(listing.id)}`;
   const returnTo = listingHref(listing.id);
-  // Mobile : barre d'action fixe (favori + contact) à la place de la navigation.
+  // Mobile : barre d'action fixe (contact) à la place de la navigation.
   const hasActionBar = !isOwner && canContact;
   const details = [
     listing.condition ? { label: "État", value: t.listing.conditions[listing.condition] } : null,
@@ -106,10 +107,27 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
       />
 
       <div className="container-page grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-x-10 lg:gap-y-10">
-        <div className="-mx-4 sm:mx-0 lg:col-start-1 lg:row-start-1">
+        <div className="lg:col-start-1 lg:row-start-1">
           <ListingGallery
             title={listing.title}
             images={listing.images.map((image) => ({ id: image.id, url: image.url }))}
+            overlay={
+              <>
+                <BackButton fallbackHref={routes.explore} />
+                <div className="flex gap-2">
+                  {isOwner ? null : (
+                    <FavoriteButton
+                      listingId={listing.id}
+                      initialFavorited={favorites.has(listing.id)}
+                      signedIn={Boolean(viewer)}
+                      returnTo={returnTo}
+                      className="size-10"
+                    />
+                  )}
+                  <ShareButton title={listing.title} url={url} variant="icon" />
+                </div>
+              </>
+            }
           />
         </div>
 
@@ -127,8 +145,18 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           ) : null}
 
           <div className="flex flex-col gap-2">
-            {listing.status !== "active" ? (
-              <ListingStatusBadge status={listing.status} className="self-start" />
+            {listing.condition || listing.status !== "active" ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {listing.condition ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+                    <BadgeCheck className="size-4" aria-hidden="true" />
+                    {t.listing.conditions[listing.condition]}
+                  </span>
+                ) : null}
+                {listing.status !== "active" ? (
+                  <ListingStatusBadge status={listing.status} />
+                ) : null}
+              </div>
             ) : null}
             <h1 className="text-xl leading-snug font-semibold tracking-tight text-balance sm:text-3xl sm:font-bold">
               {listing.title}
@@ -136,7 +164,19 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
             <p className="text-[1.75rem] leading-none font-bold tracking-tight sm:text-3xl">
               {listing.price === null ? "Prix à définir" : formatPrice(listing.price)}
             </p>
+            <p className="text-sm text-muted-foreground">
+              {city ? `${city} · ` : ""}
+              {listing.published_at
+                ? `Publiée ${formatRelativeTime(listing.published_at)}`
+                : `Créée ${formatRelativeTime(listing.created_at)}`}
+            </p>
           </div>
+
+          {listing.seller ? (
+            <div className="md:hidden">
+              <SellerCard seller={listing.seller} compact />
+            </div>
+          ) : null}
 
           {hasActionBar ? (
             <div
@@ -144,15 +184,6 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
               className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
             >
               <div className="mx-auto flex max-w-xl items-start gap-3 md:max-w-none">
-                <div className="md:hidden">
-                  <FavoriteButton
-                    listingId={listing.id}
-                    initialFavorited={favorites.has(listing.id)}
-                    signedIn={Boolean(viewer)}
-                    returnTo={returnTo}
-                    className="size-12 border border-input shadow-none"
-                  />
-                </div>
                 <div className="min-w-0 flex-1">
                   <ContactSellerButton
                     listingId={listing.id}
@@ -164,9 +195,13 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-2" data-listing-actions>
+          <div
+            className={cn("flex flex-wrap gap-2", isOwner && "hidden md:flex")}
+            data-listing-actions
+          >
+            {/* Sur mobile, favori et partage sont posés sur la photo. */}
             {isOwner ? null : (
-              <div className={cn(hasActionBar && "hidden md:block")}>
+              <div className="hidden md:block">
                 <FavoriteButton
                   listingId={listing.id}
                   initialFavorited={favorites.has(listing.id)}
@@ -176,7 +211,9 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
                 />
               </div>
             )}
-            <ShareButton title={listing.title} url={url} />
+            <div className="hidden md:block">
+              <ShareButton title={listing.title} url={url} />
+            </div>
             {!isOwner && canContact ? (
               <ReportDialog
                 targetType="listing"
@@ -222,7 +259,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
 
         <div className="flex flex-col gap-4 lg:col-start-2 lg:row-start-2 lg:self-start">
           {listing.seller ? (
-            <section aria-labelledby="seller-title" className="flex flex-col gap-2">
+            <section aria-labelledby="seller-title" className="hidden flex-col gap-2 md:flex">
               <h2 id="seller-title" className="text-lg font-bold tracking-tight sm:text-xl">
                 Vendeur
               </h2>

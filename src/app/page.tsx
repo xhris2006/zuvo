@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BadgePercent,
   HandCoins,
   MessagesSquare,
@@ -7,6 +6,7 @@ import {
   Plus,
   ShieldCheck,
 } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { SectionHeader } from "@/components/layout/section-header";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -16,95 +16,41 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { CategoryList } from "@/features/categories/components/category-list";
-import { defaultCategories, getCategoryIcon } from "@/features/categories/data";
+import { defaultCategories } from "@/features/categories/data";
 import { getCurrentUser } from "@/features/auth/session";
+import { GuestWelcome } from "@/features/home/components/guest-welcome";
+import { FeedResults } from "@/features/listings/components/feed-results";
 import { ListingResults } from "@/features/listings/components/listing-results";
+import { ListingViewToggle, parseListingView } from "@/features/listings/components/listing-view";
+import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
 import { getFollowedFeed, getRecentListings } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getDictionary } from "@/i18n";
 import { getSiteUrl } from "@/lib/env";
 
-const heroTiles = ["mode-femme", "telephones-tablettes", "chaussures", "maison"] as const;
-
-function HeroIllustration() {
-  const categories = heroTiles.map(
-    (slug) => defaultCategories.find((category) => category.slug === slug) ?? { slug, name: slug },
-  );
-  return (
-    <div aria-hidden="true" className="relative hidden pb-8 lg:block">
-      <div className="absolute -inset-6 rounded-[2rem] bg-brand-100/70" />
-      <div className="relative grid grid-cols-2 gap-4">
-        {categories.map((category, index) => {
-          const Icon = getCategoryIcon(category.slug);
-          return (
-            <div
-              key={category.slug}
-              className={
-                index % 2 === 1
-                  ? "translate-y-8 rounded-2xl border border-border bg-card p-6 shadow-raised"
-                  : "rounded-2xl border border-border bg-card p-6 shadow-raised"
-              }
-            >
-              <div className="mb-10 flex size-12 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
-                <Icon className="size-6" />
-              </div>
-              <p className="text-sm font-semibold">{category.name}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage. */
+/**
+ * Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage.
+ * Les membres connectés reçoivent les annonces récentes avec leur vendeur (fil).
+ */
 async function loadHomeListings(userId: string | null): Promise<{
   recent: ListingCardData[];
+  recentFeed: FeedListingData[] | null;
   followed: ListingCardData[];
 }> {
   try {
-    const [recent, feed] = await Promise.all([
-      getRecentListings(12),
+    const [recent, recentFeed, feed] = await Promise.all([
+      userId ? Promise.resolve(null) : getRecentListings(12),
+      userId ? getFeedListings({ pageSize: 12 }) : Promise.resolve(null),
       userId ? getFollowedFeed(userId, 1) : Promise.resolve(null),
     ]);
-    return { recent, followed: feed?.items.slice(0, 8) ?? [] };
+    return {
+      recent: recent ?? recentFeed?.items ?? [],
+      recentFeed: recentFeed?.items ?? null,
+      followed: feed?.items.slice(0, 8) ?? [],
+    };
   } catch {
-    return { recent: [], followed: [] };
+    return { recent: [], recentFeed: null, followed: [] };
   }
-}
-
-/** Présentation du site pour les visiteurs non connectés. */
-function GuestHero() {
-  const t = getDictionary();
-  return (
-    <section className="border-b border-border bg-gradient-to-b from-brand-50 to-background">
-      <div className="container-page grid items-center gap-10 py-7 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:py-20">
-        <div className="flex flex-col gap-3 sm:gap-5">
-          <h1 className="max-w-xl text-[1.75rem] leading-tight font-bold tracking-tight text-balance sm:text-5xl sm:leading-[1.1]">
-            {t.home.heroTitle}
-          </h1>
-          <p className="max-w-lg text-[0.9375rem] text-pretty text-muted-foreground sm:text-lg">
-            {t.home.heroSubtitle}
-          </p>
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <Button asChild size="lg">
-              <Link href={routes.sell}>
-                <Plus aria-hidden="true" />
-                {t.home.heroPrimary}
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="hidden sm:inline-flex">
-              <Link href={routes.explore}>
-                {t.home.heroSecondary}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <HeroIllustration />
-      </div>
-    </section>
-  );
 }
 
 /** Raccourci de mise en vente pour les membres connectés. */
@@ -136,9 +82,11 @@ function SellCard() {
 
 export default async function HomePage(props: PageProps<"/">) {
   const t = getDictionary();
-  const accountDeleted = (await props.searchParams).compte === "supprime";
+  const searchParams = await props.searchParams;
+  const accountDeleted = searchParams.compte === "supprime";
+  const view = parseListingView(searchParams.vue);
   const user = await getCurrentUser().catch(() => null);
-  const { recent, followed } = await loadHomeListings(user?.id ?? null);
+  const { recent, recentFeed, followed } = await loadHomeListings(user?.id ?? null);
   const values = [
     { icon: HandCoins, title: t.home.values.freeTitle, body: t.home.values.freeBody },
     { icon: BadgePercent, title: t.home.values.noFeeTitle, body: t.home.values.noFeeBody },
@@ -186,7 +134,7 @@ export default async function HomePage(props: PageProps<"/">) {
           <SellCard />
         </>
       ) : (
-        <GuestHero />
+        <GuestWelcome listings={recent} />
       )}
 
       <section aria-labelledby="categories-title" className="container-page">
@@ -202,12 +150,23 @@ export default async function HomePage(props: PageProps<"/">) {
       ) : null}
 
       <section aria-labelledby="recent-title" className="container-page">
-        <SectionHeader
-          id="recent-title"
-          title={t.home.recentTitle}
-          href={recent.length > 0 ? routes.explore : undefined}
-        />
-        {recent.length > 0 ? (
+        <div className="mb-4 flex items-end gap-3 sm:mb-5">
+          <SectionHeader
+            id="recent-title"
+            title={t.home.recentTitle}
+            href={recent.length > 0 ? routes.explore : undefined}
+            className="mb-0 min-w-0 flex-1 sm:mb-0"
+          />
+          {recentFeed && recentFeed.length > 0 ? (
+            <ListingViewToggle
+              current={view}
+              hrefFor={(value) => (value === "grille" ? "/?vue=grille" : routes.home) as Route}
+            />
+          ) : null}
+        </div>
+        {recentFeed && recentFeed.length > 0 && view === "fil" ? (
+          <FeedResults listings={recentFeed} />
+        ) : recent.length > 0 ? (
           <ListingResults listings={recent} priorityCount={4} />
         ) : (
           <EmptyState

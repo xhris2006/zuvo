@@ -30,34 +30,41 @@ export function BottomNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group relative flex flex-1 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium transition-colors",
+                  "group relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-medium transition-colors",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {item.emphasis ? (
                   <span
                     className={cn(
-                      "flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-card transition-transform group-active:scale-90",
-                      active && "ring-2 ring-brand-200 ring-offset-1 ring-offset-card",
+                      "flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-primary-foreground shadow-raised ring-4 ring-card transition-transform group-hover:scale-105 group-active:scale-90",
+                      active && "from-brand-600 to-brand-800",
                     )}
                   >
-                    <Icon className="size-5" strokeWidth={2.4} aria-hidden="true" />
+                    <Icon className="size-6" strokeWidth={2.5} aria-hidden="true" />
                   </span>
                 ) : (
-                  <span className="relative transition-transform duration-150 group-active:scale-90">
-                    <Icon className="size-6" strokeWidth={active ? 2.3 : 1.8} aria-hidden="true" />
-                    {item.badge ? (
-                      <UnreadBadge kind={item.badge} className="-top-1.5 -right-2.5" />
-                    ) : null}
+                  <span
+                    className={cn(
+                      "flex h-8 w-14 items-center justify-center rounded-full transition-[background-color,transform] duration-200 group-active:scale-90",
+                      active && "bg-primary/12",
+                    )}
+                  >
+                    <span className="relative">
+                      <Icon
+                        className="size-6"
+                        strokeWidth={active ? 2.3 : 1.8}
+                        aria-hidden="true"
+                      />
+                      {item.badge ? (
+                        <UnreadBadge kind={item.badge} className="-top-1.5 -right-2.5" />
+                      ) : null}
+                    </span>
                   </span>
                 )}
-                <span className={cn(item.emphasis && "sr-only")}>{item.label}</span>
-                {active && !item.emphasis ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-0 h-0.5 w-8 animate-in rounded-full bg-primary duration-300 fade-in-0 zoom-in-50"
-                  />
-                ) : null}
+                <span className={cn(item.emphasis && "sr-only", active && "font-semibold")}>
+                  {item.label}
+                </span>
                 {active ? null : <LinkPending variant="bar" />}
                 {item.badge ? <UnreadLabel kind={item.badge} /> : null}
               </Link>

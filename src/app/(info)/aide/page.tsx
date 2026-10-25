@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DocumentPage } from "@/components/layout/document-page";
 import { routes } from "@/config/routes";
-import { siteConfig } from "@/config/site";
+import { formatSupportPhone, siteConfig } from "@/config/site";
 import { publicEnv } from "@/lib/env";
 
 export const metadata: Metadata = {
@@ -57,14 +57,18 @@ export default function HelpPage() {
       </p>
 
       <h2>Nous contacter</h2>
+      <p>
+        Assistance par téléphone :{" "}
+        <a href={`tel:${siteConfig.supportPhone}`}>{formatSupportPhone()}</a>.
+      </p>
       {contactEmail ? (
         <p>
-          Écrivez-nous à <a href={`mailto:${contactEmail}`}>{contactEmail}</a>. Ne communiquez
-          jamais votre mot de passe, même à l&apos;assistance.
+          Par e-mail : <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
         </p>
-      ) : (
-        <p>L&apos;adresse de contact de l&apos;assistance sera publiée prochainement.</p>
-      )}
+      ) : null}
+      <p>
+        Ne communiquez jamais votre mot de passe ni un code reçu par SMS, même à l&apos;assistance.
+      </p>
     </DocumentPage>
   );
 }

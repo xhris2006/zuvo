@@ -1,4 +1,4 @@
-import { SearchX, WifiOff } from "lucide-react";
+import { SearchX, Store, WifiOff } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
@@ -14,10 +14,15 @@ import {
   type SearchResult,
   searchListings,
 } from "@/features/listings/queries";
+import { ShopList } from "@/features/profiles/components/shop-list";
+import { parseExploreTab, sanitizeShopQuery } from "@/features/profiles/shop-search";
+import { type ShopSearchResult, searchShops } from "@/features/profiles/shops";
 import { ActiveFilters } from "@/features/search/components/active-filters";
 import { CategoryChips } from "@/features/search/components/category-chips";
+import { ExploreTabs, exploreTabHref } from "@/features/search/components/explore-tabs";
 import { FiltersForm } from "@/features/search/components/filters-form";
 import { MobileFilters } from "@/features/search/components/mobile-filters";
+import { ShopSearchForm } from "@/features/search/components/shop-search-form";
 import { SortMenu } from "@/features/search/components/sort-menu";
 import {
   countActiveFilters,
@@ -27,9 +32,19 @@ import {
 } from "@/features/search/schema";
 import { getDictionary } from "@/i18n";
 import { isSupabaseConfigured } from "@/lib/env";
+import { parsePageParam } from "@/lib/pagination";
 
 export async function generateMetadata(props: PageProps<"/explorer">): Promise<Metadata> {
-  const filters = parseSearchParams(await props.searchParams);
+  const searchParams = await props.searchParams;
+  if (parseExploreTab(searchParams.type) === "boutiques") {
+    return {
+      title: "Boutiques",
+      description: getDictionary().explore.shopsDescription,
+      alternates: { canonical: exploreTabHref("boutiques") },
+      robots: sanitizeShopQuery(searchParams.q) ? { index: false } : undefined,
+    };
+  }
+  const filters = parseSearchParams(searchParams);
   const category = filters.category
     ? (await getCategories().catch(() => [] as Category[])).find(
         (item) => item.slug === filters.category,
@@ -51,9 +66,89 @@ function resultLabel(total: number) {
   return total === 1 ? "1 annonce" : `${total.toLocaleString("fr-FR")} annonces`;
 }
 
+/** Onglet « Boutiques » : recherche de vendeurs par nom ou pseudo. */
+async function ShopsExplorer({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const t = getDictionary();
+  const query = sanitizeShopQuery(searchParams.q);
+  const page = parsePageParam(searchParams.page);
+  let result: ShopSearchResult | null = null;
+  let unavailable = false;
+  if (isSupabaseConfigured()) {
+    try {
+      result = await searchShops({ q: query, page, pageSize: 24 });
+    } catch {
+      unavailable = true;
+    }
+  }
+  const pageCount = result ? Math.ceil(result.total / result.pageSize) : 0;
+  const pageHref = (value: number) => {
+    const params = new URLSearchParams({ type: "boutiques" });
+    if (query) params.set("q", query);
+    if (value > 1) params.set("page", String(value));
+    return exploreHref(params);
+  };
+
+  return (
+    <div className="container-page flex flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
+      <PageHeader
+        title={query ? t.explore.shopsResultsFor(query) : t.explore.shopsTitle}
+        description={<span className="hidden sm:inline">{t.explore.shopsDescription}</span>}
+      />
+      <ExploreTabs current="boutiques" query={query} />
+      <ShopSearchForm defaultValue={query} className="sm:max-w-md" />
+
+      <section aria-labelledby="shops-count" className="flex flex-col gap-5">
+        {unavailable ? (
+          <EmptyState
+            icon={WifiOff}
+            title={t.explore.shopsUnavailableTitle}
+            description="Le service ne répond pas pour le moment. Réessayez dans quelques instants."
+          />
+        ) : result === null ? (
+          <EmptyState
+            icon={Store}
+            title={t.explore.unavailableTitle}
+            description={t.explore.unavailableBody}
+          />
+        ) : (
+          <>
+            <p
+              id="shops-count"
+              className="text-sm font-medium text-muted-foreground"
+              aria-live="polite"
+            >
+              {t.explore.shopsCount(result.total)}
+            </p>
+            {result.items.length > 0 ? (
+              <>
+                <ShopList shops={result.items} />
+                <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
+              </>
+            ) : (
+              <EmptyState
+                icon={Store}
+                title={query ? t.explore.shopsEmptyTitle : t.explore.shopsNoneTitle}
+                description={query ? t.explore.shopsEmptyBody : t.explore.shopsNoneBody}
+              />
+            )}
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
+
 export default async function ExplorePage(props: PageProps<"/explorer">) {
   const t = getDictionary();
-  const filters = parseSearchParams(await props.searchParams);
+  const searchParams = await props.searchParams;
+  if (parseExploreTab(searchParams.type) === "boutiques") {
+    return <ShopsExplorer searchParams={searchParams} />;
+  }
+  const filters = parseSearchParams(searchParams);
   const activeCount = countActiveFilters(filters);
   const configured = isSupabaseConfigured();
   // Une panne de la base ne doit pas rendre la page inutilisable : on garde
@@ -82,6 +177,8 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
         title={filters.q ? `Résultats pour « ${filters.q} »` : t.explore.title}
         description={<span className="hidden sm:inline">{t.explore.description}</span>}
       />
+
+      <ExploreTabs current="articles" query={filters.q} />
 
       <CategoryChips filters={filters} categories={categories} className="lg:hidden" />
 

@@ -17,13 +17,24 @@ type AvatarQuickEditProps = {
   name: string;
   currentUrl: string | null;
   className?: string;
+  /** Classes de la photo (taille, typographie). */
+  avatarClassName?: string;
+  /** Classes du message d'état (position). */
+  messageClassName?: string;
 };
 
 /**
  * Photo de profil modifiable d'un geste depuis « Mon profil » : la photo
  * choisie est recadrée, allégée, envoyée puis enregistrée immédiatement.
  */
-export function AvatarQuickEdit({ userId, name, currentUrl, className }: AvatarQuickEditProps) {
+export function AvatarQuickEdit({
+  userId,
+  name,
+  currentUrl,
+  className,
+  avatarClassName,
+  messageClassName,
+}: AvatarQuickEditProps) {
   const router = useRouter();
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +89,7 @@ export function AvatarQuickEdit({ userId, name, currentUrl, className }: AvatarQ
           name={name}
           src={preview}
           size="xl"
-          className="size-20 text-xl sm:size-24 sm:text-2xl"
+          className={cn("size-20 text-xl sm:size-24 sm:text-2xl", avatarClassName)}
         />
         <span
           className={cn(
@@ -114,7 +125,10 @@ export function AvatarQuickEdit({ userId, name, currentUrl, className }: AvatarQ
       {message ? (
         <p
           role="status"
-          className="absolute top-full left-0 z-10 mt-1 w-48 text-xs text-muted-foreground"
+          className={cn(
+            "absolute top-full left-0 z-10 mt-1 w-48 text-xs text-muted-foreground",
+            messageClassName,
+          )}
         >
           {message}
         </p>

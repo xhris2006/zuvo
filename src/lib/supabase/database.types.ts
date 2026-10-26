@@ -338,6 +338,43 @@ export type Database = {
           },
         ];
       };
+      listing_views: {
+        Row: {
+          listing_id: string;
+          user_id: string;
+          view_count: number;
+          viewed_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          listing_id: string;
+          user_id: string;
+          view_count?: number;
+          viewed_at?: string;
+        };
+        Update: {
+          listing_id?: string;
+          user_id?: string;
+          view_count?: number;
+          viewed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listing_views_listing_id_fkey";
+            columns: ["listing_id"];
+            isOneToOne: false;
+            referencedRelation: "listings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "listing_views_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       listings: {
         Row: {
           category_id: string | null;
@@ -1081,6 +1118,14 @@ export type Database = {
       is_username_available: { Args: { p_username: string }; Returns: boolean };
       mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
       mark_conversation_read: { Args: { p_conversation_id: string }; Returns: number };
+      recommended_listings: {
+        Args: { p_limit?: number };
+        Returns: {
+          listing_id: string;
+          score: number;
+        }[];
+      };
+      record_listing_view: { Args: { p_listing_id: string }; Returns: undefined };
       register_push_subscription: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent?: string };
         Returns: undefined;
@@ -1088,6 +1133,13 @@ export type Database = {
       reorder_listing_images: {
         Args: { p_image_ids: string[]; p_listing_id: string };
         Returns: undefined;
+      };
+      similar_listings: {
+        Args: { p_limit?: number; p_listing_id: string };
+        Returns: {
+          listing_id: string;
+          score: number;
+        }[];
       };
       sync_listing_images: { Args: { p_images: Json; p_listing_id: string }; Returns: string[] };
     };

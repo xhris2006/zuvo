@@ -13,24 +13,28 @@ import { ListingViewToggle, parseListingView } from "@/features/listings/compone
 import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
 import { getFollowedFeed } from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
+import { getRecommendedListings } from "@/features/recommendations/queries";
 import { getT } from "@/i18n/server";
 
 /**
  * Données d'accueil : une indisponibilité ne doit pas empêcher l'affichage.
- * Annonces récentes avec leur vendeur (fil) et nouveautés des profils suivis.
+ * Recommandations personnalisées, annonces récentes avec leur vendeur (fil) et
+ * nouveautés des profils suivis.
  */
 async function loadHomeListings(userId: string): Promise<{
+  recommended: ListingCardData[];
   recent: FeedListingData[];
   followed: ListingCardData[];
 }> {
   try {
-    const [recent, followed] = await Promise.all([
+    const [recommended, recent, followed] = await Promise.all([
+      getRecommendedListings(12).catch(() => []),
       getFeedListings({ pageSize: 12 }),
       getFollowedFeed(userId, 1),
     ]);
-    return { recent: recent.items, followed: followed.items.slice(0, 8) };
+    return { recommended, recent: recent.items, followed: followed.items.slice(0, 8) };
   } catch {
-    return { recent: [], followed: [] };
+    return { recommended: [], recent: [], followed: [] };
   }
 }
 
@@ -40,11 +44,18 @@ export default async function HomePage(props: PageProps<"/">) {
   const user = await getCurrentUser().catch(() => null);
   if (!user) redirect(routes.welcome);
   const view = parseListingView((await props.searchParams).vue);
-  const { recent, followed } = await loadHomeListings(user.id);
+  const { recommended, recent, followed } = await loadHomeListings(user.id);
 
   return (
     <div className="flex flex-col gap-8 pt-4 sm:gap-12 sm:pt-8">
       <h1 className="sr-only">{t.nav.home}</h1>
+
+      {recommended.length > 0 ? (
+        <section aria-labelledby="recommended-title" className="container-page">
+          <SectionHeader id="recommended-title" title={t.home.recommendedTitle} />
+          <ListingResults listings={recommended} layout="carousel" />
+        </section>
+      ) : null}
 
       {followed.length > 0 ? (
         <section aria-labelledby="feed-title" className="container-page">

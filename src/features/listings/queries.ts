@@ -175,24 +175,6 @@ async function fetchListingDetail(id: string) {
 /** Annonce visible par l'utilisateur courant (RLS), ou null. */
 export const getListingDetail = cache(fetchListingDetail);
 
-export async function getSimilarListings(
-  listingId: string,
-  categoryId: string | null,
-): Promise<ListingCardData[]> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase || !categoryId) return [];
-  const { data, error } = await supabase
-    .from("listings")
-    .select(CARD_COLUMNS)
-    .eq("status", "active")
-    .eq("category_id", categoryId)
-    .neq("id", listingId)
-    .order("published_at", { ascending: false })
-    .limit(8);
-  if (error) return [];
-  return data.map(toListingCard);
-}
-
 // -----------------------------------------------------------------------------
 // Recherche
 // -----------------------------------------------------------------------------

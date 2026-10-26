@@ -106,6 +106,7 @@ export const en: Dictionary = {
     },
     categoriesTitle: "Categories",
     followedTitle: "From people you follow",
+    recommendedTitle: "Recommended for you",
     recentTitle: "Recent listings",
     sellCardTitle: "Got things to sell?",
     sellCardBody: "List for free in just a few minutes.",
@@ -919,5 +920,8 @@ export const en: Dictionary = {
       send: "Send the message",
       sendAll: "Send to all members",
     },
+  },
+  recommendations: {
+    clearHistory: "Clear my viewing history",
   },
 };

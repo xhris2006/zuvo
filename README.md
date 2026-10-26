@@ -48,6 +48,13 @@ l'authentification n'est pas encore disponible.
   ville, état, prix), tri, pagination.
 - **Social** : favoris (onglet du profil), abonnements, fil des profils suivis
   avec photos à faire défiler.
+- **Recommandations** : « Recommandé pour vous » sur l'accueil (d'après les
+  annonces consultées, les favoris, les conversations et les profils suivis)
+  et annonces similaires sous chaque annonce (catégorie, mots du titre, ville,
+  prix, annonces aimées par les mêmes membres). Calcul en SQL
+  (`recommended_listings`, `similar_listings`) sur un nombre borné de
+  candidats ; historique de consultation privé (90 jours, 300 annonces),
+  effaçable dans Paramètres → Recommandations.
 - **Navigation** : page de bienvenue pour les visiteurs (`/bienvenue`), accueil
   réservé aux membres connectés, en-tête mobile qui se masque au défilement,
   barre latérale sur ordinateur, mode sombre (Paramètres → Apparence).

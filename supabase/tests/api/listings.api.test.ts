@@ -8,9 +8,9 @@ import {
   getOwnListings,
   getRecentListings,
   getSellerListings,
-  getSimilarListings,
   searchListings,
 } from "@/features/listings/queries";
+import { getSimilarListings } from "@/features/recommendations/queries";
 import { parseSearchParams } from "@/features/search/schema";
 import { asUser, createActiveListing, createDraft, createUser } from "../support/db";
 import { actAs } from "./support/context";
@@ -49,6 +49,9 @@ describe("annonces (API)", () => {
     const own = await getOwnListings(seller.id);
     expect(own.map((item) => item.id)).toEqual(expect.arrayContaining([first, second, draft]));
 
+    // Annonces similaires vues par un visiteur (le vendeur ne se voit pas
+    // proposer ses propres annonces).
+    actAs(null);
     const detail = await getListingDetail(first);
     const similar = await getSimilarListings(first, detail?.category?.id ?? null);
     expect(similar.map((item) => item.id)).toContain(second);

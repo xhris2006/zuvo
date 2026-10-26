@@ -22,6 +22,9 @@ export const frServer = {
     passwordDescription: "Pour votre sécurité, une reconnexion récente peut être demandée.",
     deleteAccount: "Supprimer mon compte",
     deleteAccountDescription: "Suppression définitive de votre compte et de vos annonces.",
+    recommendations: "Recommandations",
+    recommendationsDescription:
+      "Les annonces que vous ouvrez (90 derniers jours), vos favoris et les profils que vous suivez servent uniquement à vous proposer des annonces qui pourraient vous plaire. Personne d'autre ne voit votre historique.",
   },
   authErrors: {
     codes: {
@@ -811,6 +814,11 @@ export const frServer = {
       historyUsers: "Messages envoyés à un membre",
       historyAll: "Messages envoyés à tous",
     },
+  },
+  recommendationActions: {
+    cleared:
+      "Historique effacé. Vos recommandations tiennent encore compte de vos favoris et de vos abonnements.",
+    failed: "L'historique n'a pas pu être effacé. Veuillez réessayer.",
   },
 };
 

@@ -10,6 +10,7 @@ const pages = [
   "/mot-de-passe-oublie",
   "/securite",
   "/aide",
+  "/installer",
   "/conditions",
   "/hors-ligne",
   "/page-inexistante",

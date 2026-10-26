@@ -41,6 +41,7 @@ export const routes = {
   adminSupport: "/admin/assistance",
   adminNotify: "/admin/notifications",
   support: "/assistance",
+  install: "/installer",
 } as const satisfies Record<string, Route>;
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */

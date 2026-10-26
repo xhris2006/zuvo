@@ -78,7 +78,11 @@ l'authentification n'est pas encore disponible.
   temporaires, messages de l'équipe en notification à un membre ou à tous,
   équipe et modérateurs, catégories et villes, message global, tendances et
   export CSV, anti-spam, assistance, journal).
-- **PWA** : installable, page hors connexion, icônes.
+- **PWA** : installable, page hors connexion, icônes ; guide d'installation
+  `/installer` adapté à l'appareil (Android, iPhone et iPad, ordinateur) avec
+  bouton d'installation directe quand le navigateur le permet ; après la
+  connexion sur un téléphone, une notification « Installez l'application Zuvo »
+  y mène (une fois, et pas si l'application est déjà installée).
 - **SEO** : métadonnées, Open Graph, sitemap des annonces, données structurées.
 
 ## Documentation

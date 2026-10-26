@@ -20,6 +20,7 @@ const publicPages = [
   "/inscription/verification",
   "/auth/confirm",
   "/fil",
+  "/installer",
 ];
 
 test.describe("pages publiques", () => {
@@ -102,6 +103,18 @@ test("la bascule FR / EN de la page de bienvenue change la langue", async ({ pag
   // Le choix est mémorisé : il s'applique aux pages suivantes.
   await page.goto("/connexion");
   await expect(page.getByRole("heading", { level: 1, name: "Sign in" })).toBeVisible();
+});
+
+test("le guide d'installation s'ouvre sur l'appareil détecté", async ({ page, isMobile }) => {
+  await page.goto("/installer");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Installer l'application" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("tab", { name: isMobile ? "Android" : "Ordinateur" }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "iPhone, iPad" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("Sur l'écran d'accueil");
 });
 
 test("la navigation mobile n'apparaît que sur petit écran", async ({ page, isMobile }) => {

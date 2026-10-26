@@ -87,6 +87,13 @@ describe("notificationHref", () => {
     );
   });
 
+  it("mène au guide d'installation de l'application", () => {
+    expect(notificationHref({ ...base, type: "install_guide" })).toBe("/installer");
+    expect(
+      describeNotification({ type: "install_guide", actorName: null, listingTitle: null }).title,
+    ).toBe("Installez l'application Zuvo");
+  });
+
   it("se replie sur une page générale si la cible a disparu", () => {
     expect(notificationHref({ ...base, type: "new_message" })).toBe("/messages");
     expect(notificationHref({ ...base, type: "listing_removed" })).toBe("/notifications");

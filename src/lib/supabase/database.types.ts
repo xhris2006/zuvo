@@ -1134,6 +1134,7 @@ export type Database = {
         Args: { p_image_ids: string[]; p_listing_id: string };
         Returns: undefined;
       };
+      request_install_guide: { Args: Record<PropertyKey, never>; Returns: boolean };
       similar_listings: {
         Args: { p_limit?: number; p_listing_id: string };
         Returns: {
@@ -1175,7 +1176,8 @@ export type Database = {
         | "listing_removed"
         | "moderation_warning"
         | "support_reply"
-        | "admin_message";
+        | "admin_message"
+        | "install_guide";
       report_reason:
         | "scam"
         | "prohibited_item"
@@ -1337,6 +1339,7 @@ export const Constants = {
         "moderation_warning",
         "support_reply",
         "admin_message",
+        "install_guide",
       ],
       report_reason: [
         "scam",

@@ -27,6 +27,7 @@ créer via l'API.
 | `moderation_warning`    | avertissement de la modération                                     | toujours envoyée                                                  |
 | `support_reply`         | réponse de l'équipe à une demande d'assistance ou une contestation | toujours envoyée                                                  |
 | `admin_message`         | message de l'équipe à un membre, ou d'un administrateur à tous     | toujours envoyée                                                  |
+| `install_guide`         | invitation à installer l'application (une fois, sur téléphone)     | toujours envoyée (sans push)                                      |
 
 Aucune notification n'est créée entre deux utilisateurs qui se sont bloqués.
 

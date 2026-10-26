@@ -13,6 +13,7 @@ import {
   Rss,
   Settings,
   ShieldCheck,
+  Smartphone,
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -154,6 +155,12 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
                 <Link href={routes.help}>
                   <LifeBuoy aria-hidden="true" />
                   {t.nav.help}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={routes.install}>
+                  <Smartphone aria-hidden="true" />
+                  {t.install.menuLink}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

@@ -294,6 +294,7 @@ export const fr = {
       moderation_warning: "Avertissement de la modération",
       support_reply: "Réponse de l'assistance",
       admin_message: "Message de l'équipe",
+      install_guide: "Installez l'application Zuvo",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -312,6 +313,8 @@ export const fr = {
           ? `L'équipe a répondu à votre demande ${quote(subject)}.`
           : "L'équipe a répondu à votre demande.",
       admin_message: (note: string | null) => note ?? "",
+      install_guide:
+        "Ajoutez Zuvo à l'écran d'accueil de votre téléphone : ouverture en un geste et notifications. Touchez pour voir comment faire.",
     },
     unread: "Non lue",
   },
@@ -647,6 +650,7 @@ export const fr = {
     iosTitle: "Sur iPhone et iPad",
     iosBody:
       "Ajoutez d'abord le site à votre écran d'accueil (bouton Partager, puis « Sur l'écran d'accueil »), ouvrez-le depuis l'icône, puis revenez ici. iOS 16.4 ou plus récent est nécessaire.",
+    iosGuide: "Voir le guide d'installation",
     deniedTitle: "Notifications bloquées",
     deniedBody:
       "Vous avez refusé les notifications pour ce site. Autorisez-les dans les réglages de votre navigateur, puis rechargez la page.",
@@ -914,6 +918,48 @@ export const fr = {
   },
   recommendations: {
     clearHistory: "Effacer mon historique de consultation",
+  },
+  install: {
+    menuLink: "Installer l'application",
+    installed: "Zuvo est installé sur cet appareil",
+    installedBody: "Ouvrez-le depuis l'icône de votre écran d'accueil.",
+    benefits: {
+      home: "Ouverture en un geste depuis l'écran d'accueil",
+      fullscreen: "Plein écran, comme une application",
+      push: "Notifications des nouveaux messages",
+      light: "Rien à télécharger sur un store, presque pas de place",
+    },
+    tabsLabel: "Choisissez votre appareil",
+    platforms: { android: "Android", ios: "iPhone, iPad", desktop: "Ordinateur" },
+    directHint: "Votre navigateur permet d'installer Zuvo directement.",
+    installButton: "Installer Zuvo",
+    steps: {
+      android: [
+        "Ouvrez Zuvo dans Chrome.",
+        "Touchez le menu ⋮ en haut à droite.",
+        "Touchez « Installer l'application » (ou « Ajouter à l'écran d'accueil »).",
+        "Confirmez avec « Installer » : l'icône Zuvo apparaît sur votre écran d'accueil.",
+      ],
+      ios: [
+        "Ouvrez Zuvo dans Safari.",
+        "Touchez le bouton Partager (carré avec une flèche vers le haut), en bas de l'écran sur iPhone, en haut sur iPad.",
+        "Faites défiler et touchez « Sur l'écran d'accueil ».",
+        "Touchez « Ajouter » : l'icône Zuvo apparaît sur votre écran d'accueil.",
+      ],
+      desktop: [
+        "Ouvrez Zuvo dans Chrome ou Edge.",
+        "Cliquez sur l'icône d'installation à droite de la barre d'adresse (ou menu ⋮, puis « Installer Zuvo »).",
+        "Confirmez avec « Installer » : Zuvo s'ouvre dans sa propre fenêtre.",
+      ],
+    },
+    notes: {
+      android: "Avec Samsung Internet : menu ≡, puis « Ajouter la page à » et « Écran d'accueil ».",
+      ios: "Sur iPhone et iPad, les notifications push ne fonctionnent que dans l'application installée (iOS 16.4 ou plus récent). Depuis iOS 16.4, le bouton Partager de Chrome et des autres navigateurs propose aussi « Sur l'écran d'accueil ».",
+      desktop: "Avec Safari sur Mac : menu Fichier, puis « Ajouter au Dock ».",
+    },
+    after:
+      "Ensuite, ouvrez Zuvo depuis son icône et activez les notifications dans les paramètres.",
+    afterLink: "Ouvrir les paramètres",
   },
 };
 

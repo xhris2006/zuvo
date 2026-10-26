@@ -5,7 +5,8 @@ import Link from "next/link";
 import { getT } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { getCurrentAnnouncement } from "../queries";
-import { DismissAnnouncement, HIDDEN_ANNOUNCEMENT_COOKIE } from "./dismiss-announcement";
+import { HIDDEN_ANNOUNCEMENT_COOKIE } from "../constants";
+import { DismissAnnouncement } from "./dismiss-announcement";
 
 /** Bandeau du message global (annonce ou maintenance), sous l'en-tête. */
 export async function SiteAnnouncementBanner() {

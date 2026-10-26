@@ -107,8 +107,13 @@ describe("garde-fous globaux du schéma", () => {
          order by p.proname`,
       ),
     );
-    // app_schema_version renvoie une constante (diagnostic de configuration).
-    expect(rows.map((row) => row.proname)).toEqual(["app_schema_version", "is_username_available"]);
+    // app_schema_version renvoie une constante (diagnostic de configuration) ;
+    // similar_listings ne lit que des annonces publiques (droits de l'appelant).
+    expect(rows.map((row) => row.proname)).toEqual([
+      "app_schema_version",
+      "is_username_available",
+      "similar_listings",
+    ]);
   });
 });
 

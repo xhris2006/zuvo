@@ -106,6 +106,7 @@ export const fr = {
     },
     categoriesTitle: "Catégories",
     followedTitle: "De vos abonnements",
+    recommendedTitle: "Recommandé pour vous",
     recentTitle: "Annonces récentes",
     sellCardTitle: "Des affaires à vendre ?",
     sellCardBody: "Publiez gratuitement en quelques minutes.",
@@ -910,6 +911,9 @@ export const fr = {
       send: "Envoyer le message",
       sendAll: "Envoyer à tous les membres",
     },
+  },
+  recommendations: {
+    clearHistory: "Effacer mon historique de consultation",
   },
 };
 

@@ -19,6 +19,9 @@ export const enServer: ServerOnlyDictionary = {
     passwordDescription: "For your security, you may be asked to sign in again.",
     deleteAccount: "Delete my account",
     deleteAccountDescription: "Permanent deletion of your account and listings.",
+    recommendations: "Recommendations",
+    recommendationsDescription:
+      "The listings you open (last 90 days), your favourites and the profiles you follow are only used to suggest listings you might like. No one else sees your history.",
   },
   authErrors: {
     codes: {
@@ -793,5 +796,10 @@ export const enServer: ServerOnlyDictionary = {
       historyUsers: "Messages sent to a member",
       historyAll: "Messages sent to all",
     },
+  },
+  recommendationActions: {
+    cleared:
+      "History cleared. Your recommendations still take your favourites and follows into account.",
+    failed: "The history could not be cleared. Please try again.",
   },
 };

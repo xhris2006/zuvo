@@ -17,11 +17,12 @@ import { ListingResults } from "@/features/listings/components/listing-results";
 import { OwnerPanel } from "@/features/listings/components/owner-panel";
 import { SellerCard } from "@/features/listings/components/seller-card";
 import { listingHref } from "@/features/listings/links";
-import { getFavoriteIds, getListingDetail, getSimilarListings } from "@/features/listings/queries";
+import { getFavoriteIds, getListingDetail } from "@/features/listings/queries";
 import { ContactSellerButton } from "@/features/messaging/components/contact-seller-button";
 import { ReportDialog } from "@/features/moderation/components/report-dialog";
 import { cityName } from "@/features/locations/queries";
 import { localizedCategoryName } from "@/features/categories/data";
+import { getSimilarListings, recordListingView } from "@/features/recommendations/queries";
 import { toSearchParams } from "@/features/search/schema";
 import { getT } from "@/i18n/server";
 import { getSiteUrl } from "@/lib/env";
@@ -64,8 +65,10 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
     Boolean(listing.seller);
   const city = await cityName(listing.city);
   const [similar, favorites] = await Promise.all([
-    getSimilarListings(listing.id, listing.category?.id ?? null),
+    getSimilarListings(listing.id, listing.category?.id ?? null).catch(() => []),
     getFavoriteIds(viewer?.id ?? null, [listing.id]),
+    // Historique privé du membre connecté (recommandations) ; jamais bloquant.
+    viewer && !isOwner ? recordListingView(listing.id).catch(() => undefined) : null,
   ]);
   const url = `${getSiteUrl()}${listingHref(listing.id)}`;
   const returnTo = listingHref(listing.id);

@@ -35,6 +35,12 @@ export function PrivacyFr({ name }: { name: string }) {
           signalements et blocages.
         </li>
         <li>
+          <strong>Historique de consultation</strong> : les annonces que vous ouvrez lorsque vous
+          êtes connecté (90 derniers jours, 300 annonces au plus), pour vous proposer des annonces
+          susceptibles de vous intéresser. Vous pouvez l&apos;effacer à tout moment dans{" "}
+          <Link href={routes.settings}>Paramètres → Recommandations</Link>.
+        </li>
+        <li>
           <strong>Données techniques</strong> : journaux de connexion et adresse IP, à des fins de
           sécurité et de prévention des abus.
         </li>
@@ -53,7 +59,8 @@ export function PrivacyFr({ name }: { name: string }) {
         </li>
         <li>
           <strong>Privé</strong> : votre adresse e-mail, votre numéro de téléphone, vos messages,
-          vos favoris, vos notifications, vos brouillons, vos signalements et vos blocages.
+          vos favoris, votre historique de consultation, vos notifications, vos brouillons, vos
+          signalements et vos blocages.
         </li>
         <li>
           Votre numéro de téléphone n&apos;est jamais affiché publiquement par défaut. Il n&apos;est
@@ -66,7 +73,13 @@ export function PrivacyFr({ name }: { name: string }) {
         <li>fournir le service : comptes, annonces, recherche, messagerie, notifications ;</li>
         <li>assurer la sécurité de la plateforme, prévenir la fraude et le spam ;</li>
         <li>traiter les signalements et appliquer les conditions d&apos;utilisation ;</li>
-        <li>répondre à vos demandes d&apos;assistance.</li>
+        <li>répondre à vos demandes d&apos;assistance ;</li>
+        <li>
+          vous recommander des annonces d&apos;après vos consultations, vos favoris, vos
+          conversations et les profils que vous suivez (calcul automatique, sans décision vous
+          concernant). Les rapprochements entre favoris de plusieurs membres ne sont utilisés que
+          sous forme de nombres, jamais nominativement.
+        </li>
       </ul>
       <p>
         {name} ne vend pas vos données personnelles.{" "}
@@ -165,6 +178,11 @@ export function PrivacyEn({ name }: { name: string }) {
           blocks.
         </li>
         <li>
+          <strong>Viewing history</strong>: the listings you open while signed in (last 90 days, 300
+          listings at most), to suggest listings you may like. You can clear it at any time in{" "}
+          <Link href={routes.settings}>Settings → Recommendations</Link>.
+        </li>
+        <li>
           <strong>Technical data</strong>: connection logs and IP address, for security and abuse
           prevention.
         </li>
@@ -181,8 +199,8 @@ export function PrivacyEn({ name }: { name: string }) {
           published listings and the number of your followers and accounts you follow.
         </li>
         <li>
-          <strong>Private</strong>: your email address, phone number, messages, favourites,
-          notifications, drafts, reports and blocks.
+          <strong>Private</strong>: your email address, phone number, messages, favourites, viewing
+          history, notifications, drafts, reports and blocks.
         </li>
         <li>
           Your phone number is never shown publicly by default. It is only shared if you decide to
@@ -195,7 +213,12 @@ export function PrivacyEn({ name }: { name: string }) {
         <li>providing the service: accounts, listings, search, messaging, notifications;</li>
         <li>keeping the platform secure, preventing fraud and spam;</li>
         <li>handling reports and enforcing the terms of use;</li>
-        <li>answering your support requests.</li>
+        <li>answering your support requests;</li>
+        <li>
+          recommending listings based on what you view, your favourites, your conversations and the
+          profiles you follow (automatic calculation, with no decision made about you). Links
+          between the favourites of several members are only used as counts, never by name.
+        </li>
       </ul>
       <p>
         {name} does not sell your personal data.{" "}

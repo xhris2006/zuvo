@@ -3,8 +3,7 @@
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/i18n/client";
-
-export const HIDDEN_ANNOUNCEMENT_COOKIE = "zuvo_hidden_announcement";
+import { HIDDEN_ANNOUNCEMENT_COOKIE } from "../constants";
 
 /** Masque l'annonce en cours pour ce navigateur (30 jours). */
 export function DismissAnnouncement({ id }: { id: string }) {
@@ -13,8 +12,12 @@ export function DismissAnnouncement({ id }: { id: string }) {
   return (
     <button
       type="button"
-      onClick={() => {
-        document.cookie = `${HIDDEN_ANNOUNCEMENT_COOKIE}=${encodeURIComponent(id)}; path=/; max-age=2592000; samesite=lax`;
+      onClick={(event) => {
+        const secure = window.location.protocol === "https:" ? "; secure" : "";
+        document.cookie = `${HIDDEN_ANNOUNCEMENT_COOKIE}=${encodeURIComponent(id)}; path=/; max-age=2592000; samesite=lax${secure}`;
+        // Disparition immédiate ; le rendu serveur suivant ne l'affiche plus.
+        const banner = event.currentTarget.closest<HTMLElement>("[data-site-banner]");
+        if (banner) banner.hidden = true;
         router.refresh();
       }}
       className="-my-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/5"

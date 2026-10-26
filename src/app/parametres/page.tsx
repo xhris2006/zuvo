@@ -15,6 +15,7 @@ import { PushSettings } from "@/features/notifications/components/push-settings"
 import { getLastPushResult, getNotificationPreferences } from "@/features/notifications/queries";
 import { isCurrentUserAdmin } from "@/features/admin/queries";
 import { getCurrentProfile } from "@/features/profiles/queries";
+import { ClearHistoryForm } from "@/features/recommendations/components/clear-history-form";
 import { ThemeSwitch } from "@/features/theme/components/theme-switch";
 import { parseTheme, THEME_COOKIE } from "@/features/theme/theme";
 import { LanguageSwitch } from "@/features/language/components/language-switch";
@@ -87,6 +88,15 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <PushSettings lastPush={lastPush} isAdmin={isAdmin} />
+        </CardContent>
+      </Card>
+      <Card id="recommandations">
+        <CardHeader>
+          <CardTitle>{t.settingsPage.recommendations}</CardTitle>
+          <CardDescription>{t.settingsPage.recommendationsDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ClearHistoryForm />
         </CardContent>
       </Card>
       <Card id="blocages">

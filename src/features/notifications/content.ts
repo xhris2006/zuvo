@@ -59,6 +59,8 @@ export function describeNotification(
       };
     case "admin_message":
       return { title, body: copy.bodies.admin_message(subject.note ?? null) };
+    case "install_guide":
+      return { title, body: copy.bodies.install_guide };
   }
 }
 
@@ -80,5 +82,7 @@ export function notificationHref(
       return routes.notifications;
     case "support_reply":
       return routes.support;
+    case "install_guide":
+      return routes.install;
   }
 }

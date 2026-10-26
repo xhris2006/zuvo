@@ -802,4 +802,8 @@ export const enServer: ServerOnlyDictionary = {
       "History cleared. Your recommendations still take your favourites and follows into account.",
     failed: "The history could not be cleared. Please try again.",
   },
+  installPage: {
+    title: "Install the app",
+    description: "Add Zuvo to the home screen of your phone or computer, like an app.",
+  },
 };

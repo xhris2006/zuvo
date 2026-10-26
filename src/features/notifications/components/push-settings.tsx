@@ -81,7 +81,10 @@ export function PushSettings({ lastPush = null, isAdmin = false }: PushSettingsP
       ) : null}
       {status === "ios_install" ? (
         <Alert variant="info" title={t.push.iosTitle}>
-          {t.push.iosBody}
+          {t.push.iosBody}{" "}
+          <Link href={routes.install} className="font-medium underline underline-offset-2">
+            {t.push.iosGuide}
+          </Link>
         </Alert>
       ) : null}
       {status === "denied" ? (

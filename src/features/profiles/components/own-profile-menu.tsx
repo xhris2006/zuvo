@@ -1,6 +1,15 @@
 "use client";
 
-import { EllipsisVertical, Eye, LifeBuoy, LogOut, Pencil, Rss, Settings } from "lucide-react";
+import {
+  EllipsisVertical,
+  Eye,
+  LifeBuoy,
+  LogOut,
+  Pencil,
+  Rss,
+  Settings,
+  Smartphone,
+} from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -59,6 +68,12 @@ export function OwnProfileMenu({ username }: OwnProfileMenuProps) {
           <Link href={routes.help}>
             <LifeBuoy aria-hidden="true" />
             {t.profile.help}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.install}>
+            <Smartphone aria-hidden="true" />
+            {t.install.menuLink}
           </Link>
         </DropdownMenuItem>
         <form action={signOutAction}>

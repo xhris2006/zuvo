@@ -8,6 +8,7 @@ import { SiteSidebar } from "@/components/layout/site-sidebar";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { siteConfig } from "@/config/site";
 import { SiteAnnouncementBanner } from "@/features/announcements/components/site-announcement";
+import { InstallSupport } from "@/features/install/components/install-support";
 import { getCurrentUser } from "@/features/auth/session";
 import { PushSync } from "@/features/notifications/components/push-sync";
 import { UnreadCountsProvider } from "@/features/notifications/components/unread-counts";
@@ -99,6 +100,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </UnreadCountsProvider>
           <ServiceWorkerRegistrar />
           {user ? <PushSync /> : null}
+          <InstallSupport signedIn={Boolean(user)} />
         </LocaleProvider>
       </body>
     </html>

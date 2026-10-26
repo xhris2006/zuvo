@@ -291,6 +291,7 @@ export const en: Dictionary = {
       moderation_warning: "Moderation warning",
       support_reply: "Support reply",
       admin_message: "Message from the team",
+      install_guide: "Install the Zuvo app",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -310,6 +311,8 @@ export const en: Dictionary = {
           ? `The team replied to your request ${quote(subject)}.`
           : "The team replied to your request.",
       admin_message: (note: string | null) => note ?? "",
+      install_guide:
+        "Add Zuvo to your phone's home screen: one-tap access and notifications. Tap to see how.",
     },
     unread: "Unread",
   },
@@ -659,6 +662,7 @@ export const en: Dictionary = {
     iosTitle: "On iPhone and iPad",
     iosBody:
       "First add the site to your home screen (Share button, then “Add to Home Screen”), open it from the icon, then come back here. iOS 16.4 or later is required.",
+    iosGuide: "See the installation guide",
     deniedTitle: "Notifications blocked",
     deniedBody:
       "You refused notifications for this site. Allow them in your browser settings, then reload the page.",
@@ -923,5 +927,46 @@ export const en: Dictionary = {
   },
   recommendations: {
     clearHistory: "Clear my viewing history",
+  },
+  install: {
+    menuLink: "Install the app",
+    installed: "Zuvo is installed on this device",
+    installedBody: "Open it from the icon on your home screen.",
+    benefits: {
+      home: "One-tap access from your home screen",
+      fullscreen: "Full screen, like an app",
+      push: "Notifications for new messages",
+      light: "Nothing to download from a store, hardly any space",
+    },
+    tabsLabel: "Choose your device",
+    platforms: { android: "Android", ios: "iPhone, iPad", desktop: "Computer" },
+    directHint: "Your browser can install Zuvo directly.",
+    installButton: "Install Zuvo",
+    steps: {
+      android: [
+        "Open Zuvo in Chrome.",
+        "Tap the ⋮ menu at the top right.",
+        "Tap “Install app” (or “Add to Home screen”).",
+        "Confirm with “Install”: the Zuvo icon appears on your home screen.",
+      ],
+      ios: [
+        "Open Zuvo in Safari.",
+        "Tap the Share button (square with an arrow pointing up), at the bottom of the screen on iPhone, at the top on iPad.",
+        "Scroll down and tap “Add to Home Screen”.",
+        "Tap “Add”: the Zuvo icon appears on your home screen.",
+      ],
+      desktop: [
+        "Open Zuvo in Chrome or Edge.",
+        "Click the install icon on the right of the address bar (or ⋮ menu, then “Install Zuvo”).",
+        "Confirm with “Install”: Zuvo opens in its own window.",
+      ],
+    },
+    notes: {
+      android: "With Samsung Internet: ≡ menu, then “Add page to” and “Home screen”.",
+      ios: "On iPhone and iPad, push notifications only work in the installed app (iOS 16.4 or later). Since iOS 16.4, the Share button of Chrome and other browsers also offers “Add to Home Screen”.",
+      desktop: "With Safari on Mac: File menu, then “Add to Dock”.",
+    },
+    after: "Then open Zuvo from its icon and turn on notifications in the settings.",
+    afterLink: "Open settings",
   },
 };

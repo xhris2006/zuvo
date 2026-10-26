@@ -6,6 +6,7 @@ import {
   MessageCircle,
   Package,
   ShieldAlert,
+  Smartphone,
   UserPlus,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -25,6 +26,7 @@ const icons = {
   moderation_warning: ShieldAlert,
   support_reply: LifeBuoy,
   admin_message: Megaphone,
+  install_guide: Smartphone,
 } satisfies Record<NotificationType, unknown>;
 
 export async function NotificationList({ items }: { items: NotificationItem[] }) {
@@ -49,7 +51,9 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                     <span className="flex size-10 items-center justify-center rounded-full bg-danger-soft text-danger">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
-                  ) : item.type === "support_reply" || item.type === "admin_message" ? (
+                  ) : item.type === "support_reply" ||
+                    item.type === "admin_message" ||
+                    item.type === "install_guide" ? (
                     <span className="flex size-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
@@ -65,7 +69,7 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {item.type === "moderation_warning" ? (
                     <span className="text-sm font-semibold text-danger">{item.title}</span>
-                  ) : item.type === "admin_message" ? (
+                  ) : item.type === "admin_message" || item.type === "install_guide" ? (
                     <span className="text-sm font-semibold text-primary">{item.title}</span>
                   ) : null}
                   <span
@@ -74,6 +78,7 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                       !item.isRead &&
                         item.type !== "moderation_warning" &&
                         item.type !== "admin_message" &&
+                        item.type !== "install_guide" &&
                         "font-semibold",
                     )}
                   >

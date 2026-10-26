@@ -820,6 +820,11 @@ export const frServer = {
       "Historique effacé. Vos recommandations tiennent encore compte de vos favoris et de vos abonnements.",
     failed: "L'historique n'a pas pu être effacé. Veuillez réessayer.",
   },
+  installPage: {
+    title: "Installer l'application",
+    description:
+      "Ajoutez Zuvo à l'écran d'accueil de votre téléphone ou de votre ordinateur, comme une application.",
+  },
 };
 
 export type ServerOnlyDictionary = typeof frServer;

@@ -1,6 +1,7 @@
 # Publicité « Et si ce que tu n'utilises plus pouvait te rapporter de l'argent ? » — storyboard
 
-> **Statut : proposition à valider avant production. Aucune vidéo n'a été rendue.**
+> **Statut : storyboard de référence. Une version motion design a été rendue (voir `video/`) ;
+> le tournage réel et la voix off enregistrée restent à produire.**
 > Les écrans sont de vraies captures de l'application (environnement local de démonstration,
 > données fictives, prix floutés en attente de validation). Planche visuelle : `planche/storyboard.html`.
 

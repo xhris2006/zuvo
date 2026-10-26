@@ -261,7 +261,7 @@ def shot_card(shot: dict) -> str:
 def page(content: str, n: int, extra: str = "") -> str:
     return (
         f'<section class="page {extra}"><header class="runner"><span class="brand">{LOGO}Zuvo · Publicité « Et si ce que tu n\'utilises plus… »</span>'
-        f'<span>Storyboard v1 — proposition à valider — aucune vidéo rendue</span><span>{n}</span></header>{content}</section>'
+        f'<span>Storyboard v1 — version motion design rendue, tournage réel à produire</span><span>{n}</span></header>{content}</section>'
     )
 
 
@@ -300,7 +300,7 @@ def build_html() -> str:
     <li><b>90 s</b> durée totale</li><li><b>9:16</b> format principal · adaptation 16:9</li>
     <li><b>6</b> scènes · <b>{len(SHOTS)}</b> plans</li><li><b>FR</b> français parlé au Cameroun</li>
   </ul>
-  <p class="status">Proposition à valider avant production. Aucune vidéo n'a été rendue.
+  <p class="status">Storyboard de référence. Une version motion design (personnages illustrés, vrais écrans) a été rendue à partir de ce storyboard ; le tournage réel et la voix off enregistrée restent à produire.
   Les écrans sont de vraies captures de l'application (environnement de démonstration local, données fictives, prix floutés en attente de validation).
   Les cadres « tournage » sont des schémas de cadrage, pas des images finales.</p>
 </div>"""
@@ -459,7 +459,8 @@ def build_md() -> str:
     out = []
     out.append("# Publicité « Et si ce que tu n'utilises plus pouvait te rapporter de l'argent ? » — storyboard\n")
     out.append(
-        "> **Statut : proposition à valider avant production. Aucune vidéo n'a été rendue.**\n"
+        "> **Statut : storyboard de référence. Une version motion design a été rendue (voir `video/`) ;\n"
+        "> le tournage réel et la voix off enregistrée restent à produire.**\n"
         "> Les écrans sont de vraies captures de l'application (environnement local de démonstration,\n"
         "> données fictives, prix floutés en attente de validation). Planche visuelle : `planche/storyboard.html`.\n"
     )

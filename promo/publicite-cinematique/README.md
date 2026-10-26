@@ -30,16 +30,17 @@ Choix par défaut, en attendant validation : adresse `zuvo-beta.vercel.app` (`SI
 pas de bannière de notification push (badge « Messages » réel) ; second message « Bonsoir, je suis
 intéressée par le téléphone. » ; prénoms Junior et Boris ; titre-question à l'ouverture.
 
-| Fichier               | Rôle                                                               |
-| --------------------- | ------------------------------------------------------------------ |
-| `video/index.html`    | Scène 1080 × 1920 et styles                                        |
-| `video/art.js`        | Illustrations : personnages articulés, chambre, objets, motifs wax |
-| `video/film.js`       | Plans, caméra, animations ; `window.render(t)` dessine l'instant t |
-| `video/textes.js`     | Répliques et voix off minutées                                     |
-| `video/ecrans/`       | Captures réelles (2x) utilisées dans le téléphone                  |
-| `video/soundtrack.py` | Bande-son provisoire et bruitages                                  |
-| `video/render.mjs`    | Rendu image par image (Playwright → ffmpeg), ou aperçus            |
-| `video/assemble.sh`   | Son, version 16:9, couverture, sous-titres `.srt`                  |
+| Fichier                | Rôle                                                               |
+| ---------------------- | ------------------------------------------------------------------ |
+| `video/index.html`     | Scène 1080 × 1920 et styles                                        |
+| `video/art.js`         | Illustrations : personnages articulés, chambre, objets, motifs wax |
+| `video/film.js`        | Plans, caméra, animations ; `window.render(t)` dessine l'instant t |
+| `video/textes.js`      | Répliques et voix off minutées                                     |
+| `video/script-voix.md` | Texte à enregistrer par rôle (Junior, Boris, voix off)             |
+| `video/ecrans/`        | Captures réelles (2x) utilisées dans le téléphone                  |
+| `video/soundtrack.py`  | Bande-son provisoire et bruitages                                  |
+| `video/render.mjs`     | Rendu image par image (Playwright → ffmpeg), ou aperçus            |
+| `video/assemble.sh`    | Son, version 16:9, couverture, sous-titres `.srt`                  |
 
 ```bash
 node promo/publicite-cinematique/video/render.mjs --stills 2.5,40,88   # aperçus

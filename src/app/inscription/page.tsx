@@ -29,7 +29,10 @@ export default async function SignUpPage() {
   const signInLink = (
     <>
       {t.authPages.alreadyMember}{" "}
-      <Link href={routes.signIn} className="font-semibold text-primary hover:text-primary-hover">
+      <Link
+        href={routes.signIn}
+        className="font-semibold text-primary-ink hover:text-primary-ink-hover"
+      >
         {t.authPages.signIn}
       </Link>
     </>

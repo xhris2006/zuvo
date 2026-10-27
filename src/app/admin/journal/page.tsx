@@ -293,7 +293,7 @@ export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
                             ? adminUserHref(entry.targetId)
                             : listingHref(entry.targetId)
                         }
-                        className="font-mono text-xs text-primary hover:underline"
+                        className="font-mono text-xs text-primary-ink hover:underline"
                       >
                         {entry.targetId.slice(0, 8)}
                       </Link>

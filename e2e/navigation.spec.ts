@@ -47,7 +47,7 @@ test("les visiteurs arrivent sur la page de bienvenue, sans en-tête ni navigati
   await page.goto("/");
   await expect(page).toHaveURL(/\/bienvenue$/);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Donnez une seconde vie à vos affaires" }),
+    page.getByRole("heading", { level: 1, name: "Achète. Vends. Donne une seconde vie." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveAttribute(
     "href",
@@ -59,7 +59,7 @@ test("les visiteurs arrivent sur la page de bienvenue, sans en-tête ni navigati
   );
   await expect(page.locator("[data-site-header]")).toBeHidden();
   await expect(page.locator("[data-bottom-nav]")).toBeHidden();
-  await expect(page).toHaveTitle(/Zuvo/);
+  await expect(page).toHaveTitle("MboaDeal — Achète, vends et trouve de bonnes affaires");
 });
 
 test("les catégories sont présentées dans Explorer", async ({ page }) => {
@@ -93,7 +93,7 @@ test("la bascule FR / EN de la page de bienvenue change la langue", async ({ pag
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
   await page.getByRole("button", { name: "English" }).click();
   await expect(
-    page.getByRole("heading", { level: 1, name: "Give your things a second life" }),
+    page.getByRole("heading", { level: 1, name: "Buy. Sell. Give things a second life." }),
   ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("button", { name: "English" })).toHaveAttribute(
@@ -142,6 +142,55 @@ test("la recherche mène à Explorer avec la requête", async ({ page, isMobile 
   await expect(page).toHaveURL(/\/explorer\?q=robe\+wax/);
   const keywords = page.getByLabel("Mots-clés");
   if (!isMobile) await expect(keywords).toHaveValue("robe wax");
+});
+
+test("la recherche vide fait défiler des suggestions sans remplir le champ", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/explorer");
+  const input = page.locator(isMobile ? "#header-search-mobile" : "#sidebar-search");
+  const form = page.locator("form[role=search]").filter({ has: input });
+  const suggestion = form.locator('span[aria-hidden="true"]').filter({ hasText: /\S/ });
+  await expect(suggestion).toBeVisible({ timeout: 8000 });
+  await expect(input).toHaveValue("");
+  await expect(input).toHaveAttribute("placeholder", "Rechercher un article…");
+  await input.focus();
+  await expect(suggestion).toHaveCount(0);
+});
+
+test.describe("animations réduites", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("la page de bienvenue s'affiche entièrement, sans animation d'entrée", async ({ page }) => {
+    await page.goto("/bienvenue");
+    const title = page.getByRole("heading", { level: 1 });
+    await expect(title).toHaveText("Achète. Vends. Donne une seconde vie.");
+    const running = await page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.playState === "running" &&
+              animation.effect?.getComputedTiming().iterations !== Infinity,
+          ).length,
+    );
+    expect(running).toBe(0);
+    const opacities = await title
+      .locator("span")
+      .evaluateAll((words) => words.map((word) => getComputedStyle(word).opacity));
+    expect(new Set(opacities)).toEqual(new Set(["1"]));
+    await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveCSS("opacity", "1");
+  });
+
+  test("la recherche ne fait pas défiler de suggestions", async ({ page, isMobile }) => {
+    await page.goto("/explorer");
+    const input = page.locator(isMobile ? "#header-search-mobile" : "#sidebar-search");
+    const form = page.locator("form[role=search]").filter({ has: input });
+    await page.waitForTimeout(2500);
+    await expect(form.locator('span[aria-hidden="true"]')).toHaveCount(0);
+  });
 });
 
 test("les filtres invalides dans l'URL sont ignorés", async ({ page }) => {

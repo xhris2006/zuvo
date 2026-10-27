@@ -36,7 +36,10 @@ export default async function SignInPage(props: PageProps<"/connexion">) {
   const signUpLink = (
     <>
       {t.authPages.noAccount}{" "}
-      <Link href={routes.signUp} className="font-semibold text-primary hover:text-primary-hover">
+      <Link
+        href={routes.signUp}
+        className="font-semibold text-primary-ink hover:text-primary-ink-hover"
+      >
         {t.authPages.createAccount}
       </Link>
     </>

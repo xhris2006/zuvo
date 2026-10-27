@@ -106,7 +106,7 @@ export default async function AdminTeamPage(props: PageProps<"/admin/equipe">) {
 
       <section aria-labelledby="team-list" className="flex flex-col gap-3">
         <h2 id="team-list" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-          <ShieldCheck className="size-5 text-primary" aria-hidden="true" />
+          <ShieldCheck className="size-5 text-primary-ink" aria-hidden="true" />
           {t.adminPages.team.members}
         </h2>
         <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card shadow-card">

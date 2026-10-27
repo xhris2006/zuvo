@@ -1,4 +1,8 @@
 import "server-only";
+import { siteConfig } from "@/config/site";
+
+/** Nom du produit (src/config/site.ts), repris dans les textes. */
+const brand = siteConfig.name;
 
 /**
  * Textes français utilisés uniquement côté serveur (pages, actions,
@@ -283,8 +287,7 @@ export const frServer = {
   },
   supportPage: {
     title: "Assistance",
-    description:
-      "Écrivez à l'équipe Zuvo. Vous serez prévenu par notification dès qu'elle aura répondu.",
+    description: `Écrivez à l'équipe ${brand}. Vous serez prévenu par notification dès qu'elle aura répondu.`,
     appealTitle: "Contester le retrait d'une annonce",
     newTitle: "Nouvelle demande",
     appealDescription:
@@ -822,8 +825,7 @@ export const frServer = {
   },
   installPage: {
     title: "Installer l'application",
-    description:
-      "Ajoutez Zuvo à l'écran d'accueil de votre téléphone ou de votre ordinateur, comme une application.",
+    description: `Ajoutez ${brand} à l'écran d'accueil de votre téléphone ou de votre ordinateur, comme une application.`,
   },
 };
 

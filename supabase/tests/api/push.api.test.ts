@@ -179,14 +179,14 @@ describe("notifications push envoyées par l'application", () => {
     actAs(admin);
     const one = await sendTeamMessageAction(
       { status: "idle" },
-      form({ recipients: "one", username: member.username, message: "Bienvenue sur Zuvo !" }),
+      form({ recipients: "one", username: member.username, message: "Bienvenue sur MboaDeal !" }),
     );
     expect(one.status).toBe("success");
     await flushAfter();
     expect(pushesTo(memberDevice)).toEqual([
       expect.objectContaining({
         title: "Message de l'équipe",
-        body: "Bienvenue sur Zuvo !",
+        body: "Bienvenue sur MboaDeal !",
         url: "/notifications",
       }),
     ]);

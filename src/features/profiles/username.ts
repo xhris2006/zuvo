@@ -3,7 +3,7 @@ export const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
 
 /**
  * Noms réservés — doit rester identique à private.is_reserved_username()
- * (supabase/migrations/*_foundations.sql) ; un test vérifie la cohérence.
+ * (dernière migration qui la définit) ; un test vérifie la cohérence.
  */
 export const reservedUsernames = [
   "admin",
@@ -13,6 +13,7 @@ export const reservedUsernames = [
   "support",
   "aide",
   "help",
+  "mboadeal",
   "zuvo",
   "equipe",
   "team",

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { LogoMark } from "@/components/layout/logo";
+import { LogoMark, Wordmark } from "@/components/layout/logo";
 import { BackButton } from "@/components/ui/back-button";
 import { LanguageToggle } from "@/features/language/components/language-switch";
 import { routes } from "@/config/routes";
@@ -59,6 +59,9 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
     >
       <div className="auth-hero relative overflow-hidden px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-14 text-white lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <span className="light-orb -top-28 -right-28 size-[28rem] [--orb-color:rgb(255_167_38/0.3)]" />
+          <span className="light-orb -bottom-36 -left-28 size-[26rem] [--orb-color:rgb(255_122_0/0.42)] [--orb-duration:24s]" />
+          <span className="light-spark top-[20%] left-[16%] hidden lg:block" />
           {floatingItems.map(({ icon: Icon, className, delay }, index) => (
             <span
               key={index}
@@ -82,12 +85,10 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
           <Link
             href={routes.home}
             className="inline-flex items-center gap-2 rounded-lg"
-            aria-label={`${siteConfig.name} — accueil`}
+            aria-label={t.ui.homeLink(siteConfig.name)}
           >
-            <span className="rounded-[0.7rem] bg-white p-0.5 shadow-raised">
-              <LogoMark className="size-8" />
-            </span>
-            <span className="text-xl font-bold tracking-tight">{siteConfig.name}</span>
+            <LogoMark className="size-9" />
+            <Wordmark tone="inverse" />
           </Link>
           <span className="size-10 lg:hidden" aria-hidden="true" />
         </div>
@@ -100,7 +101,7 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
           <ul className="mt-2 hidden flex-col gap-3 lg:flex">
             {points.map((point) => (
               <li key={point} className="flex items-center gap-3 text-base font-medium">
-                <BadgeCheck className="size-5 shrink-0 text-brand-200" aria-hidden="true" />
+                <BadgeCheck className="size-5 shrink-0 text-brand-400" aria-hidden="true" />
                 {point}
               </li>
             ))}

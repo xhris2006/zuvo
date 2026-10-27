@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Images de référence — publicité Zuvo</title>
+    <style>
+      @font-face {
+        font-family: "Jakarta";
+        src: url(polices/jakarta-latin.woff2) format("woff2");
+        font-weight: 200 800;
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F,
+          U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Jakarta";
+        src: url(polices/jakarta-latin-ext.woff2) format("woff2");
+        font-weight: 200 800;
+        unicode-range:
+          U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020,
+          U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      :root {
+        --blue: #1f5fe0;
+        --ink: #0f1b2d;
+        --paper: #f7f9fc;
+        --tint: #eff5ff;
+        --light: #bfd5fd;
+        --muted: #55627a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 40px;
+        background: #c9ced8;
+        font-family: "Jakarta", system-ui, sans-serif;
+        color: var(--ink);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 40px;
+        align-items: flex-start;
+      }
+      .frame {
+        position: relative;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .v {
+        width: 1080px;
+        height: 1920px;
+      }
+      .h {
+        width: 1920px;
+        height: 1080px;
+      }
+      .center {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+
+      /* Fond provisoire « tournage » : aplats chauds et flous. */
+      .footage {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 28% 30%, rgb(255 214 150 / 0.9), transparent 38%),
+          radial-gradient(circle at 78% 18%, rgb(255 240 210 / 0.85), transparent 28%),
+          radial-gradient(circle at 60% 85%, rgb(120 60 35 / 0.9), transparent 45%),
+          linear-gradient(160deg, #d08a52, #7a4426 55%, #3b1f14);
+      }
+      .footage i {
+        position: absolute;
+        border-radius: 50%;
+        background: rgb(255 236 200 / 0.35);
+        filter: blur(6px);
+      }
+      .footage::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.35));
+      }
+      .placeholder {
+        position: absolute;
+        z-index: 2;
+        padding: 10px 18px;
+        border-radius: 12px;
+        background: rgb(0 0 0 / 0.35);
+        color: rgb(255 255 255 / 0.85);
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .phone {
+        position: absolute;
+        z-index: 2;
+        overflow: hidden;
+        border: 16px solid var(--ink);
+        border-radius: 72px;
+        background: #fff;
+        box-shadow:
+          0 40px 90px rgb(15 27 45 / 0.45),
+          0 0 0 2px rgb(255 255 255 / 0.15);
+      }
+      .phone img {
+        display: block;
+        width: 100%;
+      }
+
+      .step {
+        display: inline-flex;
+        align-items: center;
+        gap: 22px;
+        padding: 16px 40px 16px 18px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 16px 40px rgb(15 27 45 / 0.25);
+        font-size: 44px;
+        font-weight: 720;
+        letter-spacing: -0.01em;
+      }
+      .step b {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        background: var(--blue);
+        color: #fff;
+        font-size: 36px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+      }
+      .chips span {
+        padding: 8px 20px;
+        border: 2px solid rgb(255 255 255 / 0.55);
+        border-radius: 999px;
+        background: rgb(255 255 255 / 0.18);
+        color: #fff;
+        font-size: 26px;
+        font-weight: 600;
+        backdrop-filter: blur(6px);
+      }
+      .subtitle {
+        z-index: 3;
+        color: #fff;
+        font-weight: 640;
+        line-height: 1.25;
+        text-shadow:
+          0 2px 10px rgb(0 0 0 / 0.55),
+          0 0 2px rgb(0 0 0 / 0.6);
+      }
+      .legal {
+        z-index: 3;
+        display: inline-block;
+        padding: 8px 18px;
+        border-radius: 10px;
+        background: rgb(15 27 45 / 0.62);
+        color: rgb(255 255 255 / 0.92);
+        font-size: 24px;
+        font-weight: 560;
+      }
+
+      /* Carte finale */
+      .end {
+        background: var(--paper);
+      }
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+      }
+      .mark svg {
+        display: block;
+        filter: drop-shadow(0 24px 40px rgb(31 95 224 / 0.35));
+      }
+      .word {
+        font-weight: 760;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+      }
+      .tagline {
+        color: var(--blue);
+        font-weight: 720;
+        letter-spacing: -0.015em;
+      }
+      .sub {
+        color: var(--muted);
+        font-weight: 560;
+      }
+      .url {
+        display: inline-block;
+        border: 3px dashed var(--blue);
+        border-radius: 999px;
+        color: var(--ink);
+        font-weight: 600;
+        background: #fff;
+      }
+      .cta {
+        display: inline-block;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        font-weight: 720;
+        box-shadow: 0 18px 40px rgb(31 95 224 / 0.35);
+      }
+
+      /* 16:9 démo */
+      .panel {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 40px;
+      }
+      .steps {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+      }
+      .steps div {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 18px 22px;
+        border-radius: 24px;
+        font-size: 30px;
+        font-weight: 640;
+        line-height: 1.2;
+        color: var(--muted);
+        background: #fff;
+        border: 2px solid #e3e8ef;
+      }
+      .steps b {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #e3e8ef;
+        color: var(--ink);
+        font-size: 26px;
+      }
+      .steps .done b {
+        background: #dcf5e6;
+        color: #17803d;
+      }
+      .steps .active {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+        box-shadow: 0 16px 36px rgb(31 95 224 / 0.35);
+      }
+      .steps .active b {
+        background: #fff;
+        color: var(--blue);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. Démo 9:16 (plan 3E) -->
+    <div class="frame v" id="demo-9x16">
+      <div class="footage">
+        <i style="left: 90px; top: 260px; width: 150px; height: 150px"></i>
+        <i style="left: 820px; top: 520px; width: 210px; height: 210px"></i>
+        <i style="left: 140px; top: 1240px; width: 120px; height: 120px"></i>
+        <i style="left: 760px; top: 1380px; width: 90px; height: 90px"></i>
+      </div>
+      <span class="placeholder" style="left: 40px; top: 40px"
+        >Fond provisoire : plan de tournage</span
+      >
+      <div class="center" style="top: 230px; z-index: 3">
+        <span class="step"><b>2</b>Publie ton annonce</span>
+      </div>
+      <div class="center chips" style="top: 340px; z-index: 3; padding: 0 90px">
+        <span>Titre</span><span>Description</span><span>Catégorie</span><span>État</span
+        ><span>Prix</span><span>Ville</span>
+      </div>
+      <div class="phone" style="left: 305px; top: 470px; width: 470px">
+        <img src="../ecrans/10-vendre-verification.jpg" alt="" />
+      </div>
+      <p class="center subtitle" style="top: 1478px; margin: 0; padding: 0 110px; font-size: 44px">
+        Tu prends quelques photos, tu ajoutes le prix et les informations de ton article…
+      </p>
+      <div class="center" style="top: 1612px">
+        <span class="legal">Scénario fictif. Annonces, prix et messages de démonstration.</span>
+      </div>
+    </div>
+
+    <!-- 2. Carte finale 9:16 (plan 6C) -->
+    <div class="frame v end" id="carte-finale-9x16">
+      <div
+        class="blob"
+        style="right: -260px; top: -220px; width: 760px; height: 760px; background: #dbe8fe"
+      ></div>
+      <div
+        class="blob"
+        style="left: -180px; bottom: -160px; width: 520px; height: 520px; background: var(--tint)"
+      ></div>
+      <div
+        class="blob"
+        style="left: 120px; top: 300px; width: 40px; height: 40px; background: var(--light)"
+      ></div>
+      <div class="center mark" style="top: 440px; display: flex; justify-content: center">
+        <svg viewBox="0 0 32 32" width="230" height="230">
+          <rect width="32" height="32" rx="9" fill="#1f5fe0" />
+          <path
+            d="M10 10.5h12l-12 11h12"
+            fill="none"
+            stroke="#fff"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <circle cx="23.5" cy="8.5" r="2" fill="#bfd5fd" />
+        </svg>
+      </div>
+      <div class="center word" style="top: 700px; font-size: 150px">Zuvo</div>
+      <div class="center tagline" style="top: 935px; font-size: 66px">
+        La seconde vie de tes affaires.
+      </div>
+      <div
+        class="center sub"
+        style="top: 1040px; font-size: 40px; padding: 0 150px; line-height: 1.3"
+      >
+        Le marché de la seconde main pensé pour le Cameroun.
+      </div>
+      <div class="center" style="top: 1220px">
+        <span class="url" style="padding: 16px 36px; font-size: 34px"
+          >[URL officielle de Zuvo à insérer]</span
+        >
+      </div>
+      <div class="center" style="top: 1340px">
+        <span class="cta" style="padding: 30px 60px; font-size: 44px"
+          >Découvre Zuvo dès maintenant.</span
+        >
+      </div>
+    </div>
+
+    <!-- 3. Démo 16:9 (écran partagé) -->
+    <div class="frame h" id="demo-16x9">
+      <div class="panel" style="left: 60px; top: 60px; width: 980px; height: 960px">
+        <div class="footage">
+          <i style="left: 120px; top: 140px; width: 160px; height: 160px"></i>
+          <i style="left: 700px; top: 380px; width: 200px; height: 200px"></i>
+          <i style="left: 200px; top: 700px; width: 110px; height: 110px"></i>
+        </div>
+        <span class="placeholder" style="left: 30px; top: 30px"
+          >Fond provisoire : plan de tournage (Junior photographie ses baskets)</span
+        >
+        <p
+          class="center subtitle"
+          style="bottom: 60px; top: auto; margin: 0; padding: 0 70px; font-size: 38px"
+        >
+          Tu prends quelques photos, tu ajoutes le prix et les informations de ton article…
+        </p>
+      </div>
+      <div
+        class="phone"
+        style="left: 1090px; top: 92px; width: 412px; border-width: 14px; border-radius: 62px"
+      >
+        <img src="../ecrans/10-vendre-verification.jpg" alt="" />
+      </div>
+      <div class="steps" style="left: 1560px; top: 290px; width: 330px">
+        <div class="done"><b>✓</b>Prends tes photos</div>
+        <div class="active"><b>2</b>Publie ton annonce</div>
+        <div><b>3</b>Échange avec les acheteurs</div>
+      </div>
+      <span
+        class="legal"
+        style="
+          position: absolute;
+          right: 60px;
+          bottom: 26px;
+          background: none;
+          color: var(--muted);
+          padding: 0;
+          font-size: 22px;
+        "
+        >Scénario fictif. Annonces, prix et messages de démonstration.</span
+      >
+    </div>
+
+    <!-- 4. Carte finale 16:9 -->
+    <div class="frame h end" id="carte-finale-16x9">
+      <div
+        class="blob"
+        style="right: -200px; top: -300px; width: 760px; height: 760px; background: #dbe8fe"
+      ></div>
+      <div
+        class="blob"
+        style="left: -160px; bottom: -260px; width: 560px; height: 560px; background: var(--tint)"
+      ></div>
+      <div
+        class="center"
+        style="top: 190px; display: flex; justify-content: center; align-items: center; gap: 40px"
+      >
+        <span class="mark"
+          ><svg viewBox="0 0 32 32" width="170" height="170">
+            <rect width="32" height="32" rx="9" fill="#1f5fe0" />
+            <path
+              d="M10 10.5h12l-12 11h12"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="23.5" cy="8.5" r="2" fill="#bfd5fd" /></svg
+        ></span>
+        <span class="word" style="font-size: 140px">Zuvo</span>
+      </div>
+      <div class="center tagline" style="top: 440px; font-size: 64px">
+        La seconde vie de tes affaires.
+      </div>
+      <div class="center sub" style="top: 535px; font-size: 38px">
+        Le marché de la seconde main pensé pour le Cameroun.
+      </div>
+      <div class="center" style="top: 650px">
+        <span class="url" style="padding: 14px 34px; font-size: 32px"
+          >[URL officielle de Zuvo à insérer]</span
+        >
+      </div>
+      <div class="center" style="top: 770px">
+        <span class="cta" style="padding: 26px 56px; font-size: 40px"
+          >Découvre Zuvo dès maintenant.</span
+        >
+      </div>
+    </div>
+  </body>
+</html>

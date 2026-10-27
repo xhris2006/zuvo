@@ -1,5 +1,5 @@
 /*
- * Service worker de Zuvo : notifications push et page « hors connexion ».
+ * Service worker de MboaDeal : notifications push et page « hors connexion ».
  *
  * Seule la page hors connexion (rendue sans session) et ses fichiers
  * statiques sont mis en cache. Aucune autre page, aucune réponse d'API et
@@ -7,7 +7,9 @@
  * directement par le réseau.
  */
 
-const OFFLINE_CACHE = "zuvo-offline-v1";
+// Nouveau nom à chaque changement de la page hors connexion (ici, nouvelle
+// identité MboaDeal) : l'ancien cache est supprimé à l'activation.
+const OFFLINE_CACHE = "mboadeal-offline-v1";
 const OFFLINE_URL = "/hors-ligne";
 
 async function cacheOfflinePage() {
@@ -86,7 +88,7 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {};
   }
-  const title = typeof data.title === "string" && data.title ? data.title : "Zuvo";
+  const title = typeof data.title === "string" && data.title ? data.title : "MboaDeal";
   const body = typeof data.body === "string" ? data.body : "";
   const path = safePath(data.url);
   const tag = typeof data.tag === "string" ? data.tag : undefined;

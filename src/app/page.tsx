@@ -5,13 +5,19 @@ import { redirect } from "next/navigation";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CategoryList } from "@/features/categories/components/category-list";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
 import { FeedResults } from "@/features/listings/components/feed-results";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { ListingViewToggle, parseListingView } from "@/features/listings/components/listing-view";
 import { type FeedListingData, getFeedListings } from "@/features/listings/feed";
-import { getFollowedFeed } from "@/features/listings/queries";
+import {
+  type Category,
+  getCategories,
+  getDefaultCategories,
+  getFollowedFeed,
+} from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getRecommendedListings } from "@/features/recommendations/queries";
 import { getT } from "@/i18n/server";
@@ -38,17 +44,34 @@ async function loadHomeListings(userId: string): Promise<{
   }
 }
 
+/** Catégories actives, ou liste initiale si la base est indisponible. */
+async function loadCategories(): Promise<Category[]> {
+  try {
+    return await getCategories();
+  } catch {
+    return getDefaultCategories();
+  }
+}
+
 /** Accueil des membres connectés ; les visiteurs sont dirigés vers la page de bienvenue. */
 export default async function HomePage(props: PageProps<"/">) {
   const t = await getT();
   const user = await getCurrentUser().catch(() => null);
   if (!user) redirect(routes.welcome);
   const view = parseListingView((await props.searchParams).vue);
-  const { recommended, recent, followed } = await loadHomeListings(user.id);
+  const [{ recommended, recent, followed }, categories] = await Promise.all([
+    loadHomeListings(user.id),
+    loadCategories(),
+  ]);
 
   return (
     <div className="flex flex-col gap-8 pt-4 sm:gap-12 sm:pt-8">
       <h1 className="sr-only">{t.nav.home}</h1>
+
+      <section aria-labelledby="categories-title" className="container-page">
+        <SectionHeader id="categories-title" title={t.home.categoriesTitle} href={routes.explore} />
+        <CategoryList categories={categories} />
+      </section>
 
       {recommended.length > 0 ? (
         <section aria-labelledby="recommended-title" className="container-page">
@@ -102,17 +125,21 @@ export default async function HomePage(props: PageProps<"/">) {
       </section>
 
       <section className="container-page">
-        <div className="flex flex-col gap-4 rounded-2xl bg-brand-900 p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div className="flex gap-4">
+        <div className="reveal-on-scroll light-sweep glass-edge flex flex-col gap-4 rounded-2xl bg-inverse p-5 text-inverse-foreground [--glass-edge:rgb(255_255_255/0.12)] [--glass-shine:rgb(255_255_255/0.06)] sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <span
+            aria-hidden="true"
+            className="light-orb -top-24 -right-16 size-80 [--orb-color:rgb(255_122_0/0.4)]"
+          />
+          <div className="relative flex gap-4">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-              <ShieldCheck className="size-5 text-brand-200" aria-hidden="true" />
+              <ShieldCheck className="size-5 text-brand-400" aria-hidden="true" />
             </span>
             <div>
               <h2 className="font-semibold sm:text-lg">{t.home.safetyTitle}</h2>
-              <p className="mt-1 max-w-xl text-sm text-brand-100">{t.home.safetyBody}</p>
+              <p className="mt-1 max-w-xl text-sm text-white/85">{t.home.safetyBody}</p>
             </div>
           </div>
-          <Button asChild variant="secondary" className="shrink-0">
+          <Button asChild variant="secondary" className="relative shrink-0">
             <Link href={routes.safety}>{t.home.safetyCta}</Link>
           </Button>
         </div>

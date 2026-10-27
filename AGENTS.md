@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Zuvo — règles du projet
+# MboaDeal — règles du projet
 
 - Interface bilingue, français par défaut et anglais (cookie `zuvo-locale`). Aucun texte
   d'interface en dur : textes partagés (envoyés au navigateur) dans

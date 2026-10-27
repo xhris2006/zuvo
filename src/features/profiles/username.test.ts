@@ -6,8 +6,13 @@ import { isReservedUsername, normalizeUsername, reservedUsernames } from "./user
 describe("noms d'utilisateur", () => {
   it("reprennent exactement la liste réservée définie en SQL", () => {
     const dir = path.resolve(__dirname, "../../../supabase/migrations");
-    const file = readdirSync(dir).find((name) => name.endsWith("_foundations.sql"));
-    const sql = readFileSync(path.join(dir, file!), "utf8");
+    // Dernière migration qui (re)définit la fonction : c'est elle qui s'applique.
+    const sql = readdirSync(dir)
+      .filter((name) => name.endsWith(".sql"))
+      .sort()
+      .map((name) => readFileSync(path.join(dir, name), "utf8"))
+      .filter((content) => /function private\.is_reserved_username/.test(content))
+      .at(-1)!;
     const block = sql.match(/is_reserved_username[\s\S]*?array\[([\s\S]*?)\]/);
     const fromSql = [...block![1]!.matchAll(/'([^']+)'/g)].map((match) => match[1]);
     expect([...reservedUsernames].sort()).toEqual(fromSql.sort());
@@ -19,6 +24,7 @@ describe("noms d'utilisateur", () => {
 
   it("détecte les noms réservés sans tenir compte de la casse", () => {
     expect(isReservedUsername("Admin")).toBe(true);
+    expect(isReservedUsername("MboaDeal")).toBe(true);
     expect(isReservedUsername("awa")).toBe(false);
   });
 });

@@ -104,7 +104,7 @@ export function SignUpForm() {
             {t.authForms.acceptPrefix}{" "}
             <Link
               href={routes.terms}
-              className="font-medium text-primary underline"
+              className="font-medium text-primary-ink underline"
               target="_blank"
             >
               {t.authForms.acceptTerms}
@@ -112,7 +112,7 @@ export function SignUpForm() {
             {t.authForms.acceptAnd}{" "}
             <Link
               href={routes.privacy}
-              className="font-medium text-primary underline"
+              className="font-medium text-primary-ink underline"
               target="_blank"
             >
               {t.authForms.acceptPrivacy}

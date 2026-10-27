@@ -1,6 +1,6 @@
 # Déploiement (Vercel + Supabase)
 
-Ce guide décrit la mise en ligne de Zuvo. Toutes les étapes sont à réaliser
+Ce guide décrit la mise en ligne de MboaDeal. Toutes les étapes sont à réaliser
 par le propriétaire du projet : elles demandent des comptes et des secrets qui
 ne doivent jamais être partagés (ni dans le dépôt, ni dans une conversation).
 
@@ -44,16 +44,16 @@ ne doivent jamais être partagés (ni dans le dépôt, ni dans une conversation)
 
 ### Variables d'environnement
 
-| Variable                               | Portée               | Valeur                                                       |
-| -------------------------------------- | -------------------- | ------------------------------------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`             | publique             | `https://<ref>.supabase.co`                                  |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publique             | clé _publishable_ (ou _anon_)                                |
-| `NEXT_PUBLIC_SITE_URL`                 | publique             | domaine final, ex. `https://zuvo.cm` (facultatif sur Vercel) |
-| `NEXT_PUBLIC_CONTACT_EMAIL`            | publique             | adresse de contact affichée (facultatif)                     |
-| `SUPABASE_SERVICE_ROLE_KEY`            | **serveur, secrète** | clé secrète Supabase                                         |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | publique             | voir [`notifications.md`](notifications.md)                  |
-| `VAPID_PRIVATE_KEY`                    | **serveur, secrète** | voir [`notifications.md`](notifications.md)                  |
-| `VAPID_SUBJECT`                        | serveur              | `mailto:…` ou `https://…`                                    |
+| Variable                               | Portée               | Valeur                                                                    |
+| -------------------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | publique             | `https://<ref>.supabase.co`                                               |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | publique             | clé _publishable_ (ou _anon_)                                             |
+| `NEXT_PUBLIC_SITE_URL`                 | publique             | domaine final, ex. `https://www.votre-domaine.cm` (facultatif sur Vercel) |
+| `NEXT_PUBLIC_CONTACT_EMAIL`            | publique             | adresse de contact affichée (facultatif)                                  |
+| `SUPABASE_SERVICE_ROLE_KEY`            | **serveur, secrète** | clé secrète Supabase                                                      |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`         | publique             | voir [`notifications.md`](notifications.md)                               |
+| `VAPID_PRIVATE_KEY`                    | **serveur, secrète** | voir [`notifications.md`](notifications.md)                               |
+| `VAPID_SUBJECT`                        | serveur              | `mailto:…` ou `https://…`                                                 |
 
 Règles :
 

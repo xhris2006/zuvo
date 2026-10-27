@@ -299,7 +299,7 @@ export function ChatView({
                     className={cn(
                       "mt-1 text-right text-[0.6875rem]",
                       message.attachment_path && "px-2.5 pb-1",
-                      mine ? "text-primary-foreground/80" : "text-muted-foreground",
+                      mine ? "text-primary-foreground/90" : "text-muted-foreground",
                     )}
                   >
                     <span className="sr-only">

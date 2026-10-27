@@ -55,10 +55,10 @@ export async function ProfileHeader({
 
   return (
     <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-      <div className="relative h-32 bg-gradient-to-br from-brand-500 via-brand-700 to-brand-900 sm:h-44">
+      <div className="relative h-32 bg-gradient-to-br from-brand-400 via-brand-500 to-brand-700 sm:h-44">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgb(255_255_255/0.28),transparent_42%),radial-gradient(circle_at_88%_85%,rgb(255_255_255/0.18),transparent_38%),radial-gradient(circle_at_60%_-10%,rgb(147_184_250/0.35),transparent_45%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgb(255_255_255/0.28),transparent_42%),radial-gradient(circle_at_88%_85%,rgb(255_255_255/0.18),transparent_38%),radial-gradient(circle_at_60%_-10%,rgb(255_214_170/0.4),transparent_45%)]"
         />
         {back ? <div className="absolute top-3 left-3 sm:top-4 sm:left-4">{back}</div> : null}
         {menu ? (

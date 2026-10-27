@@ -37,7 +37,7 @@ export async function FeedCard({ listing, action, priority = false }: FeedCardPr
     ) : null;
 
   return (
-    <article className="group relative flex flex-col">
+    <article className="group reveal-on-scroll relative flex flex-col">
       <div className="relative">
         {listing.imageUrls.length > 0 ? (
           // Au-dessus du lien du titre pour recevoir le balayage.

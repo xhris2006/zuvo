@@ -1,5 +1,9 @@
 import type { ListingCondition, ListingStatus } from "@/features/listings/constants";
 import { createFormatters } from "@/lib/format";
+import { siteConfig } from "@/config/site";
+
+/** Nom du produit (src/config/site.ts), repris dans les textes. */
+const brand = siteConfig.name;
 
 const conditions: Record<ListingCondition, string> = {
   new_with_tags: "Neuf avec étiquette",
@@ -34,11 +38,14 @@ export const fr = {
   /** Prix, dates et durées relatives au format de la langue. */
   format: createFormatters("fr-CM", "à l'instant"),
   site: {
-    tagline: "La seconde main, simplement.",
-    description:
-      "Vendez et achetez gratuitement vêtements, chaussures, accessoires, électronique et bien plus, entre particuliers au Cameroun. Sans commission.",
+    /** Slogan officiel. */
+    tagline: "Achète. Vends. Donne une seconde vie.",
+    /** Titre des pages d'accueil et de partage : « MboaDeal — … ». */
+    title: "Achète, vends et trouve de bonnes affaires",
+    description: `Découvre des annonces et de bonnes affaires au Cameroun. Achète et vends des articles simplement sur ${brand}.`,
     country: "Cameroun",
-    ogSubtitle: "Vente entre particuliers au Cameroun · Publication gratuite · Sans commission",
+    ogSubtitle:
+      "Annonces entre particuliers au Cameroun · Publication gratuite au lancement · Sans commission",
   },
   language: {
     title: "Langue",
@@ -76,6 +83,8 @@ export const fr = {
     sellCta: "Vendre un article",
     searchPlaceholder: "Rechercher un article…",
     searchLabel: "Rechercher des annonces",
+    /** Suggestions tapées une à une dans le champ de recherche vide (animation). */
+    searchSuggestions: ["Robe en wax", "Baskets", "Smartphone", "Sac à main", "Manette de jeu"],
     unreadMessages: (count: number) =>
       count === 1 ? "1 message non lu" : `${count} messages non lus`,
     unreadNotifications: (count: number) =>
@@ -90,17 +99,48 @@ export const fr = {
   welcome: {
     signIn: "J'ai déjà un compte",
     browse: "Découvrir les annonces sans compte",
+    discover: "Découvrir les annonces",
+    publish: "Publier une annonce",
+    signInShort: "Connexion",
+    signUpShort: "Inscription",
+    categoriesLink: "Catégories",
+    categoriesSubtitle: "Trouve ce que tu cherches, rubrique par rubrique.",
+    recentTitle: "Annonces récentes",
+    recentSubtitle: "Les derniers articles mis en vente par la communauté.",
+    recentEmptyTitle: "Les premières annonces arrivent",
+    recentEmptyBody:
+      "Aucune annonce n'est encore en ligne. Publie la première et fais découvrir tes articles.",
+    freeTitle: "Publie gratuitement",
+    freeBody:
+      "Au lancement, publier une annonce ne coûte rien et aucune commission n'est prélevée sur tes ventes.",
+    aboutTitle: `${brand}, la seconde main pensée pour le Cameroun`,
+    aboutBody:
+      "Mets tes articles en vente en quelques minutes, trouve de bonnes affaires près de chez toi et discute directement avec le vendeur, partout au Cameroun.",
+    aboutPoints: {
+      freeTitle: "Publication gratuite",
+      freeBody: "Au lancement, tes annonces sont publiées sans frais.",
+      noFeeTitle: "Aucune commission",
+      noFeeBody: "Au lancement, le prix que tu fixes est celui que tu encaisses.",
+      directTitle: "Contact direct",
+      directBody: "Échange avec l'acheteur ou le vendeur dans la messagerie.",
+      fcfaTitle: "Prix en FCFA",
+      fcfaBody: "Des annonces dans les villes du Cameroun, avec des prix en francs CFA.",
+    },
+    safetyLink: "Conseils pour acheter et vendre en sécurité",
+    footerNav: "Liens utiles",
+    footerInstall: "Installer l'application",
   },
   home: {
-    heroTitle: "Donnez une seconde vie à vos affaires",
+    heroTitle: "Achète. Vends. Donne une seconde vie.",
     heroSubtitle:
-      "Vendez gratuitement ce que vous n'utilisez plus et trouvez de bonnes affaires près de chez vous, partout au Cameroun.",
-    valueTitle: "Pourquoi vendre sur Zuvo ?",
+      "Découvre de bonnes affaires près de chez toi ou vends les articles que tu n'utilises plus.",
+    valueTitle: `Pourquoi vendre sur ${brand} ?`,
     values: {
       freeTitle: "Publication gratuite",
-      freeBody: "Mettez vos articles en ligne en quelques minutes, sans frais de publication.",
+      freeBody:
+        "Au lancement, mettez vos articles en ligne en quelques minutes, sans frais de publication.",
       noFeeTitle: "Aucune commission",
-      noFeeBody: "Le prix que vous fixez est le prix que vous encaissez.",
+      noFeeBody: "Au lancement, le prix que vous fixez est le prix que vous encaissez.",
       directTitle: "Contact direct",
       directBody: "Échangez directement avec l'acheteur ou le vendeur via la messagerie.",
     },
@@ -221,7 +261,7 @@ export const fr = {
     feed: "Mon fil",
     signOut: "Se déconnecter",
     verified: "Vendeur vérifié",
-    verifiedHint: "Identité vérifiée par l'équipe Zuvo",
+    verifiedHint: `Identité vérifiée par l'équipe ${brand}`,
     menuLabel: "Menu du profil",
     settings: "Paramètres",
     editProfile: "Modifier le profil",
@@ -294,7 +334,7 @@ export const fr = {
       moderation_warning: "Avertissement de la modération",
       support_reply: "Réponse de l'assistance",
       admin_message: "Message de l'équipe",
-      install_guide: "Installez l'application Zuvo",
+      install_guide: `Installez l'application ${brand}`,
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -313,8 +353,7 @@ export const fr = {
           ? `L'équipe a répondu à votre demande ${quote(subject)}.`
           : "L'équipe a répondu à votre demande.",
       admin_message: (note: string | null) => note ?? "",
-      install_guide:
-        "Ajoutez Zuvo à l'écran d'accueil de votre téléphone : ouverture en un geste et notifications. Touchez pour voir comment faire.",
+      install_guide: `Ajoutez ${brand} à l'écran d'accueil de votre téléphone : ouverture en un geste et notifications. Touchez pour voir comment faire.`,
     },
     unread: "Non lue",
   },
@@ -403,7 +442,7 @@ export const fr = {
     label: (kind: string) => `${kind} :`,
   },
   footer: {
-    about: "Zuvo est une plateforme gratuite de vente entre particuliers.",
+    about: `${brand} est une plateforme de vente entre particuliers au Cameroun, gratuite au lancement.`,
     legal: "Informations",
     help: "Aide",
     terms: "Conditions d'utilisation",
@@ -921,7 +960,7 @@ export const fr = {
   },
   install: {
     menuLink: "Installer l'application",
-    installed: "Zuvo est installé sur cet appareil",
+    installed: `${brand} est installé sur cet appareil`,
     installedBody: "Ouvrez-le depuis l'icône de votre écran d'accueil.",
     benefits: {
       home: "Ouverture en un geste depuis l'écran d'accueil",
@@ -931,25 +970,25 @@ export const fr = {
     },
     tabsLabel: "Choisissez votre appareil",
     platforms: { android: "Android", ios: "iPhone, iPad", desktop: "Ordinateur" },
-    directHint: "Votre navigateur permet d'installer Zuvo directement.",
-    installButton: "Installer Zuvo",
+    directHint: `Votre navigateur permet d'installer ${brand} directement.`,
+    installButton: `Installer ${brand}`,
     steps: {
       android: [
-        "Ouvrez Zuvo dans Chrome.",
+        `Ouvrez ${brand} dans Chrome.`,
         "Touchez le menu ⋮ en haut à droite.",
         "Touchez « Installer l'application » (ou « Ajouter à l'écran d'accueil »).",
-        "Confirmez avec « Installer » : l'icône Zuvo apparaît sur votre écran d'accueil.",
+        `Confirmez avec « Installer » : l'icône ${brand} apparaît sur votre écran d'accueil.`,
       ],
       ios: [
-        "Ouvrez Zuvo dans Safari.",
+        `Ouvrez ${brand} dans Safari.`,
         "Touchez le bouton Partager (carré avec une flèche vers le haut), en bas de l'écran sur iPhone, en haut sur iPad.",
         "Faites défiler et touchez « Sur l'écran d'accueil ».",
-        "Touchez « Ajouter » : l'icône Zuvo apparaît sur votre écran d'accueil.",
+        `Touchez « Ajouter » : l'icône ${brand} apparaît sur votre écran d'accueil.`,
       ],
       desktop: [
-        "Ouvrez Zuvo dans Chrome ou Edge.",
-        "Cliquez sur l'icône d'installation à droite de la barre d'adresse (ou menu ⋮, puis « Installer Zuvo »).",
-        "Confirmez avec « Installer » : Zuvo s'ouvre dans sa propre fenêtre.",
+        `Ouvrez ${brand} dans Chrome ou Edge.`,
+        `Cliquez sur l'icône d'installation à droite de la barre d'adresse (ou menu ⋮, puis « Installer ${brand} »).`,
+        `Confirmez avec « Installer » : ${brand} s'ouvre dans sa propre fenêtre.`,
       ],
     },
     notes: {
@@ -957,8 +996,7 @@ export const fr = {
       ios: "Sur iPhone et iPad, les notifications push ne fonctionnent que dans l'application installée (iOS 16.4 ou plus récent). Depuis iOS 16.4, le bouton Partager de Chrome et des autres navigateurs propose aussi « Sur l'écran d'accueil ».",
       desktop: "Avec Safari sur Mac : menu Fichier, puis « Ajouter au Dock ».",
     },
-    after:
-      "Ensuite, ouvrez Zuvo depuis son icône et activez les notifications dans les paramètres.",
+    after: `Ensuite, ouvrez ${brand} depuis son icône et activez les notifications dans les paramètres.`,
     afterLink: "Ouvrir les paramètres",
   },
 };

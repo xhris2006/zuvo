@@ -1,6 +1,10 @@
 import type { ListingCondition, ListingStatus } from "@/features/listings/constants";
 import { createFormatters } from "@/lib/format";
 import type { Dictionary } from "./fr";
+import { siteConfig } from "@/config/site";
+
+/** Nom du produit (src/config/site.ts), repris dans les textes. */
+const brand = siteConfig.name;
 
 const conditions: Record<ListingCondition, string> = {
   new_with_tags: "New with tags",
@@ -34,11 +38,13 @@ const quote = (value: string) => `“${value}”`;
 export const en: Dictionary = {
   format: createFormatters("en-CM", "just now"),
   site: {
-    tagline: "Second-hand, made simple.",
-    description:
-      "Sell and buy clothes, shoes, accessories, electronics and much more for free, between individuals in Cameroon. No commission.",
+    /** Slogan officiel. */
+    tagline: "Buy. Sell. Give things a second life.",
+    /** Titre des pages d'accueil et de partage : « MboaDeal — … ». */
+    title: "Buy, sell and find great deals",
+    description: `Discover listings and great deals in Cameroon. Buy and sell items easily on ${brand}.`,
     country: "Cameroon",
-    ogSubtitle: "Selling between individuals in Cameroon · Free listings · No commission",
+    ogSubtitle: "Listings between individuals in Cameroon · Free to list at launch · No commission",
   },
   language: {
     title: "Language",
@@ -76,6 +82,7 @@ export const en: Dictionary = {
     sellCta: "Sell an item",
     searchPlaceholder: "Search for an item…",
     searchLabel: "Search listings",
+    searchSuggestions: ["Wax print dress", "Sneakers", "Smartphone", "Handbag", "Game controller"],
     unreadMessages: (count: number) =>
       count === 1 ? "1 unread message" : `${count} unread messages`,
     unreadNotifications: (count: number) =>
@@ -90,17 +97,45 @@ export const en: Dictionary = {
   welcome: {
     signIn: "I already have an account",
     browse: "Browse listings without an account",
+    discover: "Browse listings",
+    publish: "Post a listing",
+    signInShort: "Sign in",
+    signUpShort: "Sign up",
+    categoriesLink: "Categories",
+    categoriesSubtitle: "Find what you are looking for, category by category.",
+    recentTitle: "Recent listings",
+    recentSubtitle: "The latest items put up for sale by the community.",
+    recentEmptyTitle: "The first listings are on their way",
+    recentEmptyBody: "No listings are online yet. Post the first one and show off your items.",
+    freeTitle: "List for free",
+    freeBody:
+      "At launch, posting a listing costs nothing and no commission is taken on your sales.",
+    aboutTitle: `${brand}, second-hand made for Cameroon`,
+    aboutBody:
+      "Put your items up for sale in minutes, find great deals near you and talk directly with the seller, anywhere in Cameroon.",
+    aboutPoints: {
+      freeTitle: "Free listings",
+      freeBody: "At launch, your listings are posted free of charge.",
+      noFeeTitle: "No commission",
+      noFeeBody: "At launch, the price you set is the price you receive.",
+      directTitle: "Direct contact",
+      directBody: "Talk with the buyer or seller through messages.",
+      fcfaTitle: "Prices in FCFA",
+      fcfaBody: "Listings in cities across Cameroon, priced in CFA francs.",
+    },
+    safetyLink: "Tips for buying and selling safely",
+    footerNav: "Useful links",
+    footerInstall: "Install the app",
   },
   home: {
-    heroTitle: "Give your things a second life",
-    heroSubtitle:
-      "Sell what you no longer use for free and find great deals near you, anywhere in Cameroon.",
-    valueTitle: "Why sell on Zuvo?",
+    heroTitle: "Buy. Sell. Give things a second life.",
+    heroSubtitle: "Discover great deals near you or sell the items you no longer use.",
+    valueTitle: `Why sell on ${brand}?`,
     values: {
       freeTitle: "Free listings",
-      freeBody: "Put your items online in minutes, with no listing fees.",
+      freeBody: "At launch, put your items online in minutes, with no listing fees.",
       noFeeTitle: "No commission",
-      noFeeBody: "The price you set is the price you receive.",
+      noFeeBody: "At launch, the price you set is the price you receive.",
       directTitle: "Direct contact",
       directBody: "Talk directly with the buyer or seller through messages.",
     },
@@ -219,7 +254,7 @@ export const en: Dictionary = {
     feed: "My feed",
     signOut: "Sign out",
     verified: "Verified seller",
-    verifiedHint: "Identity verified by the Zuvo team",
+    verifiedHint: `Identity verified by the ${brand} team`,
     menuLabel: "Profile menu",
     settings: "Settings",
     editProfile: "Edit profile",
@@ -291,7 +326,7 @@ export const en: Dictionary = {
       moderation_warning: "Moderation warning",
       support_reply: "Support reply",
       admin_message: "Message from the team",
-      install_guide: "Install the Zuvo app",
+      install_guide: `Install the ${brand} app`,
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -311,8 +346,7 @@ export const en: Dictionary = {
           ? `The team replied to your request ${quote(subject)}.`
           : "The team replied to your request.",
       admin_message: (note: string | null) => note ?? "",
-      install_guide:
-        "Add Zuvo to your phone's home screen: one-tap access and notifications. Tap to see how.",
+      install_guide: `Add ${brand} to your phone's home screen: one-tap access and notifications. Tap to see how.`,
     },
     unread: "Unread",
   },
@@ -401,7 +435,7 @@ export const en: Dictionary = {
     label: (kind: string) => `${kind}:`,
   },
   footer: {
-    about: "Zuvo is a free platform for selling between individuals.",
+    about: `${brand} is a platform for selling between individuals in Cameroon, free at launch.`,
     legal: "Information",
     help: "Help",
     terms: "Terms of use",
@@ -930,7 +964,7 @@ export const en: Dictionary = {
   },
   install: {
     menuLink: "Install the app",
-    installed: "Zuvo is installed on this device",
+    installed: `${brand} is installed on this device`,
     installedBody: "Open it from the icon on your home screen.",
     benefits: {
       home: "One-tap access from your home screen",
@@ -940,25 +974,25 @@ export const en: Dictionary = {
     },
     tabsLabel: "Choose your device",
     platforms: { android: "Android", ios: "iPhone, iPad", desktop: "Computer" },
-    directHint: "Your browser can install Zuvo directly.",
-    installButton: "Install Zuvo",
+    directHint: `Your browser can install ${brand} directly.`,
+    installButton: `Install ${brand}`,
     steps: {
       android: [
-        "Open Zuvo in Chrome.",
+        `Open ${brand} in Chrome.`,
         "Tap the ⋮ menu at the top right.",
         "Tap “Install app” (or “Add to Home screen”).",
-        "Confirm with “Install”: the Zuvo icon appears on your home screen.",
+        `Confirm with “Install”: the ${brand} icon appears on your home screen.`,
       ],
       ios: [
-        "Open Zuvo in Safari.",
+        `Open ${brand} in Safari.`,
         "Tap the Share button (square with an arrow pointing up), at the bottom of the screen on iPhone, at the top on iPad.",
         "Scroll down and tap “Add to Home Screen”.",
-        "Tap “Add”: the Zuvo icon appears on your home screen.",
+        `Tap “Add”: the ${brand} icon appears on your home screen.`,
       ],
       desktop: [
-        "Open Zuvo in Chrome or Edge.",
-        "Click the install icon on the right of the address bar (or ⋮ menu, then “Install Zuvo”).",
-        "Confirm with “Install”: Zuvo opens in its own window.",
+        `Open ${brand} in Chrome or Edge.`,
+        `Click the install icon on the right of the address bar (or ⋮ menu, then “Install ${brand}”).`,
+        `Confirm with “Install”: ${brand} opens in its own window.`,
       ],
     },
     notes: {
@@ -966,7 +1000,7 @@ export const en: Dictionary = {
       ios: "On iPhone and iPad, push notifications only work in the installed app (iOS 16.4 or later). Since iOS 16.4, the Share button of Chrome and other browsers also offers “Add to Home Screen”.",
       desktop: "With Safari on Mac: File menu, then “Add to Dock”.",
     },
-    after: "Then open Zuvo from its icon and turn on notifications in the settings.",
+    after: `Then open ${brand} from its icon and turn on notifications in the settings.`,
     afterLink: "Open settings",
   },
 };

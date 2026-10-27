@@ -91,7 +91,7 @@ describe("notificationHref", () => {
     expect(notificationHref({ ...base, type: "install_guide" })).toBe("/installer");
     expect(
       describeNotification({ type: "install_guide", actorName: null, listingTitle: null }).title,
-    ).toBe("Installez l'application Zuvo");
+    ).toBe("Installez l'application MboaDeal");
   });
 
   it("se replie sur une page générale si la cible a disparu", () => {

@@ -1,6 +1,6 @@
 # Base de données Supabase
 
-Ce document décrit le schéma de Zuvo, son modèle de sécurité et la procédure
+Ce document décrit le schéma de MboaDeal, son modèle de sécurité et la procédure
 pour configurer un projet Supabase. Toute la structure de la base est définie
 par les migrations versionnées de [`supabase/migrations/`](../supabase/migrations) :
 le schéma est entièrement reproductible.
@@ -25,7 +25,7 @@ le schéma est entièrement reproductible.
 ### 1.1 Créer le projet
 
 1. Créez un compte sur [supabase.com](https://supabase.com) puis **New project**.
-2. Nom : `zuvo` (ou autre). Choisissez un **mot de passe de base de données
+2. Nom : `mboadeal` (ou autre). Choisissez un **mot de passe de base de données
    robuste** et conservez-le dans un gestionnaire de mots de passe : il sera
    demandé par la CLI. Ne le communiquez à personne, y compris dans une
    conversation avec un assistant.

@@ -32,7 +32,7 @@ const ogLocales = { fr: "fr_CM", en: "en_CM" } as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   const [t, locale] = await Promise.all([getT(), getLocale()]);
-  const title = `${siteConfig.name} — ${t.site.tagline}`;
+  const title = `${siteConfig.name} — ${t.site.title}`;
   return {
     metadataBase: new URL(getSiteUrl()),
     title: { default: title, template: `%s · ${siteConfig.name}` },
@@ -45,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description: t.site.description,
     },
-    twitter: { card: "summary_large_image" },
+    twitter: { card: "summary_large_image", title, description: t.site.description },
     formatDetection: { telephone: false, address: false, email: false },
   };
 }

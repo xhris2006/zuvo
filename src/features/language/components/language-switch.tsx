@@ -37,7 +37,7 @@ export function LanguageSwitch() {
             className={cn(
               "flex h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
               locale === current
-                ? "border-primary bg-accent text-accent-foreground ring-1 ring-primary"
+                ? "border-primary-line bg-accent text-accent-foreground ring-1 ring-primary-line"
                 : "border-border bg-card hover:bg-muted",
             )}
           >
@@ -61,7 +61,14 @@ export function LanguageSwitch() {
 }
 
 /** Bascule compacte FR / EN (bienvenue, connexion, inscription). */
-export function LanguageToggle({ className }: { className?: string }) {
+export function LanguageToggle({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  /** Sans l'icône sur les petits écrans (en-têtes chargés). */
+  compact?: boolean;
+}) {
   const t = useT();
   const { current, pending, choose } = useChooseLocale();
   return (
@@ -74,7 +81,10 @@ export function LanguageToggle({ className }: { className?: string }) {
         className,
       )}
     >
-      <Languages className="mx-1.5 size-3.5 text-muted-foreground" aria-hidden="true" />
+      <Languages
+        className={cn("mx-1.5 size-3.5 text-muted-foreground", compact && "max-sm:hidden")}
+        aria-hidden="true"
+      />
       {locales.map((locale) => (
         <button
           key={locale}

@@ -46,7 +46,7 @@ export function SignInForm({ next }: { next?: string }) {
         <div className="-mt-1 text-right">
           <Link
             href={routes.forgotPassword}
-            className="text-sm font-medium text-primary hover:text-primary-hover"
+            className="text-sm font-medium text-primary-ink hover:text-primary-ink-hover"
           >
             {t.authForms.forgotPassword}
           </Link>

@@ -1,20 +1,50 @@
 import { cn } from "@/lib/utils";
 
-/** Symbole du logo (sans texte), utilisable dans les composants client. */
-export function LogoMark({ className }: { className?: string }) {
+/** Tracés du symbole MboaDeal (public/images/mboadeal-logo.svg) : poignée, sac en M, sourire. */
+export const logoPaths = {
+  handle: "M82 55C82 24 104 6 134 6S186 24 186 55",
+  body: "M38 78C38 61 51 51 67 59L134 96L201 59C217 51 230 61 230 78V206C230 224 216 236 199 236H177V151L151 178C141 188 127 188 117 178L91 151V236H69C52 236 38 224 38 206Z",
+  smile: "M101 196C119 215 149 215 167 196",
+} as const;
+
+/**
+ * Symbole du logo (sans texte), utilisable dans les composants client.
+ * « brand » : sac orange (fonds clairs ou sombres) ; « white » : sac blanc
+ * pour les fonds orange.
+ */
+export function LogoMark({
+  className,
+  tone = "brand",
+}: {
+  className?: string;
+  tone?: "brand" | "white";
+}) {
+  const color = tone === "white" ? "text-white" : "text-primary";
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-8", className)}>
-      <rect width="32" height="32" rx="9" className="fill-primary" />
+    <svg
+      viewBox="4 -14 260 260"
+      aria-hidden="true"
+      className={cn("size-8 shrink-0", color, className)}
+    >
       <path
-        d="M10 10.5h12l-12 11h12"
+        d={logoPaths.handle}
+        pathLength={1}
+        className="logo-handle"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2.6"
+        strokeWidth="20"
         strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-primary-foreground"
       />
-      <circle cx="23.5" cy="8.5" r="2" className="fill-brand-200" />
+      <path d={logoPaths.body} className="logo-body" fill="currentColor" />
+      <path
+        d={logoPaths.smile}
+        pathLength={1}
+        className="logo-smile"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="16"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

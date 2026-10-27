@@ -14,7 +14,7 @@ export async function VerifiedBadge({ variant = "label", className }: VerifiedBa
   if (variant === "icon") {
     return (
       <span
-        className={cn("inline-flex shrink-0 text-primary", className)}
+        className={cn("inline-flex shrink-0 text-primary-ink", className)}
         title={t.profile.verifiedHint}
       >
         <BadgeCheck className="size-4" aria-hidden="true" />

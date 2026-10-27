@@ -159,6 +159,27 @@ describe("profiles", () => {
     expect((await asUser(user.id, (sql) => sql(query, [user.id]))).rows).toHaveLength(1);
   });
 
+  it("réserve le nom de la plateforme, l'actuel comme l'ancien", async () => {
+    const user = await createUser();
+    const brand = await createUser({ username: "mboadeal" });
+    expect(brand.username).not.toBe("mboadeal");
+    await expectError(
+      asUser(user.id, (sql) =>
+        sql("update public.profiles set username = 'mboadeal' where id = $1", [user.id]),
+      ),
+      "23514",
+    );
+    const { rows } = await asAnon((sql) =>
+      sql(
+        `select public.is_username_available('mboadeal') as brand,
+                public.is_username_available('zuvo') as former,
+                public.is_username_available('mboadeal_237') as similar`,
+      ),
+    );
+    // Un nom voisin reste autorisé : seul le nom exact est réservé.
+    expect(rows[0]).toEqual({ brand: false, former: false, similar: true });
+  });
+
   it("indique la disponibilité d'un nom d'utilisateur", async () => {
     const user = await createUser();
     const { rows } = await asAnon((sql) =>

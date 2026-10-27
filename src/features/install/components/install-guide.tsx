@@ -135,7 +135,7 @@ export function InstallGuide({ initialPlatform }: { initialPlatform: InstallPlat
               const Icon = icons[index] ?? CircleCheck;
               return (
                 <li key={step} className="flex items-start gap-3">
-                  <span className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <span className="relative flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
                     <Icon className="size-5" aria-hidden="true" />
                     <span className="absolute -top-1.5 -left-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[0.6875rem] font-semibold text-primary-foreground">
                       {index + 1}
@@ -157,7 +157,7 @@ export function InstallGuide({ initialPlatform }: { initialPlatform: InstallPlat
         {copy.after}{" "}
         <Link
           href={routes.settings}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+          className="font-medium text-primary-ink underline-offset-4 hover:underline"
         >
           {copy.afterLink}
         </Link>

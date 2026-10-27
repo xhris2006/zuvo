@@ -103,7 +103,7 @@ function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetTyp
         {reasonsByTarget[targetType].map((reason) => (
           <label
             key={reason}
-            className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm has-checked:border-primary has-checked:bg-secondary/50"
+            className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm has-checked:border-primary-line has-checked:bg-secondary/50"
           >
             <input
               type="radio"

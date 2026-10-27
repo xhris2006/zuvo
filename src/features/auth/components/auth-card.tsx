@@ -59,6 +59,9 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
     >
       <div className="auth-hero relative overflow-hidden px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-14 text-white lg:flex lg:flex-col lg:justify-between lg:px-14 lg:py-12">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <span className="light-orb -top-28 -right-28 size-[28rem] [--orb-color:rgb(147_184_250/0.32)]" />
+          <span className="light-orb -bottom-36 -left-28 size-[26rem] [--orb-color:rgb(59_118_238/0.5)] [--orb-duration:24s]" />
+          <span className="light-spark top-[20%] left-[16%] hidden lg:block" />
           {floatingItems.map(({ icon: Icon, className, delay }, index) => (
             <span
               key={index}

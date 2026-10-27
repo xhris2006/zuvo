@@ -102,8 +102,12 @@ export default async function HomePage(props: PageProps<"/">) {
       </section>
 
       <section className="container-page">
-        <div className="flex flex-col gap-4 rounded-2xl bg-brand-900 p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div className="flex gap-4">
+        <div className="reveal-on-scroll light-sweep glass-edge flex flex-col gap-4 rounded-2xl bg-brand-900 p-5 text-white [--glass-edge:rgb(255_255_255/0.12)] [--glass-shine:rgb(255_255_255/0.06)] sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <span
+            aria-hidden="true"
+            className="light-orb -top-24 -right-16 size-80 [--orb-color:rgb(59_118_238/0.55)]"
+          />
+          <div className="relative flex gap-4">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
               <ShieldCheck className="size-5 text-brand-200" aria-hidden="true" />
             </span>
@@ -112,7 +116,7 @@ export default async function HomePage(props: PageProps<"/">) {
               <p className="mt-1 max-w-xl text-sm text-brand-100">{t.home.safetyBody}</p>
             </div>
           </div>
-          <Button asChild variant="secondary" className="shrink-0">
+          <Button asChild variant="secondary" className="relative shrink-0">
             <Link href={routes.safety}>{t.home.safetyCta}</Link>
           </Button>
         </div>

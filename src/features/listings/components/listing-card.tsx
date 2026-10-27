@@ -23,8 +23,8 @@ export async function ListingCard({ listing, action, priority = false }: Listing
   const showStatus = listing.status !== "active";
 
   return (
-    <article className="group relative flex flex-col gap-2.5">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted transition-transform duration-150 group-active:scale-[0.98]">
+    <article className="group reveal-on-scroll relative flex flex-col gap-2.5">
+      <div className="hover-sheen relative aspect-[4/5] overflow-hidden rounded-xl bg-muted transition-[translate,scale,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1 group-hover:shadow-[0_18px_36px_-18px_rgb(15_27_45/0.45)] group-active:scale-[0.98]">
         {listing.imageUrl ? (
           <Image
             src={listing.imageUrl}
@@ -32,7 +32,7 @@ export async function ListingCard({ listing, action, priority = false }: Listing
             fill
             priority={priority}
             sizes="(min-width: 1024px) 18rem, (min-width: 640px) 33vw, 50vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
           />
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">

@@ -144,6 +144,55 @@ test("la recherche mène à Explorer avec la requête", async ({ page, isMobile 
   if (!isMobile) await expect(keywords).toHaveValue("robe wax");
 });
 
+test("la recherche vide fait défiler des suggestions sans remplir le champ", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/explorer");
+  const input = page.locator(isMobile ? "#header-search-mobile" : "#sidebar-search");
+  const form = page.locator("form[role=search]").filter({ has: input });
+  const suggestion = form.locator('span[aria-hidden="true"]').filter({ hasText: /\S/ });
+  await expect(suggestion).toBeVisible({ timeout: 8000 });
+  await expect(input).toHaveValue("");
+  await expect(input).toHaveAttribute("placeholder", "Rechercher un article…");
+  await input.focus();
+  await expect(suggestion).toHaveCount(0);
+});
+
+test.describe("animations réduites", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("la page de bienvenue s'affiche entièrement, sans animation d'entrée", async ({ page }) => {
+    await page.goto("/bienvenue");
+    const title = page.getByRole("heading", { level: 1 });
+    await expect(title).toHaveText("Donnez une seconde vie à vos affaires");
+    const running = await page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.playState === "running" &&
+              animation.effect?.getComputedTiming().iterations !== Infinity,
+          ).length,
+    );
+    expect(running).toBe(0);
+    const opacities = await title
+      .locator("span")
+      .evaluateAll((words) => words.map((word) => getComputedStyle(word).opacity));
+    expect(new Set(opacities)).toEqual(new Set(["1"]));
+    await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveCSS("opacity", "1");
+  });
+
+  test("la recherche ne fait pas défiler de suggestions", async ({ page, isMobile }) => {
+    await page.goto("/explorer");
+    const input = page.locator(isMobile ? "#header-search-mobile" : "#sidebar-search");
+    const form = page.locator("form[role=search]").filter({ has: input });
+    await page.waitForTimeout(2500);
+    await expect(form.locator('span[aria-hidden="true"]')).toHaveCount(0);
+  });
+});
+
 test("les filtres invalides dans l'URL sont ignorés", async ({ page }) => {
   const response = await page.goto("/explorer?city=paris&minPrice=-3&sort=hack&page=0");
   expect(response?.status()).toBe(200);

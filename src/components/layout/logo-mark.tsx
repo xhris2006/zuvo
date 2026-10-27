@@ -7,6 +7,7 @@ export function LogoMark({ className }: { className?: string }) {
       <rect width="32" height="32" rx="9" className="fill-primary" />
       <path
         d="M10 10.5h12l-12 11h12"
+        pathLength={1}
         fill="none"
         stroke="currentColor"
         strokeWidth="2.6"

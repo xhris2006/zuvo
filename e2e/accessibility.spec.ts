@@ -20,6 +20,14 @@ for (const path of pages) {
   test(`${path} ne présente pas de défaut d'accessibilité détectable`, async ({ page }) => {
     await page.goto(path);
     await page.locator("h1").first().waitFor();
+    // Les entrées animées (fondus, flous) doivent être terminées avant de mesurer les contrastes.
+    await page.waitForFunction(() =>
+      document.getAnimations().every((animation) => {
+        if (animation.timeline !== document.timeline) return true;
+        const iterations = animation.effect?.getComputedTiming().iterations;
+        return iterations === Infinity || animation.playState !== "running";
+      }),
+    );
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       // Next.js insère un indicateur de route vide hors de la page.

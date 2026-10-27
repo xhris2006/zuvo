@@ -76,6 +76,7 @@ export const en: Dictionary = {
     sellCta: "Sell an item",
     searchPlaceholder: "Search for an item…",
     searchLabel: "Search listings",
+    searchSuggestions: ["Wax print dress", "Sneakers", "Smartphone", "Handbag", "Game controller"],
     unreadMessages: (count: number) =>
       count === 1 ? "1 unread message" : `${count} unread messages`,
     unreadNotifications: (count: number) =>

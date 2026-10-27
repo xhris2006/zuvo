@@ -76,6 +76,8 @@ export const fr = {
     sellCta: "Vendre un article",
     searchPlaceholder: "Rechercher un article…",
     searchLabel: "Rechercher des annonces",
+    /** Suggestions tapées une à une dans le champ de recherche vide (animation). */
+    searchSuggestions: ["Robe en wax", "Baskets", "Smartphone", "Sac à main", "Manette de jeu"],
     unreadMessages: (count: number) =>
       count === 1 ? "1 message non lu" : `${count} messages non lus`,
     unreadNotifications: (count: number) =>

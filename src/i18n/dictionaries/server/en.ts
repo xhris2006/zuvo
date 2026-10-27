@@ -1,5 +1,9 @@
 import "server-only";
 import type { ServerOnlyDictionary } from "./fr";
+import { siteConfig } from "@/config/site";
+
+/** Nom du produit (src/config/site.ts), repris dans les textes. */
+const brand = siteConfig.name;
 
 /** English server-only texts (pages, actions, validation, administration). */
 export const enServer: ServerOnlyDictionary = {
@@ -272,7 +276,7 @@ export const enServer: ServerOnlyDictionary = {
   },
   supportPage: {
     title: "Support",
-    description: "Write to the Zuvo team. You will be notified as soon as they reply.",
+    description: `Write to the ${brand} team. You will be notified as soon as they reply.`,
     appealTitle: "Appeal a listing removal",
     newTitle: "New request",
     appealDescription:
@@ -804,6 +808,6 @@ export const enServer: ServerOnlyDictionary = {
   },
   installPage: {
     title: "Install the app",
-    description: "Add Zuvo to the home screen of your phone or computer, like an app.",
+    description: `Add ${brand} to the home screen of your phone or computer, like an app.`,
   },
 };

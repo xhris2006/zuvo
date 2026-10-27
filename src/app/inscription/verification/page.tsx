@@ -16,7 +16,10 @@ export default async function CheckEmailPage() {
     <AuthCard
       title={t.authPages.checkEmailTitle}
       footer={
-        <Link href={routes.signIn} className="font-semibold text-primary hover:text-primary-hover">
+        <Link
+          href={routes.signIn}
+          className="font-semibold text-primary-ink hover:text-primary-ink-hover"
+        >
           {t.authPages.backToSignIn}
         </Link>
       }

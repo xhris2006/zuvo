@@ -67,7 +67,7 @@ export async function ConversationList({
                   <span
                     className={cn(
                       "shrink-0 text-xs",
-                      unread ? "font-semibold text-primary" : "text-muted-foreground",
+                      unread ? "font-semibold text-primary-ink" : "text-muted-foreground",
                     )}
                   >
                     {formats.inboxTime(conversation.last_message_at)}

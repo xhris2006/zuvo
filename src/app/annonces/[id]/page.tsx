@@ -84,7 +84,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           value: (
             <Link
               href={exploreHref(toSearchParams({ category: listing.category.slug }))}
-              className="text-primary hover:underline"
+              className="text-primary-ink hover:underline"
             >
               {localizedCategoryName(t.categoryNames, listing.category)}
             </Link>

@@ -81,7 +81,7 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
                   className={cn(
                     itemClass,
                     active
-                      ? "bg-primary/10 font-semibold text-primary"
+                      ? "bg-primary/10 font-semibold text-primary-ink"
                       : "font-medium text-foreground hover:bg-muted",
                   )}
                 >
@@ -97,7 +97,10 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
                         name={account.displayName}
                         src={account.avatarUrl}
                         size="sm"
-                        className={cn("size-6 text-[0.625rem]", active && "ring-2 ring-primary")}
+                        className={cn(
+                          "size-6 text-[0.625rem]",
+                          active && "ring-2 ring-primary-line",
+                        )}
                       />
                     ) : null}
                     {item.badge ? (
@@ -197,7 +200,7 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
             </Link>
             <Link
               href={routes.signUp}
-              className="flex h-10 items-center justify-center rounded-xl text-sm font-semibold text-primary hover:bg-accent"
+              className="flex h-10 items-center justify-center rounded-xl text-sm font-semibold text-primary-ink hover:bg-accent"
             >
               {t.common.signUp}
             </Link>

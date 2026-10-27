@@ -247,11 +247,11 @@ otp_expiry = 3600
 # Modèles d'e-mails en français : les liens ouvrent /auth/confirm (vérification
 # par token_hash, compatible avec l'ouverture du lien sur un autre appareil).
 [auth.email.template.confirmation]
-subject = "Confirmez votre inscription sur Zuvo"
+subject = "Confirmez votre inscription sur MboaDeal"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Réinitialisation de votre mot de passe Zuvo"
+subject = "Réinitialisation de votre mot de passe MboaDeal"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.email_change]

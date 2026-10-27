@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   return new NextResponse(toCsv(header, rows), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="zuvo-${type}${suffix}-${date}.csv"`,
+      "Content-Disposition": `attachment; filename="mboadeal-${type}${suffix}-${date}.csv"`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
     },

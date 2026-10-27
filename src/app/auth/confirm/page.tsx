@@ -27,7 +27,7 @@ export default async function ConfirmPage(props: PageProps<"/auth/confirm">) {
     return (
       <AuthCard title={t.authPages.invalidLinkTitle}>
         <Alert variant="danger">{t.authPages.invalidLinkBody}</Alert>
-        <Link href={routes.signIn} className="text-center text-sm font-semibold text-primary">
+        <Link href={routes.signIn} className="text-center text-sm font-semibold text-primary-ink">
           {t.authPages.backToSignIn}
         </Link>
       </AuthCard>

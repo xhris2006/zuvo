@@ -70,7 +70,7 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                   {item.type === "moderation_warning" ? (
                     <span className="text-sm font-semibold text-danger">{item.title}</span>
                   ) : item.type === "admin_message" || item.type === "install_guide" ? (
-                    <span className="text-sm font-semibold text-primary">{item.title}</span>
+                    <span className="text-sm font-semibold text-primary-ink">{item.title}</span>
                   ) : null}
                   <span
                     className={cn(

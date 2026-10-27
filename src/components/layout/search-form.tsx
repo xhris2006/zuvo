@@ -91,7 +91,7 @@ export function SearchForm({ id, defaultValue, className }: SearchFormProps) {
         onBlur={() => setFocused(false)}
         onChange={(event) => setEmpty(event.target.value === "")}
         className={cn(
-          "h-11 w-full rounded-full border border-transparent bg-muted pr-4 pl-10 text-control text-foreground transition-[color,background-color,border-color,box-shadow] duration-300 placeholder:text-muted-foreground hover:border-border focus-visible:border-ring focus-visible:bg-card focus-visible:shadow-[0_0_0_4px_rgb(31_95_224/0.12),0_8px_24px_-12px_rgb(31_95_224/0.45)] focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm",
+          "h-11 w-full rounded-full border border-transparent bg-muted pr-4 pl-10 text-control text-foreground transition-[color,background-color,border-color,box-shadow] duration-300 placeholder:text-muted-foreground hover:border-border focus-visible:border-ring focus-visible:bg-card focus-visible:shadow-[0_0_0_4px_rgb(255_122_0/0.14),0_8px_24px_-12px_rgb(255_122_0/0.4)] focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring/40 sm:text-sm",
           showTyped && "placeholder:text-transparent",
         )}
       />

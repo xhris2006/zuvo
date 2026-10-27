@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const linkClass =
-  "inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline underline-offset-4";
+  "inline-flex items-center gap-2 text-sm font-medium text-primary-ink hover:underline underline-offset-4";
 
 export default async function AdminNotifyPage() {
   const { role } = await requireStaff(routes.adminNotify);

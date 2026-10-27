@@ -5,39 +5,51 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * Design tokens Zuvo.
- * Bleu (primaire), blanc cassé froid (fond), texte bleu nuit, gris bleutés.
- * Contrastes vérifiés (WCAG AA) : texte principal 16:1, texte secondaire 5.8:1,
- * texte blanc sur primaire 5.6:1, bordures de champs 3.1:1.
+ * Design tokens MboaDeal.
+ * Orange de marque (#ff7a00) pour les fonds d'action (boutons, pastilles, états
+ * actifs), noir profond (#1f2937) pour les titres et le texte, blanc cassé
+ * (#f8f7f3) pour le fond. L'orange vif n'a que 2,6:1 de contraste avec le blanc :
+ * il porte du texte noir profond (5,6:1) et les textes orange utilisent
+ * --primary-ink, plus foncé. Contrastes vérifiés (WCAG AA) : texte principal
+ * 13:1, texte secondaire 5,6:1, texte orange 5,6:1, bordures de champs 3,3:1.
  */
 :root {
   color-scheme: light;
 
-  --background: #f7f9fc;
-  --foreground: #0f1b2d;
+  --background: #f8f7f3;
+  --foreground: #1f2937;
 
   --card: #ffffff;
-  --card-foreground: #0f1b2d;
+  --card-foreground: #1f2937;
   --popover: #ffffff;
-  --popover-foreground: #0f1b2d;
+  --popover-foreground: #1f2937;
 
-  --primary: #1f5fe0;
-  --primary-hover: #1a4dbb;
-  --primary-foreground: #ffffff;
+  --primary: #ff7a00;
+  --primary-hover: #f27100;
+  --primary-foreground: #1f2937;
+  /* Orange lisible en texte (liens, états actifs) sur les fonds clairs. */
+  --primary-ink: #a34800;
+  --primary-ink-hover: #843a00;
+  /* Traits d'état (sélection, onglet actif) : 3:1 minimum sur les fonds clairs. */
+  --primary-line: #e86a00;
 
-  --secondary: #dbe8fe;
-  --secondary-hover: #bfd5fd;
-  --secondary-foreground: #1b4195;
+  --secondary: #ffe9d1;
+  --secondary-hover: #ffdbb3;
+  --secondary-foreground: #8a3b00;
 
-  --muted: #eef2f7;
-  --muted-foreground: #55627a;
+  --muted: #f0eee8;
+  --muted-foreground: #5d6470;
 
-  --accent: #eff5ff;
-  --accent-foreground: #1b4195;
+  --accent: #fff4e8;
+  --accent-foreground: #8a3b00;
 
-  --border: #dfe5ee;
-  --input: #8792a6;
-  --ring: #3b76ee;
+  /* Surface sombre de marque (bandeaux) : noir profond, texte blanc. */
+  --inverse: #1f2937;
+  --inverse-foreground: #ffffff;
+
+  --border: #e5e1d8;
+  --input: #8a8d93;
+  --ring: #c25600;
 
   --success: #18794e;
   --success-soft: #e3f4ea;
@@ -53,7 +65,7 @@
   --radius: 0.75rem;
 
   /* Teinte des fonds de marque (bienvenue, connexion). */
-  --hero-tint: #e4eefe;
+  --hero-tint: #ffefdc;
 
   /* Hauteur de la barre de navigation mobile (hors zone de sécurité). */
   --bottom-nav-height: 4rem;
@@ -61,37 +73,43 @@
 
 /*
  * Mode sombre, choisi dans les paramètres (cookie lu côté serveur, donc sans
- * flash au chargement). Contrastes vérifiés (WCAG AA) : texte principal 15:1,
- * texte secondaire 7:1, primaire sur fond 6,8:1, texte sur primaire 6,8:1.
+ * flash au chargement). Contrastes vérifiés (WCAG AA) : texte principal 16:1,
+ * texte secondaire 7,8:1, texte orange 8,8:1, texte sur orange 7,9:1.
  */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --background: #0b1220;
-  --foreground: #e6ebf3;
+  --background: #111827;
+  --foreground: #f3f1ec;
 
-  --card: #121a2b;
-  --card-foreground: #e6ebf3;
-  --popover: #172135;
-  --popover-foreground: #e6ebf3;
+  --card: #1a2230;
+  --card-foreground: #f3f1ec;
+  --popover: #212b3b;
+  --popover-foreground: #f3f1ec;
 
-  --primary: #6b9bf5;
-  --primary-hover: #8ab0f7;
-  --primary-foreground: #071226;
+  --primary: #ff8a1f;
+  --primary-hover: #ff9d45;
+  --primary-foreground: #1a1206;
+  --primary-ink: #ffa04d;
+  --primary-ink-hover: #ffb676;
+  --primary-line: #ff8a1f;
 
-  --secondary: #1c2f57;
-  --secondary-hover: #243a69;
-  --secondary-foreground: #c3d6fd;
+  --secondary: #3a2512;
+  --secondary-hover: #4a2f17;
+  --secondary-foreground: #ffcb94;
 
-  --muted: #1a2335;
-  --muted-foreground: #9ba7bc;
+  --muted: #1e2735;
+  --muted-foreground: #a5adba;
 
-  --accent: #16233f;
-  --accent-foreground: #c3d6fd;
+  --accent: #2a1f14;
+  --accent-foreground: #ffcb94;
 
-  --border: #263249;
-  --input: #6c7a93;
-  --ring: #6b9bf5;
+  --inverse: #263142;
+  --inverse-foreground: #ffffff;
+
+  --border: #2e3846;
+  --input: #6f7988;
+  --ring: #ff9a3d;
 
   --success: #4cc38a;
   --success-soft: #10291e;
@@ -103,7 +121,7 @@
   --info: #5cc4e0;
   --info-soft: #0f2a33;
 
-  --hero-tint: #10203f;
+  --hero-tint: #2a1c0f;
 }
 
 @theme inline {
@@ -116,6 +134,9 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-ink-hover: var(--primary-ink-hover);
+  --color-primary-line: var(--primary-line);
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -123,6 +144,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -136,17 +159,18 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
 
-  --color-brand-50: #eff5ff;
-  --color-brand-100: #dbe8fe;
-  --color-brand-200: #bfd5fd;
-  --color-brand-300: #93b8fa;
-  --color-brand-400: #5f95f5;
-  --color-brand-500: #3b76ee;
-  --color-brand-600: #1f5fe0;
-  --color-brand-700: #1a4dbb;
-  --color-brand-800: #1b4195;
-  --color-brand-900: #1c3a75;
-  --color-brand-950: #14254a;
+  /* Gamme orange MboaDeal : 400 = orange secondaire, 500 = orange principal. */
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #ffa726;
+  --color-brand-500: #ff7a00;
+  --color-brand-600: #e86a00;
+  --color-brand-700: #b85500;
+  --color-brand-800: #8f4200;
+  --color-brand-900: #6e3300;
+  --color-brand-950: #3f1d00;
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
@@ -187,8 +211,8 @@
   --radius-xl: calc(var(--radius) + 0.25rem);
   --radius-2xl: calc(var(--radius) + 0.5rem);
 
-  --shadow-card: 0 1px 2px 0 rgb(15 27 45 / 0.04), 0 1px 3px 0 rgb(15 27 45 / 0.06);
-  --shadow-raised: 0 4px 16px -4px rgb(15 27 45 / 0.12);
+  --shadow-card: 0 1px 2px 0 rgb(31 41 55 / 0.04), 0 1px 3px 0 rgb(31 41 55 / 0.06);
+  --shadow-raised: 0 4px 16px -4px rgb(31 41 55 / 0.12);
 }
 
 @layer base {
@@ -211,7 +235,7 @@
   }
 
   ::selection {
-    @apply bg-brand-200 text-brand-900;
+    @apply bg-brand-200 text-foreground;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -262,7 +286,7 @@
     @apply text-brand-500;
   }
   .prose-content a {
-    @apply font-medium text-primary underline underline-offset-4 hover:text-primary-hover;
+    @apply font-medium text-primary-ink underline underline-offset-4 hover:text-primary-ink-hover;
   }
   .prose-content strong {
     @apply font-semibold text-foreground;
@@ -290,18 +314,13 @@ body:has([data-admin]) main {
   padding-bottom: 0;
 }
 
-/* Panneau de marque des écrans de connexion et d'inscription. */
+/* Panneau de marque des écrans de connexion et d'inscription : noir profond et halo orange. */
 .auth-hero {
-  background-color: var(--color-brand-700);
+  background-color: #1f2937;
   background-image:
-    radial-gradient(circle at 88% 8%, rgb(255 255 255 / 0.14), transparent 42%),
-    radial-gradient(circle at 8% 100%, rgb(147 184 250 / 0.22), transparent 45%),
-    linear-gradient(
-      150deg,
-      var(--color-brand-600) 0%,
-      var(--color-brand-800) 62%,
-      var(--color-brand-950) 100%
-    );
+    radial-gradient(circle at 88% 8%, rgb(255 122 0 / 0.38), transparent 46%),
+    radial-gradient(circle at 8% 100%, rgb(255 167 38 / 0.2), transparent 45%),
+    linear-gradient(150deg, #263142 0%, #1f2937 55%, #141b26 100%);
 }
 
 @keyframes float {
@@ -476,14 +495,14 @@ body:has([data-admin]) main {
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --orb-color: rgb(31 95 224 / 0.3);
-  --orb-color-soft: rgb(95 149 245 / 0.22);
+  --orb-color: rgb(255 122 0 / 0.26);
+  --orb-color-soft: rgb(255 167 38 / 0.22);
   --glass-edge: rgb(255 255 255 / 0.75);
   --glass-shine: rgb(255 255 255 / 0.28);
 }
 :root[data-theme="dark"] {
-  --orb-color: rgb(59 118 238 / 0.42);
-  --orb-color-soft: rgb(107 155 245 / 0.24);
+  --orb-color: rgb(255 138 31 / 0.3);
+  --orb-color-soft: rgb(255 167 38 / 0.18);
   --glass-edge: rgb(255 255 255 / 0.14);
   --glass-shine: rgb(255 255 255 / 0.08);
 }
@@ -619,10 +638,10 @@ body:has([data-admin]) main {
   height: 0.875rem;
   border-radius: 9999px;
   pointer-events: none;
-  background: radial-gradient(circle, #fff 0%, #cfe0ff 45%, var(--color-brand-400) 100%);
+  background: radial-gradient(circle, #fff 0%, #ffe2bf 45%, var(--color-brand-400) 100%);
   box-shadow:
-    0 0 1.25rem 0.375rem rgb(95 149 245 / 0.65),
-    0 0 4.5rem 1.5rem rgb(31 95 224 / 0.35);
+    0 0 1.25rem 0.375rem rgb(255 167 38 / 0.65),
+    0 0 4.5rem 1.5rem rgb(255 122 0 / 0.35);
   animation:
     spark-drift 16s ease-in-out infinite,
     spark-pulse 3.2s ease-in-out infinite;
@@ -732,17 +751,17 @@ body:has([data-admin]) main {
 }
 @utility logo-intro {
   @media (prefers-reduced-motion: no-preference) {
-    & rect,
-    & circle {
+    /* Le sac apparaît, puis la poignée et le sourire se dessinent. */
+    & .logo-body {
       transform-box: fill-box;
-      transform-origin: center;
+      transform-origin: center bottom;
       animation: logo-pop 650ms var(--ease-out-back) both;
     }
-    & path {
+    & :is(.logo-handle, .logo-smile) {
       stroke-dasharray: 1;
       animation: logo-draw 650ms var(--ease-out-expo) 250ms both;
     }
-    & circle {
+    & .logo-smile {
       animation-delay: 650ms;
     }
   }

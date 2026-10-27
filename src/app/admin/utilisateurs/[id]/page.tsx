@@ -128,7 +128,7 @@ export default async function AdminUserPage(props: PageProps<"/admin/utilisateur
                   {account.email ? (
                     <a
                       href={`mailto:${account.email}`}
-                      className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+                      className="inline-flex items-center gap-1.5 font-medium text-primary-ink hover:underline"
                     >
                       <Mail className="size-4" aria-hidden="true" />
                       {account.email}

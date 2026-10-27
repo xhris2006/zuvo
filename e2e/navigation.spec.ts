@@ -47,7 +47,7 @@ test("les visiteurs arrivent sur la page de bienvenue, sans en-tête ni navigati
   await page.goto("/");
   await expect(page).toHaveURL(/\/bienvenue$/);
   await expect(
-    page.getByRole("heading", { level: 1, name: "Donnez une seconde vie à vos affaires" }),
+    page.getByRole("heading", { level: 1, name: "Achète. Vends. Donne une seconde vie." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Créer un compte" })).toHaveAttribute(
     "href",
@@ -59,7 +59,7 @@ test("les visiteurs arrivent sur la page de bienvenue, sans en-tête ni navigati
   );
   await expect(page.locator("[data-site-header]")).toBeHidden();
   await expect(page.locator("[data-bottom-nav]")).toBeHidden();
-  await expect(page).toHaveTitle(/Zuvo/);
+  await expect(page).toHaveTitle("MboaDeal — Achète, vends et trouve de bonnes affaires");
 });
 
 test("les catégories sont présentées dans Explorer", async ({ page }) => {
@@ -93,7 +93,7 @@ test("la bascule FR / EN de la page de bienvenue change la langue", async ({ pag
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
   await page.getByRole("button", { name: "English" }).click();
   await expect(
-    page.getByRole("heading", { level: 1, name: "Give your things a second life" }),
+    page.getByRole("heading", { level: 1, name: "Buy. Sell. Give things a second life." }),
   ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("button", { name: "English" })).toHaveAttribute(
@@ -165,7 +165,7 @@ test.describe("animations réduites", () => {
   test("la page de bienvenue s'affiche entièrement, sans animation d'entrée", async ({ page }) => {
     await page.goto("/bienvenue");
     const title = page.getByRole("heading", { level: 1 });
-    await expect(title).toHaveText("Donnez une seconde vie à vos affaires");
+    await expect(title).toHaveText("Achète. Vends. Donne une seconde vie.");
     const running = await page.evaluate(
       () =>
         document

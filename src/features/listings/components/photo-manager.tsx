@@ -125,7 +125,7 @@ export function PhotoManager({
             <label
               htmlFor={inputId}
               className={cn(
-                "flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-input bg-card text-center text-xs font-medium text-primary transition-colors hover:bg-accent",
+                "flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-input bg-card text-center text-xs font-medium text-primary-ink transition-colors hover:bg-accent",
                 "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring",
               )}
             >

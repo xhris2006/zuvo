@@ -117,7 +117,7 @@ function SidebarContent({
                       className={cn(
                         "flex h-10 items-center gap-3 rounded-xl px-3 text-sm transition-colors",
                         active
-                          ? "bg-primary/10 font-semibold text-primary"
+                          ? "bg-primary/10 font-semibold text-primary-ink"
                           : "font-medium text-foreground hover:bg-muted",
                       )}
                     >
@@ -190,10 +190,10 @@ export function AdminNav({ role, roleLabel }: { role: "admin" | "moderator"; rol
             <Menu className="size-5" aria-hidden="true" />
           </DialogPrimitive.Trigger>
           <p className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold">
-            <CurrentIcon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <CurrentIcon className="size-4 shrink-0 text-primary-ink" aria-hidden="true" />
             <span className="truncate">{current?.label ?? t.adminUi.nav.administration}</span>
           </p>
-          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-ink">
             {roleLabel}
           </span>
         </div>

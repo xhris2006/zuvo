@@ -9,14 +9,14 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Reflet qui traverse le bouton et halo bleu au survol.
+        // Orange de marque, texte noir profond (5,6:1) ; reflet et halo orange au survol.
         primary:
-          "hover-sheen bg-primary text-primary-foreground shadow-card hover:bg-primary-hover hover:shadow-[0_10px_28px_-10px_rgb(31_95_224/0.65)]",
+          "hover-sheen bg-primary text-primary-foreground shadow-card hover:bg-primary-hover hover:shadow-[0_10px_28px_-10px_rgb(255_122_0/0.55)]",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
         outline: "border border-input bg-card text-foreground hover:bg-muted",
         ghost: "text-foreground hover:bg-muted",
         destructive: "bg-danger-solid text-white hover:bg-danger-solid/90",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary-ink underline-offset-4 hover:underline",
       },
       size: {
         sm: "h-9 px-3",

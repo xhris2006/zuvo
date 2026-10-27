@@ -33,7 +33,7 @@ export default async function EditProfilePage() {
       <PageHeader
         title={t.profilePages.editTitle}
         actions={
-          <Link href={routes.profile} className="text-sm font-semibold text-primary">
+          <Link href={routes.profile} className="text-sm font-semibold text-primary-ink">
             {t.profilePages.backToProfile}
           </Link>
         }

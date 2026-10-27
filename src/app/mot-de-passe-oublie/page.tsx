@@ -19,7 +19,10 @@ export default async function ForgotPasswordPage() {
       title={t.authPages.forgotTitle}
       description={t.authPages.forgotDescription}
       footer={
-        <Link href={routes.signIn} className="font-semibold text-primary hover:text-primary-hover">
+        <Link
+          href={routes.signIn}
+          className="font-semibold text-primary-ink hover:text-primary-ink-hover"
+        >
           {t.authPages.backToSignIn}
         </Link>
       }

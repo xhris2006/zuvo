@@ -1,16 +1,20 @@
-# Zuvo
+# MboaDeal
 
-Marketplace sociale de seconde main pour le Cameroun : les particuliers vendent
-gratuitement vêtements, chaussures, accessoires, électronique et autres objets,
-et échangent directement avec les acheteurs.
+« Achète. Vends. Donne une seconde vie. » — marketplace de seconde main pour le
+Cameroun : les particuliers vendent vêtements, chaussures, accessoires,
+électronique et autres objets, et échangent directement avec les acheteurs.
 
-- Publication gratuite, aucune commission, aucun abonnement obligatoire.
+- Au lancement : publication gratuite, aucune commission, aucun abonnement obligatoire.
 - Pas de paiement ni de livraison intégrés dans la première version.
 - Prix en FCFA (XAF), interface en français ou en anglais (choix dans Paramètres →
   Langue, ou FR / EN sur les pages de bienvenue et de connexion).
 
-> **Nom provisoire.** Le nom, le pays, la devise et la langue sont centralisés
-> dans [`src/config/site.ts`](src/config/site.ts).
+> **Identité.** Le nom, le slogan, le pays, la devise et la langue sont centralisés
+> dans [`src/config/site.ts`](src/config/site.ts) ; couleurs dans
+> [`src/app/globals.css`](src/app/globals.css) (orange `#ff7a00`, noir profond `#1f2937`,
+> blanc cassé `#f8f7f3`) ; logos dans [`public/images/`](public/images/). Anciennement
+> « Zuvo » : les identifiants techniques (cookies, nom du paquet, projet Supabase local)
+> gardent ce nom pour ne pas réinitialiser les préférences des utilisateurs.
 
 ## État d'avancement
 
@@ -81,7 +85,7 @@ l'authentification n'est pas encore disponible.
 - **PWA** : installable, page hors connexion, icônes ; guide d'installation
   `/installer` adapté à l'appareil (Android, iPhone et iPad, ordinateur) avec
   bouton d'installation directe quand le navigateur le permet ; après la
-  connexion sur un téléphone, une notification « Installez l'application Zuvo »
+  connexion sur un téléphone, une notification « Installez l'application MboaDeal »
   y mène (une fois, et pas si l'application est déjà installée).
 - **SEO** : métadonnées, Open Graph, sitemap des annonces, données structurées.
 

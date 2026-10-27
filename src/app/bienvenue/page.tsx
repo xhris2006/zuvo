@@ -4,7 +4,12 @@ import { Alert } from "@/components/ui/alert";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { WelcomeScreen } from "@/features/home/components/welcome-screen";
-import { getRecentListings } from "@/features/listings/queries";
+import {
+  type Category,
+  getCategories,
+  getDefaultCategories,
+  getRecentListings,
+} from "@/features/listings/queries";
 import type { ListingCardData } from "@/features/listings/types";
 import { getLocale, getT } from "@/i18n/server";
 import { intlLocales } from "@/i18n";
@@ -13,13 +18,13 @@ import { getSiteUrl } from "@/lib/env";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
-    title: { absolute: `${siteConfig.name} — ${t.site.tagline}` },
+    title: { absolute: `${siteConfig.name} — ${t.site.title}` },
     alternates: { canonical: "/bienvenue" },
   };
 }
 
-/** Annonces récentes pour la mosaïque ; une panne n'empêche pas l'affichage. */
-async function loadMosaicListings(): Promise<ListingCardData[]> {
+/** Annonces récentes (grille et mosaïque) ; une panne n'empêche pas l'affichage. */
+async function loadRecentListings(): Promise<ListingCardData[]> {
   try {
     return await getRecentListings(12);
   } catch {
@@ -27,14 +32,23 @@ async function loadMosaicListings(): Promise<ListingCardData[]> {
   }
 }
 
+/** Catégories actives en base, ou liste initiale si la base est indisponible. */
+async function loadCategories(): Promise<Category[]> {
+  try {
+    return await getCategories();
+  } catch {
+    return getDefaultCategories();
+  }
+}
+
 /**
- * Page autonome (sans en-tête ni barre de navigation) vers laquelle l'accueil
- * redirige les visiteurs non connectés.
+ * Accueil des visiteurs non connectés (l'accueil « / » les redirige ici) :
+ * page autonome avec son propre en-tête et pied de page.
  */
 export default async function WelcomePage(props: PageProps<"/bienvenue">) {
   const [t, locale] = await Promise.all([getT(), getLocale()]);
   const searchParams = await props.searchParams;
-  const listings = await loadMosaicListings();
+  const [listings, categories] = await Promise.all([loadRecentListings(), loadCategories()]);
   const siteUrl = getSiteUrl();
   return (
     <div data-standalone>
@@ -58,6 +72,7 @@ export default async function WelcomePage(props: PageProps<"/bienvenue">) {
       />
       <WelcomeScreen
         listings={listings}
+        categories={categories}
         notice={
           searchParams.compte === "supprime" ? (
             <Alert

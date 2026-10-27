@@ -81,7 +81,7 @@ export default async function AdminAntiSpamPage() {
         <CardContent>
           <Link
             href={`${routes.adminListings}?vue=doublons` as Route}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary-ink hover:underline"
           >
             <Copy className="size-4" aria-hidden="true" />
             {t.adminPages.antiSpam.seeDuplicates}

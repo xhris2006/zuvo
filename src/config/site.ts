@@ -3,17 +3,22 @@
  * par défaut sont définis ici et nulle part ailleurs.
  */
 export const siteConfig = {
-  name: "Zuvo",
-  tagline: "La seconde main, simplement.",
+  name: "MboaDeal",
+  /** Les deux parties du nom, mises en forme séparément (« Deal » en orange). */
+  brand: { first: "Mboa", second: "Deal" },
+  tagline: "Achète. Vends. Donne une seconde vie.",
   description:
-    "Vendez et achetez gratuitement vêtements, chaussures, accessoires, électronique et bien plus, entre particuliers au Cameroun. Sans commission.",
+    "Découvre des annonces et de bonnes affaires au Cameroun. Achète et vends des articles simplement sur MboaDeal.",
   country: { code: "CM", name: "Cameroun" },
   currency: "XAF",
   /** Locale utilisée pour formater les prix et les dates. */
   intlLocale: "fr-CM",
   timeZone: "Africa/Douala",
   defaultLocale: "fr",
-  themeColor: "#1f5fe0",
+  /** Orange de marque (barre du navigateur, application installée). */
+  themeColor: "#ff7a00",
+  /** Fond de l'écran de démarrage de l'application installée. */
+  backgroundColor: "#f8f7f3",
   /** Assistance téléphonique (format international, sans espaces). */
   supportPhone: "+237694600007",
 } as const;

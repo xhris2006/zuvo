@@ -31,14 +31,14 @@ export function BottomNav() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "group relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-medium transition-colors",
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  active ? "text-primary-ink" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {item.emphasis ? (
                   <span
                     className={cn(
-                      "flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-raised ring-4 ring-card transition-transform group-hover:scale-105 group-active:scale-90",
-                      active && "from-brand-600 to-brand-800",
+                      "flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-500 text-primary-foreground shadow-raised ring-4 ring-card transition-transform group-hover:scale-105 group-active:scale-90",
+                      active && "from-brand-500 to-brand-600",
                     )}
                   >
                     <Icon className="size-6" strokeWidth={2.5} aria-hidden="true" />

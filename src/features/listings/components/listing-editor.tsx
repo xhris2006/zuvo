@@ -341,7 +341,7 @@ export function ListingEditor({
               type="submit"
               value="draft"
               disabled={pending}
-              className="rounded-md px-1 py-1 font-semibold text-primary hover:text-primary-hover disabled:opacity-50"
+              className="rounded-md px-1 py-1 font-semibold text-primary-ink hover:text-primary-ink-hover disabled:opacity-50"
             >
               {t.sell.saveDraft}
             </button>
@@ -630,7 +630,7 @@ function ChoiceGroup({
         {options.map(({ value, label, hint, icon: Icon }) => (
           <label
             key={value}
-            className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm transition-colors select-none hover:border-primary/50 has-checked:border-primary has-checked:bg-accent has-checked:ring-1 has-checked:ring-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
+            className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm transition-colors select-none hover:border-primary-line/50 has-checked:border-primary-line has-checked:bg-accent has-checked:ring-1 has-checked:ring-primary-line has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring"
           >
             <input
               type="radio"
@@ -693,7 +693,7 @@ function ReviewCard({
     <button
       type="button"
       onClick={() => onEdit(step)}
-      className="shrink-0 rounded-md px-1 py-1 text-sm font-semibold text-primary hover:text-primary-hover"
+      className="shrink-0 rounded-md px-1 py-1 text-sm font-semibold text-primary-ink hover:text-primary-ink-hover"
       aria-label={t.editor.editLabel(t.sell.edit, label)}
     >
       {t.sell.edit}

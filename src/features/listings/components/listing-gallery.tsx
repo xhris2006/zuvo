@@ -121,7 +121,7 @@ export function ListingGallery({ images, title, overlay }: ListingGalleryProps) 
               className={cn(
                 "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
                 index === active
-                  ? "border-primary"
+                  ? "border-primary-line"
                   : "border-transparent opacity-80 hover:opacity-100",
               )}
             >

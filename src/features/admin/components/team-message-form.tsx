@@ -49,7 +49,7 @@ export function TeamMessageForm({ canBroadcast }: { canBroadcast: boolean }) {
                   className={cn(
                     "flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ring",
                     value === recipients
-                      ? "border-primary bg-accent text-accent-foreground ring-1 ring-primary"
+                      ? "border-primary-line bg-accent text-accent-foreground ring-1 ring-primary-line"
                       : "border-border bg-card hover:bg-muted",
                   )}
                 >

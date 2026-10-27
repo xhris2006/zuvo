@@ -11,7 +11,7 @@ export const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 /** Couleur de la barre du navigateur (mobile) pour chaque thème. */
 export const themeColors: Record<Theme, string> = {
   light: siteConfig.themeColor,
-  dark: "#0b1220",
+  dark: "#111827",
 };
 
 /** Toute valeur inconnue ou absente retombe sur le thème clair. */

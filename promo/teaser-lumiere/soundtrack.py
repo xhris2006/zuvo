@@ -3,6 +3,7 @@
 Synthèse numpy uniquement (création originale, sans droits tiers).
 
     python3 soundtrack.py rendus/bande-son.wav
+    python3 soundtrack.py rendus/bande-son-sous-voix.wav --voix   # pour la voix off (voix.py)
 """
 import sys
 import wave
@@ -15,6 +16,7 @@ N = int(SR * DUR)
 rng = np.random.default_rng(23)
 BEAT = 0.5
 STEP = BEAT / 4
+VOIX = "--voix" in sys.argv[2:]
 
 L = np.zeros(N)
 R = np.zeros(N)
@@ -30,6 +32,11 @@ def add(sig, t, gain=1.0, pan=0.0):
     s = sig[: j - i] * gain
     L[i:j] += s * np.sqrt((1 - pan) / 2)
     R[i:j] += s * np.sqrt((1 + pan) / 2)
+
+
+def sous_voix(gain):
+    """Bruitage qui tombe sur une phrase de la voix off : atténué dans la version avec voix."""
+    return gain * 0.35 if VOIX else gain
 
 
 def tt(d):
@@ -196,7 +203,7 @@ add(fin, 25.615, 0.22, 0.2)
 
 # ---------------------------------------------------------------- bruitages calés sur l'image
 add(boom(1.6, 0.6), 0.15)
-add(sparkle(), 0.3, 0.22, 0.2)
+add(sparkle(), 0.3, sous_voix(0.22), 0.2)
 for i in range(5):  # panneaux du carrousel
     add(bell(midi(76 + [0, 3, 5, 7, 10][i]), 0.8), 0.4 + i * 0.22, 0.07, -0.6 + i * 0.3)
 add(riser(1.0), 3.3, 0.22)
@@ -229,17 +236,17 @@ add(riser(1.95, 2200), 16.95, 0.3)
 for i in range(4):  # indicateur d'étape (2 sur 5 … 5 sur 5)
     add(tick(), 17.33 + i * 0.38, 0.22, 0.3)
 add(boom(1.8, 1.0), 18.95)
-add(sparkle(5, 2349), 18.98, 0.3, 0.2)
-add(bell(1567.98, 1.6), 19.0, 0.2)
-add(whoosh(0.7), 19.5, 0.35, 0.4)
-add(whoosh(0.7), 20.05, 0.3, 0.5)
+add(sparkle(5, 2349), 18.98, sous_voix(0.3), 0.2)
+add(bell(1567.98, 1.6), 19.0, sous_voix(0.2))
+add(whoosh(0.7), 19.5, sous_voix(0.35), 0.4)
+add(whoosh(0.7), 20.05, sous_voix(0.3), 0.5)
 add(whoosh(0.6), 22.4, 0.3, -0.4)
 add(boom(1.0, 0.5), 22.95)
 add(whoosh(0.7), 25.0, 0.3)
 add(boom(1.6, 0.9), 25.65)
 add(riser(0.55, 1800), 25.95, 0.14)
-add(bell(1975.5, 1.8), 26.45, 0.26)
-add(sparkle(5, 2637), 26.47, 0.3, 0.1)
+add(bell(1975.5, 1.8), 26.45, sous_voix(0.26))
+add(sparkle(5, 2637), 26.47, sous_voix(0.3), 0.1)
 add(pop(500, 900), 27.35, 0.16)
 for i in range(len("À toi de jouer.")):
     add(key_click(), 27.75 + i * 0.07, 0.22)

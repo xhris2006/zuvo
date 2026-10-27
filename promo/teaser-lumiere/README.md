@@ -25,6 +25,7 @@ au code de l'application.
 | `teaser.js`     | Plans et animations ; `window.render(t)` dessine l'instant t                    |
 | `ecrans/`       | Vraies captures du site (copie locale, mode sombre, données de démonstration)   |
 | `soundtrack.py` | Bande-son provisoire : pulsation, frappes, balayages, impacts calés sur l'image |
+| `voix.py`       | Voix off : découpe la prise phrase par phrase, la cale sur l'image, mixage      |
 | `render.mjs`    | Rendu image par image (Playwright → ffmpeg), ou aperçus avec `--stills t1,t2,…` |
 
 Le teaser réutilise les icônes et les polices du dossier `../publicite-cinematique/`.
@@ -40,6 +41,29 @@ ffmpeg -i rendus/teaser-lumiere-9x16-sans-son.mp4 -i rendus/bande-son.wav -map 0
 
 Les fichiers produits (`rendus/`) ne sont pas versionnés.
 
+## Voix off
+
+Prise ElevenLabs du 27 octobre 2026, à placer dans `rendus/voix-off-elevenlabs.mp3` (non
+versionnée). `voix.py` en découpe les 15 phrases (positions relevées sur cette prise : une
+nouvelle prise demande de les relever à nouveau) et place chacune au moment voulu. Pendant la
+voix, la musique baisse de 5 dB et de 13 dB entre 300 Hz et 4 kHz. La variante `--voix` de la
+bande-son atténue en plus les bruitages qui tombent sur « Publiée. », « Discute. » et « Zuvo. ».
+
+```bash
+python3 soundtrack.py rendus/bande-son-sous-voix.wav --voix
+python3 voix.py rendus/voix-off-elevenlabs.mp3 rendus/bande-son-sous-voix.wav rendus/bande-son-voix.wav
+ffmpeg -i rendus/teaser-lumiere-9x16-sans-son.mp4 -i rendus/bande-son-voix.wav -map 0:v -map 1:a \
+  -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart rendus/teaser-lumiere-9x16-voix.mp4
+```
+
+Texte enregistré (voix jeune, chaleureuse, qui tutoie ; mots isolés détachés) :
+
+> Ce que tu n'utilises plus… quelqu'un le cherche. / Cherche. / Une robe en wax ? / Trouve. /
+> Les photos, le prix, la ville : tout est là. / Et toi… qu'as-tu à vendre aujourd'hui ? /
+> Une photo, un titre, un prix. / Cinq étapes simples… / Publiée. / Discute. / Directement avec
+> l'acheteur. / La seconde main, simplement. / Zuvo. / La seconde vie de tes affaires. /
+> À toi de jouer.
+
 ## À valider avant diffusion
 
 - **Adresse** : `zuvo-beta.vercel.app` (`SITE_URL` dans `teaser.js`), à remplacer par l'adresse
@@ -50,4 +74,6 @@ Les fichiers produits (`rendus/`) ne sont pas versionnés.
 - **Mentions commerciales** : « gratuit / sans commission » sont masquées dans les captures.
 - **Musique** : générée par `soundtrack.py` (originale, sans droits tiers) ; une musique sous
   licence couvrant la publicité payante peut la remplacer.
+- **Voix off** : vérifier que l'abonnement ElevenLabs utilisé autorise l'usage commercial (l'offre
+  gratuite ne le permet pas).
 - Aucune fonction inventée : chaque écran et chaque étape existent sur le site.

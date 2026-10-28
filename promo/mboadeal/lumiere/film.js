@@ -435,6 +435,8 @@
   });
 
   // 6 — Partage : lien, WhatsApp, Facebook jaillissent de l'annonce (19,4–23)
+  const TRAIL_AT = [20.35, 20.9, 21.6];
+  const CHIP_AT = [20.55, 21.1, 21.8];
   const CHIP_POS = [
     [610, 700],
     [640, 900],
@@ -458,7 +460,7 @@
     const src = [560, 760];
     [...trails.children].forEach((p, i) => {
       const [x, y] = CHIP_POS[i];
-      const st = 20.35 + i * 0.25;
+      const st = TRAIL_AT[i];
       p.setAttribute(
         "d",
         `M${src[0]} ${src[1]} C${src[0] + 80} ${src[1]}, ${x - 60} ${y + 52}, ${x} ${y + 52}`,
@@ -467,7 +469,7 @@
       p.style.opacity = clamp((t - st) / 0.1) * (1 - clamp((t - (st + 0.9)) / 0.5)) * (1 - out);
     });
     SHARE_CHIPS.forEach((el, i) => {
-      const st = 20.55 + i * 0.25;
+      const st = CHIP_AT[i];
       const u = ease(t, st, 0.6);
       const [x, y] = CHIP_POS[i];
       showGlass(el, {
@@ -479,7 +481,7 @@
       });
     });
     // WhatsApp choisi : coche verte
-    const c = pop(t, 21.55, 0.4);
+    const c = pop(t, 22.1, 0.4);
     if (c > 0 && out < 1) {
       waCheck.style.display = "flex";
       waCheck.style.left = "940px";
@@ -517,7 +519,7 @@
       beam.style.opacity = Math.min(1, sweep * 8, (1 - sweep) * 8) * 0.8;
     }
     PROFILE_CHIPS.forEach((el, i) => {
-      const u = pop(t, 24.3 + i * 0.22, 0.5);
+      const u = pop(t, [24.8, 25.5, 25.9][i], 0.5);
       const [x, y] = PCHIP_POS[i];
       showGlass(el, {
         x,

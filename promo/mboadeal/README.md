@@ -114,8 +114,8 @@ soit découpée et mixée comme pour les vidéos précédentes.
 `commun/voixoff.py` découpe la prise phrase par phrase, place chaque phrase sur son moment (léger
 accéléré possible, sans changer la hauteur de la voix) et baisse la musique sous la voix
 (−5 dB, et −13 dB entre 300 Hz et 4 kHz). Les positions des phrases dans la prise sont dans
-`seconde-vie/voix.py` (prise ElevenLabs du 28 octobre 2026, à placer dans
-`seconde-vie/rendus/voix-off.mp3`) ; une nouvelle prise demande de les relever à nouveau.
+`seconde-vie/voix.py` et `lumiere/voix.py` (prises ElevenLabs du 28 octobre 2026, à placer
+dans `rendus/voix-off.mp3` de chaque vidéo) ; une nouvelle prise demande de les relever à nouveau.
 
 ```bash
 cd promo/mboadeal/seconde-vie

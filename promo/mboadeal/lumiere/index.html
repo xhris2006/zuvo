@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>MboaDeal — lumière</title>
+    <style>
+      @font-face {
+        font-family: "Jakarta";
+        src: url(../../publicite-cinematique/planche/polices/jakarta-latin.woff2) format("woff2");
+        font-weight: 200 800;
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F,
+          U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Jakarta";
+        src: url(../../publicite-cinematique/planche/polices/jakarta-latin-ext.woff2)
+          format("woff2");
+        font-weight: 200 800;
+        unicode-range:
+          U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+2020,
+          U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      :root {
+        --orange: #ff7a00;
+        --orange-glow: #ff8a1f;
+        --orange-light: #ffc27a;
+        --night: #000;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #000;
+      }
+      #stage {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--night);
+        color: #f5f5f5;
+        font-family: "Jakarta", system-ui, sans-serif;
+      }
+      .abs {
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      /* Décor : noir profond, halo ambré et sol brillant */
+      #bg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(1100px 900px at 50% 30%, #2a1404 0%, #0d0602 45%, #000 100%);
+      }
+      #floor {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 1330px;
+        bottom: 0;
+        background: linear-gradient(#0d0703, #000 75%);
+      }
+      #floor::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgb(255 150 60 / 0.4), transparent);
+      }
+      #pool {
+        position: absolute;
+        width: 760px;
+        height: 120px;
+        margin: -60px 0 0 -380px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, rgb(255 122 0 / 0.5), transparent 70%);
+        pointer-events: none;
+      }
+      /* Point de lumière */
+      .orb {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+      }
+      .orb i {
+        position: absolute;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .orb .core {
+        width: 30px;
+        height: 30px;
+        background: radial-gradient(
+          circle,
+          #fff 0%,
+          #fff1e0 40%,
+          #ffb066 75%,
+          rgb(255 122 0 / 0) 100%
+        );
+      }
+      .orb .glow1 {
+        width: 190px;
+        height: 190px;
+        background: radial-gradient(
+          circle,
+          rgb(255 190 120 / 0.75) 0%,
+          rgb(255 122 0 / 0.35) 35%,
+          transparent 70%
+        );
+      }
+      .orb .glow2 {
+        width: 760px;
+        height: 760px;
+        background: radial-gradient(
+          circle,
+          rgb(255 106 0 / 0.32) 0%,
+          rgb(255 106 0 / 0.1) 40%,
+          transparent 70%
+        );
+      }
+      .orb .streak {
+        width: 620px;
+        height: 5px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, transparent, rgb(255 200 150 / 0.55), transparent);
+        filter: blur(1.5px);
+      }
+      /* Scène en perspective et panneaux de verre */
+      #persp {
+        position: absolute;
+        inset: 0;
+        perspective: 1700px;
+        perspective-origin: 50% 46%;
+        transform-style: preserve-3d;
+      }
+      .panel {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: none;
+        overflow: hidden;
+        border-radius: 46px;
+        background: #080a0d;
+        box-shadow:
+          0 50px 120px -30px rgb(0 0 0 / 0.9),
+          0 0 80px -20px rgb(255 122 0 / 0.3);
+        -webkit-box-reflect: below 22px linear-gradient(transparent 64%, rgb(255 255 255 / 0.2));
+        transform-origin: 50% 50%;
+      }
+      .panel img {
+        display: block;
+        width: 100%;
+      }
+      .panel::after,
+      .glass::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        box-shadow:
+          inset 0 0 0 1.5px rgb(255 255 255 / 0.16),
+          inset 0 1.5px 0 rgb(255 255 255 / 0.35);
+        background: linear-gradient(155deg, rgb(255 255 255 / 0.1), transparent 34%);
+      }
+      .glass {
+        position: absolute;
+        background: linear-gradient(160deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02));
+        backdrop-filter: blur(18px);
+        border-radius: 40px;
+        box-shadow: 0 40px 100px -30px rgb(0 0 0 / 0.85);
+      }
+      svg.i {
+        width: 1em;
+        height: 1em;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: none;
+      }
+      /* Textes */
+      .kword {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 136px;
+        font-weight: 780;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        display: none;
+        -webkit-box-reflect: below -8px linear-gradient(transparent 55%, rgb(255 255 255 / 0.12));
+      }
+      .kword .dot {
+        color: var(--orange-glow);
+      }
+      .chars .w {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .chars .c {
+        display: inline-block;
+        white-space: pre;
+      }
+      #intro {
+        position: absolute;
+        left: 60px;
+        right: 60px;
+        top: 250px;
+        display: none;
+        text-align: center;
+        font-size: 82px;
+        font-weight: 760;
+        letter-spacing: -0.035em;
+        line-height: 1.08;
+      }
+      #intro .l2 {
+        color: var(--orange-glow);
+      }
+      #pill {
+        position: absolute;
+        display: none;
+        align-items: center;
+        gap: 26px;
+        width: 880px;
+        height: 132px;
+        padding: 0 40px;
+        border-radius: 999px;
+        font-size: 52px;
+        font-weight: 560;
+        -webkit-box-reflect: below 26px linear-gradient(transparent 50%, rgb(255 255 255 / 0.18));
+      }
+      #pill svg {
+        width: 50px;
+        height: 50px;
+        color: var(--orange-light);
+      }
+      #pill .ph {
+        position: absolute;
+        left: 116px;
+        color: rgb(255 255 255 / 0.42);
+      }
+      #pill .ghost {
+        color: rgb(255 255 255 / 0.38);
+      }
+      .caret {
+        display: inline-block;
+        width: 4px;
+        height: 1em;
+        margin-left: 3px;
+        vertical-align: -0.12em;
+        background: var(--orange-light);
+        border-radius: 2px;
+      }
+      #sugg {
+        display: none;
+        width: 880px;
+        padding: 30px 0 18px;
+      }
+      #sugg .lbl {
+        padding: 0 44px 14px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: rgb(255 255 255 / 0.45);
+      }
+      #sugg .s {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        height: 104px;
+        padding: 0 44px;
+        font-size: 38px;
+        font-weight: 560;
+      }
+      #sugg .s span.ic {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: rgb(255 255 255 / 0.7);
+      }
+      #sugg .s.hi {
+        background: linear-gradient(90deg, rgb(255 122 0 / 0.28), rgb(255 122 0 / 0.04));
+      }
+      #counter {
+        position: absolute;
+        display: none;
+        right: 80px;
+        top: 420px;
+        text-align: right;
+        font-size: 28px;
+        font-weight: 600;
+        color: rgb(255 255 255 / 0.55);
+      }
+      #counter b {
+        display: block;
+        font-size: 64px;
+        font-weight: 760;
+        color: #fff;
+        letter-spacing: -0.02em;
+      }
+      #done {
+        position: absolute;
+        display: none;
+        left: 90px;
+        width: 900px;
+        top: 1500px;
+        height: 170px;
+        align-items: center;
+        gap: 30px;
+        padding: 0 36px;
+      }
+      #done img {
+        width: 110px;
+        height: 110px;
+        border-radius: 24px;
+        object-fit: cover;
+      }
+      #done .ok {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 30px;
+        font-weight: 700;
+        color: #4cc38a;
+      }
+      #done .t {
+        font-size: 40px;
+        font-weight: 720;
+        letter-spacing: -0.02em;
+      }
+      #done .p {
+        font-size: 34px;
+        font-weight: 780;
+        color: var(--orange-glow);
+      }
+      .chipg {
+        position: absolute;
+        display: none;
+        align-items: center;
+        gap: 18px;
+        height: 104px;
+        padding: 0 36px 0 20px;
+        border-radius: 999px;
+        font-size: 36px;
+        font-weight: 680;
+        white-space: nowrap;
+      }
+      .chipg .ic {
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        background: rgb(255 122 0 / 0.2);
+        box-shadow: inset 0 0 0 2px rgb(255 160 80 / 0.45);
+        color: var(--orange-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+      }
+      #beam {
+        position: absolute;
+        display: none;
+        width: 14px;
+        height: 1180px;
+        margin-left: -7px;
+        border-radius: 7px;
+        background: linear-gradient(transparent, #ffe2c2 20%, #fff 50%, #ffe2c2 80%, transparent);
+        box-shadow:
+          0 0 40px 12px rgb(255 122 0 / 0.55),
+          0 0 140px 50px rgb(255 122 0 / 0.25);
+        filter: blur(1px);
+      }
+      #end {
+        position: absolute;
+        inset: 0;
+        display: none;
+      }
+      #end .center {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+      #word {
+        left: 170px !important;
+        right: auto !important;
+        width: 740px;
+      }
+      #tag {
+        font-size: 48px;
+        font-weight: 640;
+        color: rgb(255 255 255 / 0.86);
+        letter-spacing: -0.015em;
+      }
+      #tag b {
+        color: var(--orange-glow);
+        font-weight: 700;
+      }
+      #cta span {
+        display: inline-block;
+        padding: 30px 60px;
+        border-radius: 999px;
+        background: var(--orange);
+        color: #140800;
+        font-size: 44px;
+        font-weight: 760;
+        box-shadow:
+          0 0 60px rgb(255 122 0 / 0.55),
+          inset 0 2px 0 rgb(255 255 255 / 0.4);
+      }
+      #offer {
+        font-size: 34px;
+        font-weight: 600;
+        color: rgb(255 255 255 / 0.62);
+      }
+      #note {
+        font-size: 24px;
+        color: rgb(255 255 255 / 0.4);
+      }
+      #vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgb(0 0 0 / 0.7) 100%);
+      }
+      #flash {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          circle at 50% 45%,
+          #ffe7cf,
+          rgb(255 122 0 / 0.4) 40%,
+          transparent 75%
+        );
+        opacity: 0;
+        mix-blend-mode: screen;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <script src="../commun/marque.js"></script>
+    <script src="../commun/icones.js"></script>
+    <script src="film.js"></script>
+  </body>
+</html>

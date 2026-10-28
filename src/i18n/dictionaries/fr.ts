@@ -60,6 +60,9 @@ export const fr = {
     back: "Retour",
     share: "Partager",
     linkCopied: "Lien copié",
+    copyLink: "Copier le lien",
+    shareWhatsApp: "Partager sur WhatsApp",
+    shareFacebook: "Partager sur Facebook",
     seeAll: "Tout voir",
     search: "Rechercher",
     signIn: "Se connecter",
@@ -85,6 +88,17 @@ export const fr = {
     searchLabel: "Rechercher des annonces",
     /** Suggestions tapées une à une dans le champ de recherche vide (animation). */
     searchSuggestions: ["Robe en wax", "Baskets", "Smartphone", "Sac à main", "Manette de jeu"],
+    suggestions: {
+      label: "Suggestions de recherche",
+      searches: "Annonces",
+      categories: "Catégories",
+      members: "Membres",
+      count: (count: number) =>
+        count === 0
+          ? "Aucune suggestion"
+          : `${count} suggestion${count > 1 ? "s" : ""}, flèches haut et bas pour parcourir`,
+      acceptHint: "Flèche droite pour compléter",
+    },
     unreadMessages: (count: number) =>
       count === 1 ? "1 message non lu" : `${count} messages non lus`,
     unreadNotifications: (count: number) =>
@@ -95,6 +109,7 @@ export const fr = {
     description: "Le thème choisi s'applique sur cet appareil.",
     darkMode: "Mode sombre",
     darkModeHint: "Fond sombre, plus reposant le soir.",
+    lightMode: "Mode clair",
   },
   welcome: {
     signIn: "J'ai déjà un compte",
@@ -189,19 +204,21 @@ export const fr = {
       "La base de données n'est pas encore connectée. Les annonces publiées apparaîtront ici.",
     tabsLabel: "Que recherchez-vous ?",
     tabArticles: "Articles",
-    tabShops: "Boutiques",
-    shopsTitle: "Boutiques",
-    shopsDescription: "Trouvez un vendeur par son nom ou son pseudo et découvrez ses articles.",
-    shopsSearchLabel: "Rechercher une boutique",
+    tabShops: "Membres",
+    shopsTitle: "Membres",
+    shopsDescription:
+      "Trouvez un membre par son nom ou son pseudo, qu'il ait déjà publié une annonce ou non.",
+    shopsSearchLabel: "Rechercher un membre",
     shopsSearchPlaceholder: "Nom ou @pseudo",
-    shopsResultsFor: (query: string) => `Boutiques pour ${quote(query)}`,
+    shopsResultsFor: (query: string) => `Membres pour ${quote(query)}`,
     shopsCount: (count: number) =>
-      count === 0 ? "Aucune boutique" : count === 1 ? "1 boutique" : `${count} boutiques`,
-    shopsEmptyTitle: "Aucune boutique trouvée",
+      count === 0 ? "Aucun membre" : count === 1 ? "1 membre" : `${count} membres`,
+    shopsEmptyTitle: "Aucun membre trouvé",
     shopsEmptyBody: "Vérifiez l'orthographe du nom ou du pseudo, ou essayez un autre mot.",
-    shopsNoneTitle: "Aucune boutique pour le moment",
-    shopsNoneBody: "Les vendeurs ayant des annonces en vente apparaîtront ici.",
-    shopsUnavailableTitle: "Boutiques momentanément indisponibles",
+    shopsNoneTitle: "Aucun vendeur pour le moment",
+    shopsNoneBody:
+      "Les membres ayant des annonces en vente apparaissent ici. Recherchez un nom pour trouver n'importe quel membre.",
+    shopsUnavailableTitle: "Membres momentanément indisponibles",
     shopListings: (count: number) =>
       count === 0 ? "Aucune annonce en vente" : count === 1 ? "1 annonce" : `${count} annonces`,
     quoted: (query: string) => `«\u00a0${query}\u00a0»`,
@@ -335,6 +352,8 @@ export const fr = {
       support_reply: "Réponse de l'assistance",
       admin_message: "Message de l'équipe",
       install_guide: `Installez l'application ${brand}`,
+      support_message: "Message à l'assistance",
+      staff_report: "Alerte de modération",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -354,6 +373,18 @@ export const fr = {
           : "L'équipe a répondu à votre demande.",
       admin_message: (note: string | null) => note ?? "",
       install_guide: `Ajoutez ${brand} à l'écran d'accueil de votre téléphone : ouverture en un geste et notifications. Touchez pour voir comment faire.`,
+      support_message: (actor: string, subject: string | null) =>
+        subject
+          ? `${actor} a écrit à l'assistance : ${quote(subject)}.`
+          : `${actor} a écrit à l'assistance.`,
+      staff_report: (actor: string, reason: string, listing: string | null) =>
+        listing
+          ? `${actor} a signalé ${quote(listing)} : ${reason.toLowerCase()}.`
+          : `${actor} a fait un signalement : ${reason.toLowerCase()}.`,
+      spam_banned_word: (actor: string) =>
+        `Publication de ${actor} bloquée par l'anti-spam : terme interdit.`,
+      spam_publication_limit: (actor: string) =>
+        `${actor} a atteint la limite de publications d'un compte récent.`,
     },
     unread: "Non lue",
   },
@@ -700,6 +731,7 @@ export const fr = {
     sendTest: "Envoyer un test",
     disableHere: "Désactiver sur cet appareil",
     promptLabel: "Notifications sur cet appareil",
+    attention: "notifications pas encore activées sur cet appareil",
     promptTitle: "Ne manquez aucun message",
     promptMessages:
       "Activez les notifications pour être prévenu dès qu'un acheteur ou un vendeur vous écrit, même application fermée.",

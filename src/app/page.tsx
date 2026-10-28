@@ -65,7 +65,7 @@ export default async function HomePage(props: PageProps<"/">) {
   ]);
 
   return (
-    <div className="flex flex-col gap-8 pt-4 sm:gap-12 sm:pt-8">
+    <div className="flex flex-col gap-6 pt-3 sm:gap-10 sm:pt-8">
       <h1 className="sr-only">{t.nav.home}</h1>
 
       <section aria-labelledby="categories-title" className="container-page">

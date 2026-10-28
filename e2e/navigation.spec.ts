@@ -144,6 +144,24 @@ test("la recherche mène à Explorer avec la requête", async ({ page, isMobile 
   if (!isMobile) await expect(keywords).toHaveValue("robe wax");
 });
 
+test("le champ de recherche est une liste de suggestions accessible", async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto("/explorer");
+  const input = page.locator(isMobile ? "#header-search-mobile" : "#sidebar-search");
+  await expect(input).toHaveAttribute("role", "combobox");
+  await expect(input).toHaveAttribute("aria-autocomplete", "both");
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  const listId = await input.getAttribute("aria-controls");
+  expect(listId).toBeTruthy();
+  // Sans suggestion (base non connectée), la liste reste masquée et Entrée lance la recherche.
+  await input.fill("ro");
+  await expect(page.locator(`[id="${listId}"]`)).toBeHidden();
+  await input.press("Enter");
+  await expect(page).toHaveURL(/\/explorer\?q=ro/);
+});
+
 test("la recherche vide fait défiler des suggestions sans remplir le champ", async ({
   page,
   isMobile,

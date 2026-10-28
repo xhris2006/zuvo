@@ -171,7 +171,7 @@ export function AdminNav({ role, roleLabel }: { role: "admin" | "moderator"; rol
     <>
       <aside
         data-admin-sidebar
-        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col gap-6 overflow-y-auto border-r border-border bg-card py-5 lg:flex"
+        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col gap-6 overflow-y-auto border-r border-border bg-card py-5 lg:flex dark:bg-chrome"
       >
         <SidebarContent
           groups={groups}
@@ -182,7 +182,7 @@ export function AdminNav({ role, roleLabel }: { role: "admin" | "moderator"; rol
       </aside>
 
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
-        <div className="sticky top-0 z-40 flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-border bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:hidden">
+        <div className="sticky top-0 z-40 flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-border bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:hidden dark:bg-chrome/95">
           <DialogPrimitive.Trigger
             className="-ml-1.5 inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
             aria-label={t.adminUi.nav.openMenu}
@@ -201,7 +201,7 @@ export function AdminNav({ role, roleLabel }: { role: "admin" | "moderator"; rol
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-[2px] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 lg:hidden" />
           <DialogPrimitive.Content
-            className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,86vw)] flex-col gap-6 overflow-y-auto bg-card pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-raised duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,86vw)] flex-col gap-6 overflow-y-auto bg-card pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-raised duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left lg:hidden dark:bg-chrome"
             onClickCapture={closeOnLinkClick}
           >
             <DialogPrimitive.Description className="sr-only">

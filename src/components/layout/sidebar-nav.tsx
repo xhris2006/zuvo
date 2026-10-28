@@ -30,6 +30,7 @@ import { LinkPending } from "@/components/ui/link-pending";
 import { routes } from "@/config/routes";
 import { signOutAction } from "@/features/auth/actions";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
+import { PushAttentionDot } from "@/features/notifications/components/push-attention-dot";
 import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -105,6 +106,9 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
                     ) : null}
                     {item.badge ? (
                       <UnreadBadge kind={item.badge} className="-top-1.5 -right-2" />
+                    ) : null}
+                    {item.badge === "notifications" && account ? (
+                      <PushAttentionDot className="-bottom-0.5 -left-1" />
                     ) : null}
                   </span>
                   {item.label}

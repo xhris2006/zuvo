@@ -22,7 +22,7 @@ export function UpdatePasswordForm() {
   if (state.status === "success") {
     return (
       <div className="flex flex-col gap-4">
-        <FormMessage state={state} />
+        <FormMessage state={state} persist />
         <Button asChild>
           <Link href={routes.profile}>{t.authForms.goToProfile}</Link>
         </Button>

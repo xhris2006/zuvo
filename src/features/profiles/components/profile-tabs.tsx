@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -8,6 +9,7 @@ export type ProfileTab = {
   key: string;
   label: string;
   count?: number;
+  icon?: LucideIcon;
 } & ({ current: true; href?: never } | { current?: false; href: Route });
 
 type ProfileTabsProps = {
@@ -20,22 +22,28 @@ type ProfileTabsProps = {
 };
 
 /**
- * Onglets d'un profil. L'onglet actif est le titre (h2) de la section, les
- * autres sont des liens vers leur page : aucun JavaScript nécessaire.
+ * Onglets d'un profil, sur toute la largeur : icône, libellé et nombre ;
+ * l'onglet actif est souligné en orange. L'onglet actif est le titre (h2) de
+ * la section, les autres sont des liens vers leur page : aucun JavaScript.
  */
 export async function ProfileTabs({ tabs, labelledBy, trailing, className }: ProfileTabsProps) {
   const t = await getT();
   const hasLinks = tabs.some((tab) => !tab.current);
   const list = (
-    <ul className="flex min-w-0 items-end gap-5 sm:gap-6">
+    <ul
+      className="grid min-w-0 flex-1"
+      style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+    >
       {tabs.map((tab) => {
+        const Icon = tab.icon;
         const content = (
           <>
-            {tab.label}
+            {Icon ? <Icon className="size-[1.125rem] shrink-0" aria-hidden="true" /> : null}
+            <span className="truncate">{tab.label}</span>
             {tab.count !== undefined ? (
               <span
                 className={cn(
-                  "ml-2 inline-flex min-w-6 justify-center rounded-full px-1.5 py-0.5 align-middle text-xs font-semibold",
+                  "inline-flex min-w-5 shrink-0 justify-center rounded-full px-1.5 text-xs font-semibold",
                   tab.current ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
                 )}
               >
@@ -44,19 +52,24 @@ export async function ProfileTabs({ tabs, labelledBy, trailing, className }: Pro
             ) : null}
           </>
         );
+        const base =
+          "-mb-px flex h-11 items-center justify-center gap-1.5 border-b-2 px-2 text-sm whitespace-nowrap";
         return (
-          <li key={tab.key} className="-mb-px">
+          <li key={tab.key} className="min-w-0">
             {tab.current ? (
               <h2
                 id={labelledBy}
-                className="border-b-2 border-foreground pb-2.5 text-sm font-semibold tracking-tight whitespace-nowrap sm:text-base"
+                className={cn(base, "border-primary-line font-semibold text-foreground")}
               >
                 {content}
               </h2>
             ) : (
               <Link
                 href={tab.href}
-                className="block border-b-2 border-transparent pb-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-border hover:text-foreground sm:text-base"
+                className={cn(
+                  base,
+                  "border-transparent font-medium text-muted-foreground transition-colors hover:text-foreground",
+                )}
               >
                 {content}
               </Link>
@@ -68,9 +81,15 @@ export async function ProfileTabs({ tabs, labelledBy, trailing, className }: Pro
   );
 
   return (
-    <div className={cn("flex items-end justify-between gap-4 border-b border-border", className)}>
-      {hasLinks ? <nav aria-label={t.profile.tabsLabel}>{list}</nav> : list}
-      {trailing ? <div className="shrink-0 pb-2">{trailing}</div> : null}
+    <div className={cn("flex items-end gap-3 border-b border-border", className)}>
+      {hasLinks ? (
+        <nav aria-label={t.profile.tabsLabel} className="flex min-w-0 flex-1">
+          {list}
+        </nav>
+      ) : (
+        list
+      )}
+      {trailing ? <div className="shrink-0 pb-1.5">{trailing}</div> : null}
     </div>
   );
 }

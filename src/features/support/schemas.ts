@@ -29,5 +29,17 @@ export const supportRequestSchema = z
 
 export type SupportField = "subject" | "message" | "listingId";
 
+/** Message ajouté à une conversation d'assistance par son auteur. */
+export const supportMessageSchema = z.object({
+  requestId: z.uuid(),
+  body: z
+    .string()
+    .trim()
+    .min(1, vm("messageRequired"))
+    .max(MESSAGE_MAX, vm("maxChars", MESSAGE_MAX)),
+});
+
+export type SupportMessageField = "body";
+
 export const supportStatuses = ["open", "answered", "closed"] as const;
 export type SupportStatus = (typeof supportStatuses)[number];

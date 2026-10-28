@@ -1,7 +1,7 @@
 "use client";
 
 import { Send } from "lucide-react";
-import { useActionState, useId } from "react";
+import { useActionState, useEffect, useId, useRef } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { FormMessage } from "@/components/ui/form-message";
@@ -13,14 +13,18 @@ import { answerSupportRequestAction, type SupportAnswerField } from "../actions"
 
 const idle: FormState<SupportAnswerField> = { status: "idle" };
 
-/** Réponse de l'équipe à une demande d'assistance, avec clôture facultative. */
+/** Réponse de l'équipe dans une conversation d'assistance, avec clôture facultative. */
 export function SupportAnswerForm({ requestId }: { requestId: string }) {
   const t = useT();
   const [state, formAction, pending] = useActionState(answerSupportRequestAction, idle);
   const id = useId();
-  if (state.status === "success") return <FormMessage state={state} />;
+  const formRef = useRef<HTMLFormElement>(null);
+  // La zone reste disponible pour la suite de la conversation.
+  useEffect(() => {
+    if (state.status === "success") formRef.current?.reset();
+  }, [state]);
   return (
-    <form action={formAction} className="flex flex-col gap-3" noValidate>
+    <form ref={formRef} action={formAction} className="flex flex-col gap-3" noValidate>
       <input type="hidden" name="requestId" value={requestId} />
       <FormMessage state={state} />
       <Field
@@ -34,7 +38,7 @@ export function SupportAnswerForm({ requestId }: { requestId: string }) {
             name="response"
             rows={3}
             maxLength={2000}
-            defaultValue={state.values?.response}
+            defaultValue={state.status === "error" ? state.values?.response : undefined}
           />
         )}
       </Field>

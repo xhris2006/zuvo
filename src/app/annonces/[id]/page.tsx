@@ -1,6 +1,7 @@
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Alert } from "@/components/ui/alert";
@@ -46,31 +47,39 @@ export async function generateMetadata(props: PageProps<"/annonces/[id]">): Prom
       title: `${listing.title}${price}`,
       description,
       type: "website",
-      images: image ? [{ url: image }] : undefined,
+      url: listingHref(listing.id),
+      images: image ? [{ url: image, alt: listing.title }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: `${listing.title}${price}`,
+      description,
+      images: image ? [image] : undefined,
     },
   };
 }
 
 export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
   const { id } = await props.params;
-  const listing = await getListingDetail(id);
+  // Requêtes indépendantes lancées ensemble (pas d'attente en cascade).
+  const [listing, t, viewer] = await Promise.all([getListingDetail(id), getT(), getCurrentUser()]);
   if (!listing) notFound();
 
-  const t = await getT();
-  const viewer = await getCurrentUser();
   const isOwner = viewer?.id === listing.seller_id;
   const canContact =
     (listing.status === "active" || listing.status === "reserved") &&
     !listing.removed_at &&
     Boolean(listing.seller);
-  const city = await cityName(listing.city);
-  const [similar, favorites] = await Promise.all([
-    getSimilarListings(listing.id, listing.category?.id ?? null).catch(() => []),
+  const [city, favorites] = await Promise.all([
+    cityName(listing.city),
     getFavoriteIds(viewer?.id ?? null, [listing.id]),
     // Historique privé du membre connecté (recommandations) ; jamais bloquant.
     viewer && !isOwner ? recordListingView(listing.id).catch(() => undefined) : null,
   ]);
   const url = `${getSiteUrl()}${listingHref(listing.id)}`;
+  // Texte du partage : titre et prix (aperçu WhatsApp et autres messageries).
+  const shareText =
+    listing.price === null ? listing.title : `${listing.title} – ${t.format.price(listing.price)}`;
   const returnTo = listingHref(listing.id);
   // Mobile : barre d'action fixe (contact) à la place de la navigation.
   const hasActionBar = !isOwner && canContact;
@@ -131,7 +140,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
                       className="size-10"
                     />
                   )}
-                  <ShareButton title={listing.title} url={url} variant="icon" />
+                  <ShareButton title={listing.title} url={url} text={shareText} variant="icon" />
                 </div>
               </>
             }
@@ -198,7 +207,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
           {hasActionBar ? (
             <div
               data-hide-bottom-nav
-              className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+              className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none dark:bg-chrome/95"
             >
               <div className="mx-auto flex max-w-xl items-start gap-3 md:max-w-none">
                 <div className="min-w-0 flex-1">
@@ -229,7 +238,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
               </div>
             )}
             <div className="hidden md:block">
-              <ShareButton title={listing.title} url={url} />
+              <ShareButton title={listing.title} url={url} text={shareText} />
             </div>
             {!isOwner && canContact ? (
               <ReportDialog
@@ -296,12 +305,30 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
         </div>
       </div>
 
-      {similar.length > 0 ? (
-        <section aria-labelledby="similar-title" className="container-page">
-          <SectionHeader id="similar-title" title={t.listingPage.similar} />
-          <ListingResults listings={similar} layout="carousel" />
-        </section>
-      ) : null}
+      <Suspense fallback={null}>
+        <SimilarListings listingId={listing.id} categoryId={listing.category?.id ?? null} />
+      </Suspense>
     </div>
+  );
+}
+
+/** Annonces similaires, diffusées après la fiche : elles ne retardent pas son affichage. */
+async function SimilarListings({
+  listingId,
+  categoryId,
+}: {
+  listingId: string;
+  categoryId: string | null;
+}) {
+  const [t, similar] = await Promise.all([
+    getT(),
+    getSimilarListings(listingId, categoryId).catch(() => []),
+  ]);
+  if (similar.length === 0) return null;
+  return (
+    <section aria-labelledby="similar-title" className="container-page">
+      <SectionHeader id="similar-title" title={t.listingPage.similar} />
+      <ListingResults listings={similar} layout="carousel" />
+    </section>
   );
 }

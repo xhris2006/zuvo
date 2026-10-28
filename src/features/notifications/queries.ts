@@ -73,7 +73,7 @@ export async function getNotifications(page = 1): Promise<{
   const { data, error, count } = await supabase
     .from("notifications")
     .select(
-      `id, type, is_read, created_at, listing_id, conversation_id, note,
+      `id, type, is_read, created_at, listing_id, conversation_id, note, actor_id, support_request_id,
        actor:profiles!notifications_actor_id_fkey(username, display_name, avatar_path),
        listing:listings(title)`,
       { count: "exact" },
@@ -88,12 +88,14 @@ export async function getNotifications(page = 1): Promise<{
   const items = (data ?? []).map((row): NotificationItem => {
     const subject: NotificationSubject = {
       type: row.type,
+      actorId: row.actor_id,
       actorName: row.actor?.display_name ?? null,
       actorUsername: row.actor?.username ?? null,
       listingId: row.listing_id,
       listingTitle: row.listing?.title ?? null,
       conversationId: row.conversation_id,
       note: row.note,
+      supportRequestId: row.support_request_id,
     };
     return {
       ...subject,

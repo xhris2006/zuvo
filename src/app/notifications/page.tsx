@@ -54,7 +54,7 @@ export default async function NotificationsPage(props: PageProps<"/notifications
               </form>
             ) : null}
             <Button asChild variant="ghost" size="sm">
-              <Link href={routes.settings} title={t.pages.preferences}>
+              <Link href={routes.settingsNotifications} title={t.pages.preferences}>
                 <Settings aria-hidden="true" />
                 <span className="sr-only sm:not-sr-only">{t.pages.preferences}</span>
               </Link>

@@ -82,6 +82,20 @@ encore disponibles.
 La Content-Security-Policy autorise automatiquement l'URL Supabase configurée
 (API, stockage, temps réel) ; aucun autre domaine externe n'est nécessaire.
 
+Les liens partagés (annonces, profils), le sitemap et les aperçus Open Graph
+(WhatsApp, Facebook) sont construits à partir de `NEXT_PUBLIC_SITE_URL` : c'est
+la seule valeur à changer pour passer au domaine définitif. Après le
+changement, vérifiez l'aperçu d'une annonce avec le débogueur de partage de
+Facebook (WhatsApp utilise les mêmes balises et garde l'aperçu en cache).
+
+### Performances
+
+- Placez le projet Vercel (Settings → Functions → Region) dans la même région
+  que le projet Supabase : chaque page interroge la base plusieurs fois.
+- Supabase → Settings → JWT Keys : passez aux **clés de signature asymétriques**.
+  Avec l'ancien secret partagé, la vérification de session fait un appel réseau
+  supplémentaire à chaque page.
+
 ## 4. Après le premier déploiement
 
 Vérifications rapides (navigation privée, sur mobile et ordinateur) :

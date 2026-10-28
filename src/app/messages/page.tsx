@@ -8,7 +8,6 @@ import { routes } from "@/config/routes";
 import { MemberGate } from "@/features/auth/components/member-gate";
 import { ConversationList } from "@/features/messaging/components/conversation-list";
 import { getConversations } from "@/features/messaging/queries";
-import { PushPrompt } from "@/features/notifications/components/push-prompt";
 import { getT } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -42,7 +41,6 @@ export default async function MessagesPage() {
     <div className="container-page flex max-w-3xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
       <PageHeader title={t.pages.messagesTitle} />
       <MemberGate returnTo={routes.messages}>
-        <PushPrompt context="messages" />
         <Inbox />
       </MemberGate>
     </div>

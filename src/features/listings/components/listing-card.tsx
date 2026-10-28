@@ -23,8 +23,8 @@ export async function ListingCard({ listing, action, priority = false }: Listing
   const showStatus = listing.status !== "active";
 
   return (
-    <article className="group reveal-on-scroll relative flex flex-col gap-2.5">
-      <div className="hover-sheen relative aspect-[4/5] overflow-hidden rounded-xl bg-muted transition-[translate,scale,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1 group-hover:shadow-[0_18px_36px_-18px_rgb(15_27_45/0.45)] group-active:scale-[0.98]">
+    <article className="group reveal-on-scroll relative flex flex-col gap-2">
+      <div className="hover-sheen relative aspect-[4/5] overflow-hidden rounded-xl bg-muted transition-[translate,scale,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1 group-hover:shadow-[0_18px_36px_-18px_rgb(31_41_55/0.45)] group-active:scale-[0.98]">
         {listing.imageUrl ? (
           <Image
             src={listing.imageUrl}
@@ -47,10 +47,10 @@ export async function ListingCard({ listing, action, priority = false }: Listing
       </div>
 
       <div className="flex flex-col gap-0.5 px-0.5">
-        <p className="text-base font-bold tracking-tight">
+        <p className="text-base leading-tight font-bold tracking-tight sm:text-[1.0625rem]">
           {listing.price === null ? t.listing.priceTbd : t.format.price(listing.price)}
         </p>
-        <h3 className="line-clamp-1 text-sm text-foreground">
+        <h3 className="line-clamp-2 text-sm leading-snug text-foreground">
           <Link
             href={listingHref(listing.id)}
             className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-ring"

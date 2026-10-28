@@ -81,3 +81,33 @@ export async function searchShops({
   }));
   return { items, total: count ?? 0, pageSize };
 }
+
+export type MemberSuggestion = Pick<
+  ShopSummary,
+  "username" | "displayName" | "avatarPath" | "verified"
+>;
+
+/**
+ * Membres dont le nom ou le pseudo correspond (suggestions de recherche),
+ * qu'ils aient publié une annonce ou non. Comptes suspendus exclus.
+ */
+export async function suggestMembers(q: string, limit = 4): Promise<MemberSuggestion[]> {
+  const tokens = shopQueryTokens(q);
+  const supabase = await createSupabaseServerClient();
+  if (!supabase || tokens.length === 0) return [];
+  let query = supabase
+    .from("profiles")
+    .select("username, display_name, avatar_path, verified_at")
+    .or(`suspended_at.is.null,suspended_until.lte.${new Date().toISOString()}`);
+  for (const token of tokens) {
+    query = query.or(`display_name.ilike.%${token}%,username.ilike.%${token}%`);
+  }
+  const { data, error } = await query.order("display_name").limit(limit);
+  if (error) throw new ShopQueryError();
+  return data.map((row) => ({
+    username: row.username,
+    displayName: row.display_name,
+    avatarPath: row.avatar_path,
+    verified: row.verified_at !== null,
+  }));
+}

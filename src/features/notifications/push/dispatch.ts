@@ -58,7 +58,7 @@ async function forEachLimited<T>(items: T[], task: (item: T) => Promise<void>) {
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, items.length) }, worker));
 }
 
-const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id, note,
+const CLAIM_COLUMNS = `id, user_id, type, is_read, listing_id, conversation_id, note, actor_id, support_request_id,
   actor:profiles!notifications_actor_id_fkey(username, display_name, suspended_at, suspended_until),
   listing:listings(title)`;
 
@@ -140,12 +140,14 @@ export async function dispatchPendingPush(
       }
       const subject: NotificationSubject = {
         type: notification.type,
+        actorId: notification.actor_id,
         actorName: notification.actor?.display_name ?? null,
         actorUsername: notification.actor?.username ?? null,
         listingId: notification.listing_id,
         listingTitle: notification.listing?.title ?? null,
         conversationId: notification.conversation_id,
         note: notification.note,
+        supportRequestId: notification.support_request_id,
       };
       const result = await sendPush(
         devices,

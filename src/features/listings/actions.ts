@@ -11,7 +11,7 @@ import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { getT } from "@/i18n/server";
 import type { ServerDictionary } from "@/i18n/server-dictionaries";
 import { translateValidation, vm } from "@/lib/forms/validation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, type TypedSupabaseClient } from "@/lib/supabase/server";
 import { LISTING_IMAGE_BUCKET } from "./image-url";
 import { listingHref } from "./links";
 import {
@@ -41,6 +41,30 @@ function listingErrorMessage(t: ServerDictionary, error: DbError): string {
   if (message.includes("new_account_publication_limit")) return texts.newAccountLimit;
   if (error?.code === "23514") return texts.invalidData;
   return texts.generic;
+}
+
+/**
+ * Publication refusée par l'anti-spam : la base revérifie le refus puis
+ * prévient l'équipe (au plus une alerte par membre et par heure).
+ */
+async function reportSpamBlock(
+  supabase: TypedSupabaseClient,
+  userId: string,
+  error: DbError,
+  text: { title: string; description: string },
+) {
+  const message = error?.message ?? "";
+  if (
+    !message.includes("listing_banned_word") &&
+    !message.includes("new_account_publication_limit")
+  ) {
+    return;
+  }
+  const { data } = await supabase.rpc("report_spam_block", {
+    p_title: text.title,
+    p_description: text.description,
+  });
+  if (data) schedulePushDispatch({ type: "staff_report", actorId: userId });
 }
 
 function revalidateListing(listingId: string) {
@@ -139,7 +163,10 @@ export async function saveListingAction(
 
   if (listingId === null) {
     const { data, error } = await supabase.from("listings").insert(values).select("id").single();
-    if (error || !data) return { status: "error", message: listingErrorMessage(t, error) };
+    if (error || !data) {
+      await reportSpamBlock(supabase, user.id, error, values);
+      return { status: "error", message: listingErrorMessage(t, error) };
+    }
     return { status: "saved", listingId: data.id };
   }
 
@@ -150,7 +177,10 @@ export async function saveListingAction(
     .eq("seller_id", user.id)
     .select("id")
     .maybeSingle();
-  if (error) return { status: "error", message: listingErrorMessage(t, error) };
+  if (error) {
+    await reportSpamBlock(supabase, user.id, error, values);
+    return { status: "error", message: listingErrorMessage(t, error) };
+  }
   if (!data) return { status: "error", message: t.listingActions.notFound };
   return { status: "saved", listingId };
 }
@@ -209,7 +239,10 @@ export async function finalizeListingAction(input: {
       .from("listings")
       .update({ status: "active" })
       .eq("id", listingId);
-    if (publishError) return { status: "error", message: listingErrorMessage(t, publishError) };
+    if (publishError) {
+      await reportSpamBlock(supabase, user.id, publishError, { title: "", description: "" });
+      return { status: "error", message: listingErrorMessage(t, publishError) };
+    }
     schedulePushDispatch({ type: "followed_user_listing", actorId: user.id, listingId });
   }
 

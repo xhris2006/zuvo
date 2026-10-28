@@ -328,7 +328,7 @@ export function ChatView({
         })}
       </div>
 
-      <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0 md:pb-4">
+      <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:px-0 md:pb-4 dark:bg-chrome/95">
         {disabledReason ? (
           <p className="rounded-lg bg-muted px-3 py-2.5 text-center text-sm text-muted-foreground">
             {disabledReason}

@@ -14,6 +14,8 @@ export const buttonVariants = cva(
           "hover-sheen bg-primary text-primary-foreground shadow-card hover:bg-primary-hover hover:shadow-[0_10px_28px_-10px_rgb(255_122_0/0.55)]",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
         outline: "border border-input bg-card text-foreground hover:bg-muted",
+        // Action secondaire sur fond gris (profil) : gris clair en thème clair, carte sombre en thème sombre.
+        soft: "bg-muted text-foreground hover:bg-border dark:bg-card dark:hover:bg-border",
         ghost: "text-foreground hover:bg-muted",
         destructive: "bg-danger-solid text-white hover:bg-danger-solid/90",
         link: "text-primary-ink underline-offset-4 hover:underline",

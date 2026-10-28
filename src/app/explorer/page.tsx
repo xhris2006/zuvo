@@ -17,11 +17,17 @@ import {
 } from "@/features/listings/queries";
 import { ShopList } from "@/features/profiles/components/shop-list";
 import { parseExploreTab, sanitizeShopQuery } from "@/features/profiles/shop-search";
-import { type ShopSearchResult, searchShops } from "@/features/profiles/shops";
+import {
+  type MemberSuggestion,
+  type ShopSearchResult,
+  searchShops,
+  suggestMembers,
+} from "@/features/profiles/shops";
 import { ActiveFilters } from "@/features/search/components/active-filters";
 import { CategoryChips } from "@/features/search/components/category-chips";
 import { ExploreTabs, exploreTabHref } from "@/features/search/components/explore-tabs";
 import { FiltersForm } from "@/features/search/components/filters-form";
+import { MatchingMembers } from "@/features/search/components/matching-members";
 import { MobileFilters } from "@/features/search/components/mobile-filters";
 import { ShopSearchForm } from "@/features/search/components/shop-search-form";
 import { SortMenu } from "@/features/search/components/sort-menu";
@@ -159,10 +165,19 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
   // les filtres et on affiche un message à la place des résultats.
   let categories: Category[];
   let result: SearchResult | null = null;
+  let members: MemberSuggestion[] = [];
   let unavailable = false;
   try {
     categories = await getCategories();
-    if (configured) result = await searchListings(filters);
+    if (configured) {
+      // Une recherche libre peut viser une personne : ses profils en tête de la première page.
+      [result, members] = await Promise.all([
+        searchListings(filters),
+        filters.q && filters.page === 1
+          ? suggestMembers(filters.q, 8).catch(() => [])
+          : Promise.resolve([]),
+      ]);
+    }
   } catch {
     categories = await getDefaultCategories();
     unavailable = true;
@@ -236,6 +251,7 @@ export default async function ExplorePage(props: PageProps<"/explorer">) {
             </MobileFilters>
           </div>
           <ActiveFilters filters={filters} categories={categories} />
+          {filters.q ? <MatchingMembers query={filters.q} members={members} /> : null}
           {unavailable ? (
             <EmptyState
               icon={WifiOff}

@@ -46,7 +46,7 @@ export function HelpFr({ name, phone, contactEmail }: HelpProps) {
 
       <h3>Comment changer de langue ?</h3>
       <p>
-        Dans <Link href={routes.settings}>Paramètres</Link>, rubrique « Langue », choisissez
+        Dans <Link href={routes.settingsDisplay}>Paramètres → Langue et apparence</Link>, choisissez
         Français ou English. Avant de vous connecter, utilisez le bouton FR / EN en haut des pages
         de bienvenue et de connexion.
       </p>
@@ -117,9 +117,9 @@ export function HelpEn({ name, phone, contactEmail }: HelpProps) {
 
       <h3>How do I change the language?</h3>
       <p>
-        In <Link href={routes.settings}>Settings</Link>, under “Language”, choose Français or
-        English. Before signing in, use the FR / EN button at the top of the welcome and sign-in
-        pages.
+        In <Link href={routes.settingsDisplay}>Settings → Language and appearance</Link>, choose
+        Français or English. Before signing in, use the FR / EN button at the top of the welcome and
+        sign-in pages.
       </p>
 
       <h2>“Verified seller” badge</h2>

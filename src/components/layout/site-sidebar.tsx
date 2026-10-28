@@ -17,7 +17,7 @@ export async function SiteSidebar() {
     <aside
       data-sidebar
       style={{ viewTransitionName: "site-sidebar" }}
-      className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col overflow-y-auto border-r border-border bg-card lg:flex"
+      className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col overflow-y-auto border-r border-border bg-card lg:flex dark:bg-chrome"
     >
       <div className="flex h-20 shrink-0 items-center px-6">
         <Logo />

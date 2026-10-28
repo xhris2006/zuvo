@@ -156,7 +156,7 @@ export function InstallGuide({ initialPlatform }: { initialPlatform: InstallPlat
       <p className="text-sm text-muted-foreground">
         {copy.after}{" "}
         <Link
-          href={routes.settings}
+          href={routes.settingsNotifications}
           className="font-medium text-primary-ink underline-offset-4 hover:underline"
         >
           {copy.afterLink}

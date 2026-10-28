@@ -109,6 +109,23 @@ soit découpée et mixée comme pour les vidéos précédentes.
 | 24,1 – 26 s   | Ton profil, tes favoris, tes abonnés.           |
 | 27 – 30,5 s   | MboaDeal. Achète, vends, donne une seconde vie. |
 
+### Mixage
+
+`commun/voixoff.py` découpe la prise phrase par phrase, place chaque phrase sur son moment (léger
+accéléré possible, sans changer la hauteur de la voix) et baisse la musique sous la voix
+(−5 dB, et −13 dB entre 300 Hz et 4 kHz). Les positions des phrases dans la prise sont dans
+`seconde-vie/voix.py` (prise ElevenLabs du 28 octobre 2026, à placer dans
+`seconde-vie/rendus/voix-off.mp3`) ; une nouvelle prise demande de les relever à nouveau.
+
+```bash
+cd promo/mboadeal/seconde-vie
+python3 soundtrack.py rendus/bande-son.wav
+python3 voix.py rendus/voix-off.mp3 rendus/bande-son.wav rendus/bande-son-voix.wav
+ffmpeg -i rendus/mboadeal-seconde-vie-9x16-sans-son.mp4 -i rendus/bande-son-voix.wav -map 0:v -map 1:a \
+  -c:v copy -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:a aac -b:a 192k -shortest -movflags +faststart \
+  rendus/mboadeal-seconde-vie-9x16-voix.mp4
+```
+
 ## À valider avant diffusion
 
 - **Adresse du site** : aucune adresse n'est affichée (« Sur le web · à installer sur ton

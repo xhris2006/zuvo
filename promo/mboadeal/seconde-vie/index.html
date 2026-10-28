@@ -817,7 +817,12 @@
             ><br />
             <span class="mask"
               ><span style="animation: maskUp 0.6s var(--out) 2.36s both; color: #3a1800"
-                >Donne une seconde vie.</span
+                >Donne une seconde vie</span
+              ></span
+            ><br />
+            <span class="mask"
+              ><span style="animation: maskUp 0.6s var(--out) 2.5s both; color: #3a1800"
+                >à tes affaires.</span
               ></span
             >
           </div>
@@ -825,7 +830,7 @@
             class="abs tricolor"
             style="
               left: 390px;
-              top: 1352px;
+              top: 1440px;
               width: 300px;
               animation: growX 0.7s var(--out) 2.8s both;
             "
@@ -1031,7 +1036,7 @@
                   maskUp 0.6s var(--out) 7.45s both,
                   maskOut 0.4s var(--inout) 9s forwards;
               "
-              >qui prend toute la place.</span
+              >qui prend trop de place.</span
             ></span
           >
         </div>
@@ -1885,15 +1890,21 @@
         ></div>
         <div
           class="abs headline"
-          style="left: 80px; right: 60px; top: 330px; font-size: 118px; color: #fff"
+          style="left: 80px; right: 60px; top: 330px; font-size: 82px; color: #fff"
         >
           <span class="mask"
-            ><span style="animation: maskUp 0.6s var(--out) 36.3s both">Au lancement,</span></span
+            ><span style="animation: maskUp 0.6s var(--out) 36.3s both"
+              >Pour son lancement,</span
+            ></span
           ><br />
           <span class="mask"
             ><span
-              style="animation: maskUp 0.6s var(--out) 36.45s both; color: #3a1800; font-size: 80px"
-              >c'est gratuit.</span
+              style="
+                animation: maskUp 0.6s var(--out) 36.45s both;
+                color: #3a1800;
+                font-size: 104px;
+              "
+              >tout est gratuit.</span
             ></span
           >
         </div>
@@ -1994,28 +2005,40 @@
             right: 0;
             top: 1078px;
             text-align: center;
-            font-size: 46px;
-            font-weight: 700;
-            letter-spacing: -0.015em;
+            font-size: 56px;
+            font-weight: 760;
+            letter-spacing: -0.02em;
           "
         >
           <span class="mask"
-            ><span style="animation: maskUp 0.6s var(--out) 41.3s both">Achète.</span></span
+            ><span style="animation: maskUp 0.6s var(--out) 41.3s both">Et toi,</span></span
           >
           <span class="mask"
-            ><span style="animation: maskUp 0.6s var(--out) 41.45s both">Vends.</span></span
-          >
-          <span class="mask"
-            ><span style="animation: maskUp 0.6s var(--out) 41.6s both; color: var(--o600)"
-              >Donne une seconde vie.</span
+            ><span style="animation: maskUp 0.6s var(--out) 41.4s both; color: var(--o600)"
+              >qu'attends-tu ?</span
             ></span
           >
+        </div>
+        <div
+          class="abs"
+          style="
+            left: 0;
+            right: 0;
+            top: 1168px;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--muted);
+            animation: riseIn 0.6s var(--out) 41.69s both;
+          "
+        >
+          Fais tes affaires avec le sucre aux dents, mon ami.
         </div>
         <div
           class="abs tricolor"
           style="
             left: 390px;
-            top: 1182px;
+            top: 1262px;
             width: 300px;
             animation: growX 0.7s var(--out) 41.9s both;
           "
@@ -2028,7 +2051,7 @@
           style="
             left: 0;
             right: 0;
-            top: 1290px;
+            top: 1340px;
             text-align: center;
             animation: riseIn 0.6s var(--out) 42.3s both;
           "
@@ -2050,7 +2073,7 @@
           style="
             left: 0;
             right: 0;
-            top: 1450px;
+            top: 1500px;
             text-align: center;
             font-size: 32px;
             font-weight: 600;
@@ -2080,8 +2103,9 @@
 
     <script src="../commun/marque.js"></script>
     <script src="../commun/icones.js"></script>
+    <script src="calage.js"></script>
     <script>
-      const DURATION = 45;
+      const { duree: DURATION, M: calage, inverse: tempsScene } = window.CALAGE;
       const M = window.MARQUE;
 
       // Symbole (sac en M) : poignée tracée, sac qui apparaît, sourire tracé.
@@ -2159,19 +2183,25 @@
       // Moments où l'assistant passe à l'étape suivante (captures de l'écran Vendre).
       const STEPS = [17.9, 19.05, 20.15, 21.25, 22.35];
 
+      // t : temps de la vidéo ; s : temps de scène (les instants écrits dans la page), voir calage.js.
       window.seek = function (t) {
+        const s = tempsScene(t);
         for (const el of scenes) {
           el.style.visibility =
-            t >= Number(el.dataset.s) && t < Number(el.dataset.e) ? "visible" : "hidden";
+            s >= Number(el.dataset.s) && s < Number(el.dataset.e) ? "visible" : "hidden";
         }
         for (const a of anims) a.currentTime = t * 1000;
+        seekScene(s, t);
+      };
+
+      function seekScene(t, tVideo) {
         // Recherche : « ro », puis la suite proposée en grisé, acceptée.
         const n = t < 25.35 ? 0 : t < 25.5 ? 1 : 2;
         const accepted = t >= 27.3;
         typed.textContent = accepted ? "robe en wax" : "ro".slice(0, n);
         ghost.textContent = !accepted && t >= 25.9 ? "be en wax" : "";
         ghost.style.opacity = clamp((t - 25.9) / 0.25, 0, 1);
-        caret.style.opacity = Math.floor(t * 2.4) % 2 === 0 || (t > 25.2 && t < 25.9) ? 1 : 0;
+        caret.style.opacity = Math.floor(tVideo * 2.4) % 2 === 0 || (t > 25.2 && t < 25.9) ? 1 : 0;
         // Prix saisi à l'étape 4
         const p = easeOut(clamp((t - 21.4) / 0.8, 0, 1));
         price.textContent =
@@ -2185,13 +2215,18 @@
         const y = 640 + (prev + (i - prev) * u) * 170 - 8;
         focus.style.top = y + "px";
         focus.style.opacity = clamp((t - 18.3) / 0.3, 0, 1) * (1 - clamp((t - 23.5) / 0.3, 0, 1));
-      };
+      }
 
       window.ready = (async () => {
         await document.fonts.ready;
         await Promise.all([...document.images].map((img) => img.decode().catch(() => undefined)));
         anims = document.getAnimations();
-        for (const a of anims) a.pause();
+        for (const a of anims) {
+          a.pause();
+          // Les délais sont écrits en temps de scène : on les place sur la voix.
+          const delay = a.effect.getTiming().delay / 1000;
+          a.effect.updateTiming({ delay: calage(delay) * 1000 });
+        }
         window.seek(0);
         return { animations: anims.length, duration: DURATION };
       })();

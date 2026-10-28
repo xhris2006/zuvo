@@ -6,23 +6,25 @@ vidéos Zuvo, avec un nouveau scénario, l'identité orange et les **vrais écra
 
 | Vidéo                                       | Style                                                                         | Durée | Images |
 | ------------------------------------------- | ----------------------------------------------------------------------------- | ----- | ------ |
-| `seconde-vie/` « Ici, tout trouve preneur » | Clair et coloré : cartes d'objets, téléphone, étapes numérotées, carte finale | 45 s  | 60 i/s |
+| `seconde-vie/` « Ici, tout trouve preneur » | Clair et coloré : cartes d'objets, téléphone, étapes numérotées, carte finale | 52 s  | 60 i/s |
 | `lumiere/` « Achète. Vends. Partage. »      | Noir profond : point de lumière orange, panneaux de verre, mots isolés        | 31 s  | 30 i/s |
 
 ## Déroulé
 
 ### `seconde-vie/` — Ici, tout trouve preneur
 
-| Temps       | Plan                                                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
-| 0 – 4,4 s   | Fond orange : le sac du logo se dessine, « MboaDeal », « Achète. Vends. Donne une seconde vie. »       |
-| 3,9 – 11,6  | Une robe, une manette, un canapé s'empilent puis s'ouvrent en éventail : « Ici, tout trouve preneur. » |
-| 11 – 17,6   | « Achète et vends près de chez toi, partout au Cameroun » : page d'accueil, catégories réelles         |
-| 17 – 24,6   | 01 Publie : les 5 étapes réelles de mise en vente se valident une à une, annonce publiée               |
-| 24 – 31,2   | 02 Trouve : « ro » → suite proposée en grisé, suggestions (annonces, catégories, membres)              |
-| 30,6 – 36,4 | 03 Partage et discute : menu de partage réel (lien, WhatsApp, Facebook), conversation                  |
-| 35,8 – 40,6 | Au lancement : 0 FCFA pour publier, 0 % de commission (mêmes termes que le site)                       |
-| 40 – 45     | Carte finale : logo, slogan, « Découvre MboaDeal », mention « démonstration »                          |
+Temps de la version avec voix off (calage dans `calage.js`).
+
+| Temps       | Plan                                                                                                            |
+| ----------- | --------------------------------------------------------------------------------------------------------------- |
+| 0 – 6 s     | Fond orange : le sac du logo se dessine, « MboaDeal », « Achète. Vends. Donne une seconde vie à tes affaires. » |
+| 5,8 – 13,7  | Une robe, une manette, un canapé s'empilent puis s'ouvrent en éventail : « Ici, tout trouve preneur. »          |
+| 13,4 – 18   | « Achète et vends près de chez toi, partout au Cameroun » : page d'accueil, catégories réelles                  |
+| 17,4 – 26,7 | 01 Publie : les 5 étapes réelles de mise en vente se valident une à une, annonce publiée                        |
+| 26,3 – 35   | 02 Trouve : « ro » → suite proposée en grisé, suggestions (annonces, catégories, membres)                       |
+| 34,5 – 38,5 | 03 Partage et discute : menu de partage réel (lien, WhatsApp, Facebook), conversation                           |
+| 38 – 44,7   | Pour son lancement : 0 FCFA pour publier, 0 % de commission (mêmes termes que le site)                          |
+| 44,3 – 51,8 | Carte finale : logo, « Et toi, qu'attends-tu ? », « Découvre MboaDeal », mention « démonstration »              |
 
 ### `lumiere/` — Achète. Vends. Partage.
 
@@ -47,6 +49,7 @@ vidéos Zuvo, avec un nouveau scénario, l'identité orange et les **vrais écra
 | `commun/icones.js`                  | Icônes Lucide (les mêmes que sur le site, licence ISC)                            |
 | `commun/synthe.py`                  | Instruments et bruitages des bandes-son (synthèse numpy)                          |
 | `*/index.html`                      | Scène 1080 × 1920 ; `window.seek(t)` dessine l'instant t                          |
+| `seconde-vie/calage.js`             | Calage de l'image sur la voix off (lu par la page et par `calage.py`)             |
 | `lumiere/film.js`                   | Plans et trajectoire de la lumière de la vidéo sombre                             |
 | `*/soundtrack.py`                   | Bande-son originale calée sur l'image                                             |
 | `render.mjs`                        | Rendu image par image (Playwright → ffmpeg), ou aperçus avec `--stills`           |
@@ -56,7 +59,7 @@ Polices : Plus Jakarta Sans (licence OFL), partagées avec `../publicite-cinemat
 ```bash
 cd promo/mboadeal
 node render.mjs seconde-vie --stills 2,10,22,44     # aperçus dans seconde-vie/rendus/apercus/
-node render.mjs seconde-vie                         # ≈ 6 min
+node render.mjs seconde-vie                         # ≈ 8 min
 python3 seconde-vie/soundtrack.py seconde-vie/rendus/bande-son.wav
 ffmpeg -i seconde-vie/rendus/mboadeal-seconde-vie-9x16-sans-son.mp4 -i seconde-vie/rendus/bande-son.wav \
   -map 0:v -map 1:a -c:v copy -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:a aac -b:a 192k -shortest \
@@ -84,28 +87,33 @@ syllables « m-bo-a », jamais « bois ». « Deal » se dit « dil ». Dans Ele
 
 **Voix** : légère teinte africaine (Afrique centrale), jeune, chaleureuse, qui tutoie.
 
-**`seconde-vie/`** (45 s)
+**`seconde-vie/`** (52 s) — texte de la prise retenue (voix d'Ellen, 28 octobre 2026)
 
-| À l'écran                                       | Texte à dire                                                                                         |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Logo, « Achète. Vends. Donne une seconde vie. » | Mbo-a Dil. Achète. Vends. Donne une seconde vie.                                                     |
-| Une robe… une manette… un canapé                | Une robe portée une seule fois… une manette oubliée sous le lit… un canapé qui prend toute la place. |
-| « Ici, tout trouve preneur. »                   | Ici, tout trouve preneur.                                                                            |
-| « Achète et vends près de chez toi… »           | Achète et vends près de chez toi, partout au Cameroun.                                               |
-| « Ton annonce en 5 étapes. »                    | Ton annonce en cinq étapes :                                                                         |
-| Étape 1 « Photos »                              | les photos…                                                                                          |
-| Étape 2 « Description »                         | la description…                                                                                      |
-| Étape 3 « Catégorie »                           | la catégorie…                                                                                        |
-| Étape 4 « 12 000 FCFA · Douala »                | le prix et la ville…                                                                                 |
-| Étape 5 « Vérification », « Annonce publiée »   | tu vérifies… et c'est publié !                                                                       |
-| « Deux lettres, MboaDeal complète le reste. »   | Tape deux lettres… et Mbo-a Dil complète le reste.                                                   |
-| « Annonces », « Catégories », « Membres »       | Annonces, catégories, et même les membres.                                                           |
-| « Partage-la en un geste. »                     | Partage-la en un geste…                                                                              |
-| « Et discute directement. »                     | et discute directement.                                                                              |
-| « Au lancement, c'est gratuit. »                | Au lancement, c'est gratuit :                                                                        |
-| « 0 FCFA pour publier une annonce »             | zéro franc pour publier une annonce…                                                                 |
-| « 0 % de commission sur tes ventes »            | et zéro pour cent de commission sur tes ventes.                                                      |
-| Carte finale, « Découvre MboaDeal »             | Achète, vends, donne une seconde vie… Découvre Mbo-a Dil !                                           |
+| À l'écran                                                      | Texte dit                                                                                           |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Logo, « Achète. Vends. Donne une seconde vie à tes affaires. » | Mbo-a Dil. Achète, vends. Donne une seconde vie à tes affaires.                                     |
+| Une robe… une manette… un canapé                               | Une robe portée une seule fois, une manette oubliée sous le lit, un canapé qui prend trop de place. |
+| « Ici, tout trouve preneur. »                                  | Ici, tout trouve preneur.                                                                           |
+| « Achète et vends près de chez toi… »                          | Achète et vends près de chez toi, partout au Cameroun.                                              |
+| « Ton annonce en 5 étapes. »                                   | Ton annonce en cinq étapes.                                                                         |
+| Étape 1 « Photos »                                             | Tes photos,                                                                                         |
+| Étape 2 « Description »                                        | la description,                                                                                     |
+| Étape 3 « Catégorie »                                          | la catégorie,                                                                                       |
+| Étape 4 « 12 000 FCFA · Douala »                               | le prix et la ville.                                                                                |
+| Étape 5 « Vérification », « Annonce publiée »                  | Tu vérifies et c'est publié.                                                                        |
+| « Deux lettres, MboaDeal complète le reste. »                  | Pas besoin de trop réfléchir pour trouver ce que tu veux.                                           |
+| « Annonces », « Catégories », « Membres »                      | T'as des annonces, toutes les catégories et les membres de ta communauté sur une seule interface.   |
+| « Partage-la en un geste. »                                    | Partage-la en un geste                                                                              |
+| « Et discute directement. »                                    | et discute directement.                                                                             |
+| « Pour son lancement, tout est gratuit. »                      | Pour son lancement, tout est gratuit.                                                               |
+| « 0 FCFA pour publier une annonce »                            | Zéro franc pour publier une annonce                                                                 |
+| « 0 % de commission sur tes ventes »                           | et zéro pour cent de commission sur tes ventes.                                                     |
+| Carte finale, « Et toi, qu'attends-tu ? »                      | Et toi, qu'attends-tu ? Fais tes affaires avec le sucre aux dents, mon ami.                         |
+| « Découvre MboaDeal »                                          | Découvre Mbo-a Dil.                                                                                 |
+
+Nouvelle prise : relever le début et la fin de chaque phrase (`voix.py`), puis déplacer les points
+de `calage.js` pour que chaque titre, étape ou étiquette tombe sur le mot qui le dit ; la page et
+la bande-son suivent toutes les deux ce calage.
 
 **`lumiere/`** (31 s) — mots isolés détachés, ton plus posé
 

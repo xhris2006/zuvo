@@ -38,7 +38,7 @@ export function PrivacyFr({ name }: { name: string }) {
           <strong>Historique de consultation</strong> : les annonces que vous ouvrez lorsque vous
           êtes connecté (90 derniers jours, 300 annonces au plus), pour vous proposer des annonces
           susceptibles de vous intéresser. Vous pouvez l&apos;effacer à tout moment dans{" "}
-          <Link href={routes.settings}>Paramètres → Recommandations</Link>.
+          <Link href={routes.settingsPrivacy}>Paramètres → Confidentialité</Link>.
         </li>
         <li>
           <strong>Données techniques</strong> : journaux de connexion et adresse IP, à des fins de
@@ -180,7 +180,7 @@ export function PrivacyEn({ name }: { name: string }) {
         <li>
           <strong>Viewing history</strong>: the listings you open while signed in (last 90 days, 300
           listings at most), to suggest listings you may like. You can clear it at any time in{" "}
-          <Link href={routes.settings}>Settings → Recommendations</Link>.
+          <Link href={routes.settingsPrivacy}>Settings → Privacy</Link>.
         </li>
         <li>
           <strong>Technical data</strong>: connection logs and IP address, for security and abuse

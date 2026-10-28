@@ -65,7 +65,7 @@ function ReportForm({ targetType, targetId }: Pick<ReportDialogProps, "targetTyp
   if (state.status === "success") {
     return (
       <div className="flex flex-col gap-4">
-        <FormMessage state={state} />
+        <FormMessage state={state} persist />
         <p className="text-sm text-muted-foreground">
           {t.moderation.reportedBody}{" "}
           <Link href={routes.safety} className="font-medium underline">

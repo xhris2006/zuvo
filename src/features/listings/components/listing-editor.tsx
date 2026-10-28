@@ -535,7 +535,7 @@ export function ListingEditor({
         </section>
       ))}
 
-      <div className="sticky bottom-0 z-20 -mx-4 mt-1 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-2xl sm:border sm:px-4 sm:pb-3">
+      <div className="sticky bottom-0 z-20 -mx-4 mt-1 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-2xl sm:border sm:px-4 sm:pb-3 dark:bg-chrome/95">
         <div className="flex gap-3">
           {step > 0 ? (
             <Button

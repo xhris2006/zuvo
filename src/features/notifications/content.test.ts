@@ -99,3 +99,71 @@ describe("notificationHref", () => {
     expect(notificationHref({ ...base, type: "listing_removed" })).toBe("/notifications");
   });
 });
+
+describe("alertes et assistance", () => {
+  const base = { actorUsername: null, listingId: null, conversationId: null };
+  const REQUEST_ID = "4f1c2a3b-0000-4000-8000-0000000000cc";
+  const USER_ID = "4f1c2a3b-0000-4000-8000-0000000000dd";
+
+  it("décrit un signalement avec son motif traduit", () => {
+    expect(
+      describeNotification({
+        type: "staff_report",
+        actorName: "Awa",
+        listingTitle: "iPhone 12",
+        note: "counterfeit",
+      }),
+    ).toEqual({
+      title: "Alerte de modération",
+      body: "Awa a signalé « iPhone 12 » : contrefaçon.",
+    });
+    expect(
+      describeNotification({
+        type: "staff_report",
+        actorName: "Awa",
+        listingTitle: null,
+        note: "x",
+      }).body,
+    ).toBe("Awa a fait un signalement : autre motif.");
+  });
+
+  it("décrit une publication bloquée par l'anti-spam", () => {
+    expect(
+      describeNotification({
+        type: "staff_report",
+        actorName: "Kevin",
+        listingTitle: null,
+        note: "spam_banned_word",
+      }).body,
+    ).toBe("Publication de Kevin bloquée par l'anti-spam : terme interdit.");
+    expect(
+      notificationHref({
+        ...base,
+        type: "staff_report",
+        note: "spam_banned_word",
+        actorId: USER_ID,
+      }),
+    ).toBe(`/admin/utilisateurs/${USER_ID}`);
+    expect(notificationHref({ ...base, type: "staff_report", note: "spam" })).toBe(
+      "/admin/signalements",
+    );
+  });
+
+  it("mène chaque partie à la conversation d'assistance", () => {
+    expect(
+      describeNotification({
+        type: "support_message",
+        actorName: "Awa",
+        listingTitle: null,
+        note: "Compte bloqué",
+      }).body,
+    ).toBe("Awa a écrit à l'assistance : « Compte bloqué ».");
+    expect(
+      notificationHref({ ...base, type: "support_message", supportRequestId: REQUEST_ID }),
+    ).toBe(`/admin/assistance/${REQUEST_ID}`);
+    expect(notificationHref({ ...base, type: "support_reply", supportRequestId: REQUEST_ID })).toBe(
+      `/assistance/${REQUEST_ID}`,
+    );
+    expect(notificationHref({ ...base, type: "support_reply" })).toBe("/assistance");
+  });
+});

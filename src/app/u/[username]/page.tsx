@@ -1,4 +1,4 @@
-import { PackageOpen } from "lucide-react";
+import { LayoutGrid, PackageOpen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,6 +6,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
+import { ShareButton } from "@/components/ui/share-button";
 import { searchLimits } from "@/config/limits";
 import { publicProfileHref, routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
@@ -23,6 +24,7 @@ import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileByUsername, getProfileStats, isFollowing } from "@/features/profiles/queries";
 import { USERNAME_PATTERN } from "@/features/profiles/username";
 import { getT } from "@/i18n/server";
+import { getSiteUrl } from "@/lib/env";
 
 async function loadProfile(rawUsername: string) {
   const username = decodeURIComponent(rawUsername).toLowerCase();
@@ -47,15 +49,14 @@ export async function generateMetadata(props: PageProps<"/u/[username]">): Promi
 }
 
 export default async function PublicProfilePage(props: PageProps<"/u/[username]">) {
-  const { username } = await props.params;
-  const profile = await loadProfile(username);
+  const [{ username }, searchParams] = await Promise.all([props.params, props.searchParams]);
+  // Requêtes indépendantes lancées ensemble (pas d'attente en cascade).
+  const [profile, viewer, t] = await Promise.all([loadProfile(username), getCurrentUser(), getT()]);
   if (!profile) notFound();
 
-  const searchParams = await props.searchParams;
   const requestedPage = Number(searchParams.page);
   const page = Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
 
-  const viewer = await getCurrentUser();
   const isOwnProfile = viewer?.id === profile.id;
   const [stats, following, blocked, listings] = await Promise.all([
     getProfileStats(profile.id),
@@ -65,24 +66,44 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   ]);
   const profilePath = publicProfileHref(profile.username);
   const pageCount = Math.ceil(listings.total / searchLimits.pageSize);
-  const t = await getT();
 
   let actions;
   let menu;
+  const share = (
+    <ShareButton
+      title={`${profile.display_name} (@${profile.username})`}
+      text={t.profilePages.discover(profile.display_name, siteConfig.name)}
+      url={`${getSiteUrl()}${profilePath}`}
+      label={t.profilePages.shareProfile}
+      tone="soft"
+      // 360 px : sans icône pour que les deux libellés tiennent sur une ligne.
+      className="min-w-0 flex-1 max-[25rem]:px-2 max-[25rem]:[&_svg]:hidden"
+    />
+  );
   if (isOwnProfile) {
     actions = (
-      <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
-        <Link href={routes.editProfile}>{t.profilePages.editMine}</Link>
-      </Button>
+      <>
+        <Button asChild variant="soft" size="sm" className="min-w-0 flex-1 max-[25rem]:px-2">
+          <Link href={routes.editProfile}>
+            <span className="truncate">{t.profilePages.editMine}</span>
+          </Link>
+        </Button>
+        {share}
+      </>
     );
   } else if (viewer) {
-    actions = blocked ? null : (
-      <FollowButton
-        profileId={profile.id}
-        username={profile.username}
-        initialFollowing={following}
-        className="flex-1 sm:flex-none"
-      />
+    actions = blocked ? (
+      share
+    ) : (
+      <>
+        <FollowButton
+          profileId={profile.id}
+          username={profile.username}
+          initialFollowing={following}
+          className="flex-1"
+        />
+        {share}
+      </>
     );
     menu = (
       <UserActionsMenu
@@ -93,9 +114,12 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
     );
   } else {
     actions = (
-      <Button asChild className="flex-1 sm:flex-none">
-        <Link href={signInHref(profilePath)}>{t.profilePages.follow}</Link>
-      </Button>
+      <>
+        <Button asChild size="sm" className="flex-1">
+          <Link href={signInHref(profilePath)}>{t.profilePages.follow}</Link>
+        </Button>
+        {share}
+      </>
     );
     menu = (
       <ReportDialog
@@ -109,18 +133,31 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
   }
 
   return (
-    <div className="container-page flex max-w-4xl flex-col gap-8 pt-5 sm:gap-10 sm:pt-10">
+    <div className="container-page flex max-w-4xl flex-col gap-5 sm:gap-7 lg:pt-6">
       <ProfileHeader
         profile={profile}
         stats={stats}
         actions={actions}
-        menu={menu}
-        back={<BackButton fallbackHref={routes.explore} />}
+        trailing={menu}
+        leading={
+          <BackButton
+            fallbackHref={routes.explore}
+            className="bg-transparent shadow-none backdrop-blur-none hover:bg-muted"
+          />
+        }
       />
       <section aria-labelledby="profile-listings" className="flex flex-col gap-4">
         <ProfileTabs
           labelledBy="profile-listings"
-          tabs={[{ key: "on-sale", label: t.profile.onSale, count: listings.total, current: true }]}
+          tabs={[
+            {
+              key: "on-sale",
+              label: t.profile.onSale,
+              count: listings.total,
+              icon: LayoutGrid,
+              current: true,
+            },
+          ]}
         />
         {listings.items.length > 0 ? (
           <>

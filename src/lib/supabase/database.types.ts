@@ -594,6 +594,7 @@ export type Database = {
           push_detail: string | null;
           push_status: string | null;
           pushed_at: string | null;
+          support_request_id: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
         };
@@ -609,6 +610,7 @@ export type Database = {
           push_detail?: string | null;
           push_status?: string | null;
           pushed_at?: string | null;
+          support_request_id?: string | null;
           type: Database["public"]["Enums"]["notification_type"];
           user_id: string;
         };
@@ -623,6 +625,7 @@ export type Database = {
           push_detail?: string | null;
           push_status?: string | null;
           pushed_at?: string | null;
+          support_request_id?: string | null;
           type?: Database["public"]["Enums"]["notification_type"];
           user_id?: string;
         };
@@ -646,6 +649,13 @@ export type Database = {
             columns: ["listing_id"];
             isOneToOne: false;
             referencedRelation: "listings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_support_request_id_fkey";
+            columns: ["support_request_id"];
+            isOneToOne: false;
+            referencedRelation: "support_requests";
             referencedColumns: ["id"];
           },
           {
@@ -866,6 +876,49 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      support_messages: {
+        Row: {
+          author_id: string | null;
+          body: string;
+          created_at: string;
+          from_staff: boolean;
+          id: string;
+          request_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_id?: string | null;
+          body: string;
+          created_at?: string;
+          from_staff?: boolean;
+          id?: string;
+          request_id: string;
+        };
+        Update: {
+          author_id?: string | null;
+          body?: string;
+          created_at?: string;
+          from_staff?: boolean;
+          id?: string;
+          request_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_messages_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "support_requests";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       support_requests: {
         Row: {
@@ -1134,6 +1187,7 @@ export type Database = {
         Args: { p_image_ids: string[]; p_listing_id: string };
         Returns: undefined;
       };
+      report_spam_block: { Args: { p_description: string; p_title: string }; Returns: boolean };
       request_install_guide: { Args: Record<PropertyKey, never>; Returns: boolean };
       similar_listings: {
         Args: { p_limit?: number; p_listing_id: string };
@@ -1177,7 +1231,9 @@ export type Database = {
         | "moderation_warning"
         | "support_reply"
         | "admin_message"
-        | "install_guide";
+        | "install_guide"
+        | "support_message"
+        | "staff_report";
       report_reason:
         | "scam"
         | "prohibited_item"
@@ -1340,6 +1396,8 @@ export const Constants = {
         "support_reply",
         "admin_message",
         "install_guide",
+        "support_message",
+        "staff_report",
       ],
       report_reason: [
         "scam",

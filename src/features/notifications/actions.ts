@@ -38,7 +38,7 @@ export async function openNotificationAction(formData: FormData): Promise<void> 
   const { data } = await supabase
     .from("notifications")
     .select(
-      "id, type, is_read, listing_id, conversation_id, actor:profiles!notifications_actor_id_fkey(username)",
+      "id, type, is_read, listing_id, conversation_id, note, actor_id, support_request_id, actor:profiles!notifications_actor_id_fkey(username)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -50,9 +50,12 @@ export async function openNotificationAction(formData: FormData): Promise<void> 
   redirect(
     notificationHref({
       type: data.type,
+      actorId: data.actor_id,
       actorUsername: data.actor?.username ?? null,
       listingId: data.listing_id,
       conversationId: data.conversation_id,
+      note: data.note,
+      supportRequestId: data.support_request_id,
     }),
   );
 }
@@ -87,7 +90,7 @@ export async function updateNotificationPreferencesAction(
     .update(update)
     .eq("user_id", user.id);
   if (error) return { status: "error", message: texts.generic };
-  revalidatePath(routes.settings);
+  revalidatePath(routes.settingsNotifications);
   return { status: "success", message: texts.preferencesSaved };
 }
 
@@ -127,7 +130,7 @@ export async function savePushSubscriptionAction(input: unknown): Promise<PushRe
   if (error) {
     return { status: "error", message: texts.enableFailed };
   }
-  revalidatePath(routes.settings);
+  revalidatePath(routes.settingsNotifications);
   return { status: "ok" };
 }
 
@@ -155,7 +158,7 @@ export async function removePushSubscriptionAction(endpoint: string): Promise<Pu
       .update({ push_enabled: false })
       .eq("user_id", user.id);
   }
-  revalidatePath(routes.settings);
+  revalidatePath(routes.settingsNotifications);
   return { status: "ok" };
 }
 

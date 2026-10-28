@@ -31,7 +31,8 @@ export function FollowButton({
       <input type="hidden" name="username" value={username} />
       <SubmitButton
         pending={pending}
-        variant={state.following ? "outline" : "primary"}
+        variant={state.following ? "soft" : "primary"}
+        size="sm"
         aria-pressed={state.following}
       >
         {state.following ? <UserCheck aria-hidden="true" /> : <UserPlus aria-hidden="true" />}

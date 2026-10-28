@@ -26,9 +26,12 @@ export async function SectionHeader({
 }: SectionHeaderProps) {
   const t = await getT();
   return (
-    <div className={cn("mb-4 flex items-end justify-between gap-4 sm:mb-5", className)}>
+    <div className={cn("mb-3 flex items-end justify-between gap-4 sm:mb-4", className)}>
       <div className="flex min-w-0 flex-col gap-0.5">
-        <h2 id={id} className="reveal-on-scroll-blur text-lg font-bold tracking-tight sm:text-2xl">
+        <h2
+          id={id}
+          className="reveal-on-scroll-blur text-xl font-bold tracking-tight sm:text-[1.3125rem]"
+        >
           {title}
         </h2>
         {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}

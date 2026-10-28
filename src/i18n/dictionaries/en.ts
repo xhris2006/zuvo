@@ -59,6 +59,9 @@ export const en: Dictionary = {
     back: "Back",
     share: "Share",
     linkCopied: "Link copied",
+    copyLink: "Copy link",
+    shareWhatsApp: "Share on WhatsApp",
+    shareFacebook: "Share on Facebook",
     seeAll: "See all",
     search: "Search",
     signIn: "Sign in",
@@ -83,6 +86,17 @@ export const en: Dictionary = {
     searchPlaceholder: "Search for an item…",
     searchLabel: "Search listings",
     searchSuggestions: ["Wax print dress", "Sneakers", "Smartphone", "Handbag", "Game controller"],
+    suggestions: {
+      label: "Search suggestions",
+      searches: "Listings",
+      categories: "Categories",
+      members: "Members",
+      count: (count: number) =>
+        count === 0
+          ? "No suggestions"
+          : `${count} suggestion${count > 1 ? "s" : ""}, use the up and down arrows to browse`,
+      acceptHint: "Right arrow to complete",
+    },
     unreadMessages: (count: number) =>
       count === 1 ? "1 unread message" : `${count} unread messages`,
     unreadNotifications: (count: number) =>
@@ -93,6 +107,7 @@ export const en: Dictionary = {
     description: "The chosen theme applies on this device.",
     darkMode: "Dark mode",
     darkModeHint: "Dark background, easier on the eyes at night.",
+    lightMode: "Light mode",
   },
   welcome: {
     signIn: "I already have an account",
@@ -182,19 +197,21 @@ export const en: Dictionary = {
     unavailableBody: "The database is not connected yet. Published listings will appear here.",
     tabsLabel: "What are you looking for?",
     tabArticles: "Items",
-    tabShops: "Shops",
-    shopsTitle: "Shops",
-    shopsDescription: "Find a seller by name or username and discover their items.",
-    shopsSearchLabel: "Search for a shop",
+    tabShops: "Members",
+    shopsTitle: "Members",
+    shopsDescription:
+      "Find a member by name or username, whether or not they have posted a listing.",
+    shopsSearchLabel: "Search for a member",
     shopsSearchPlaceholder: "Name or @username",
-    shopsResultsFor: (query: string) => `Shops for ${quote(query)}`,
+    shopsResultsFor: (query: string) => `Members for ${quote(query)}`,
     shopsCount: (count: number) =>
-      count === 0 ? "No shops" : count === 1 ? "1 shop" : `${count} shops`,
-    shopsEmptyTitle: "No shops found",
+      count === 0 ? "No members" : count === 1 ? "1 member" : `${count} members`,
+    shopsEmptyTitle: "No members found",
     shopsEmptyBody: "Check the spelling of the name or username, or try another word.",
-    shopsNoneTitle: "No shops yet",
-    shopsNoneBody: "Sellers with listings for sale will appear here.",
-    shopsUnavailableTitle: "Shops temporarily unavailable",
+    shopsNoneTitle: "No sellers yet",
+    shopsNoneBody:
+      "Members with listings for sale appear here. Search for a name to find any member.",
+    shopsUnavailableTitle: "Members temporarily unavailable",
     shopListings: (count: number) =>
       count === 0 ? "No listings for sale" : count === 1 ? "1 listing" : `${count} listings`,
     quoted: (query: string) => `“${query}”`,
@@ -327,6 +344,8 @@ export const en: Dictionary = {
       support_reply: "Support reply",
       admin_message: "Message from the team",
       install_guide: `Install the ${brand} app`,
+      support_message: "Message to support",
+      staff_report: "Moderation alert",
     },
     bodies: {
       new_message: (actor: string, listing: string | null) =>
@@ -347,6 +366,16 @@ export const en: Dictionary = {
           : "The team replied to your request.",
       admin_message: (note: string | null) => note ?? "",
       install_guide: `Add ${brand} to your phone's home screen: one-tap access and notifications. Tap to see how.`,
+      support_message: (actor: string, subject: string | null) =>
+        subject ? `${actor} wrote to support: ${quote(subject)}.` : `${actor} wrote to support.`,
+      staff_report: (actor: string, reason: string, listing: string | null) =>
+        listing
+          ? `${actor} reported ${quote(listing)}: ${reason.toLowerCase()}.`
+          : `${actor} made a report: ${reason.toLowerCase()}.`,
+      spam_banned_word: (actor: string) =>
+        `A listing by ${actor} was blocked by the anti-spam filter: banned term.`,
+      spam_publication_limit: (actor: string) =>
+        `${actor} reached the publication limit for new accounts.`,
     },
     unread: "Unread",
   },
@@ -707,6 +736,7 @@ export const en: Dictionary = {
     sendTest: "Send a test",
     disableHere: "Disable on this device",
     promptLabel: "Notifications on this device",
+    attention: "notifications not yet enabled on this device",
     promptTitle: "Never miss a message",
     promptMessages:
       "Enable notifications to be alerted as soon as a buyer or seller messages you, even when the app is closed.",

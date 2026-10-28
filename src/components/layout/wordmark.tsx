@@ -17,7 +17,7 @@ export function Wordmark({
   className,
   tone = "default",
 }: {
-  /** Hauteur du nom (par défaut, accordée au symbole size-8). */
+  /** Hauteur du nom (par défaut 20 px, soit un nom en corps 26, accordée au symbole size-9). */
   className?: string;
   /** « inverse » : « Mboa » en blanc, sur fond sombre. */
   tone?: "default" | "inverse";
@@ -27,7 +27,7 @@ export function Wordmark({
       viewBox={wordmarkViewBox}
       aria-hidden="true"
       className={cn(
-        "h-[0.95rem] w-auto shrink-0",
+        "h-5 w-auto shrink-0",
         tone === "inverse" ? "text-white" : "text-foreground",
         className,
       )}

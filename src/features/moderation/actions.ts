@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { publicProfileHref, routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
+import { schedulePushDispatch } from "@/features/notifications/push/schedule";
 import { type FormState, fieldErrorsFrom, formText } from "@/lib/forms/form-state";
 import { getT } from "@/i18n/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -49,6 +50,8 @@ export async function createReportAction(
             : texts.reportFailed;
     return { status: "error", message, values };
   }
+  // L'équipe est notifiée par la base ; envoi en push après la réponse.
+  schedulePushDispatch({ type: "staff_report", actorId: user.id });
   return { status: "success", message: texts.reportSent };
 }
 
@@ -84,6 +87,7 @@ export async function toggleBlockAction(
   }
 
   revalidatePath(routes.settings);
+  revalidatePath(routes.settingsPrivacy);
   revalidatePath(routes.messages, "layout");
   if (/^[a-z0-9_]{3,30}$/.test(username)) revalidatePath(publicProfileHref(username));
   return { blocked: !currentlyBlocked };

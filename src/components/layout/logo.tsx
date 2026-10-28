@@ -26,9 +26,9 @@ export async function Logo({
       className={cn("inline-flex items-center gap-2 rounded-lg", className)}
       aria-label={t.ui.homeLink(siteConfig.name)}
     >
-      <LogoMark className={cn(compact && "max-sm:size-7", animated && "logo-intro")} />
+      <LogoMark className={cn(compact && "max-sm:size-8", animated && "logo-intro")} />
       <Wordmark
-        className={cn(compact && "max-sm:h-[0.85rem]", animated && "reveal [--reveal-delay:500ms]")}
+        className={cn(compact && "max-sm:h-[1.05rem]", animated && "reveal [--reveal-delay:500ms]")}
       />
     </Link>
   );

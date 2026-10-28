@@ -1,14 +1,18 @@
-import { Eye, Heart, PackageOpen, Pencil, Plus } from "lucide-react";
+import { Heart, LayoutGrid, PackageOpen, Plus, Settings } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { NotificationsLink } from "@/components/layout/notifications-link";
 import { PageHeader } from "@/components/layout/page-header";
-import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { AutoDismiss } from "@/components/ui/auto-dismiss";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
+import { ShareButton } from "@/components/ui/share-button";
 import { publicProfileHref, routes } from "@/config/routes";
+import { siteConfig } from "@/config/site";
+import { isCurrentUserStaff } from "@/features/admin/queries";
 import { AuthRequired } from "@/features/auth/components/auth-required";
 import { requireUser } from "@/features/auth/session";
 import { ListingResults } from "@/features/listings/components/listing-results";
@@ -20,7 +24,7 @@ import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
 import { getT } from "@/i18n/server";
-import { isSupabaseConfigured } from "@/lib/env";
+import { getSiteUrl, isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -46,10 +50,11 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
   // Onglet « Favoris » affiché sur la page même, comme les annonces.
   const tab = searchParams.onglet === "favoris" ? "favorites" : "listings";
   const favoritesPage = tab === "favorites" ? parsePageParam(searchParams.page) : 1;
-  const [stats, listings, favorites] = await Promise.all([
+  const [stats, listings, favorites, isStaff] = await Promise.all([
     getProfileStats(user.id),
     getOwnListings(user.id),
     getFavoriteListings(user.id, favoritesPage),
+    isCurrentUserStaff(),
   ]);
   const t = await getT();
   const favoritesHref = (page: number) =>
@@ -58,7 +63,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
       : routes.profileFavorites) as typeof routes.profileFavorites;
 
   return (
-    <div className="container-page flex max-w-4xl flex-col gap-8 pt-5 sm:gap-10 sm:pt-10">
+    <div className="container-page flex max-w-4xl flex-col gap-5 sm:gap-7 lg:pt-6">
       <ProfileHeader
         profile={profile}
         stats={stats}
@@ -67,24 +72,49 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
             userId={user.id}
             name={profile.display_name}
             currentUrl={avatarUrl(profile.avatar_path)}
-            avatarClassName="size-24 text-2xl sm:size-28 sm:text-3xl"
+            avatarClassName="size-[4.5rem] text-xl min-[25rem]:size-20 sm:size-28 sm:text-3xl"
             messageClassName="top-auto bottom-1 left-full ml-3"
           />
         }
-        back={<BackButton fallbackHref={routes.home} />}
-        menu={<OwnProfileMenu username={profile.username} />}
+        leading={
+          <Link
+            href={routes.sell}
+            aria-label={t.profilePages.sellItem}
+            title={t.profilePages.sellItem}
+            className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+          >
+            <Plus className="size-6" strokeWidth={2} aria-hidden="true" />
+          </Link>
+        }
+        trailing={
+          <>
+            <NotificationsLink />
+            <OwnProfileMenu username={profile.username} isStaff={isStaff} />
+          </>
+        }
         actions={
           <>
-            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Button asChild variant="soft" size="sm" className="min-w-0 flex-1 max-[25rem]:px-2">
               <Link href={routes.editProfile}>
-                <Pencil aria-hidden="true" />
-                {t.profilePages.edit}
+                <span className="truncate">{t.profilePages.editMine}</span>
               </Link>
             </Button>
-            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
-              <Link href={publicProfileHref(profile.username)}>
-                <Eye aria-hidden="true" />
-                {t.profilePages.publicProfile}
+            <ShareButton
+              title={`${profile.display_name} (@${profile.username})`}
+              text={t.profilePages.discover(profile.display_name, siteConfig.name)}
+              url={`${getSiteUrl()}${publicProfileHref(profile.username)}`}
+              label={t.profilePages.shareProfile}
+              tone="soft"
+              // 360 px : sans icône pour que les deux libellés tiennent sur une ligne.
+              className="min-w-0 flex-1 max-[25rem]:px-2 max-[25rem]:[&_svg]:hidden"
+            />
+            <Button asChild variant="soft" size="icon-sm" className="shrink-0">
+              <Link
+                href={routes.settings}
+                aria-label={t.profile.settings}
+                title={t.profile.settings}
+              >
+                <Settings aria-hidden="true" />
               </Link>
             </Button>
           </>
@@ -100,12 +130,14 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
                   key: "listings",
                   label: t.profile.myListings,
                   count: listings.length,
+                  icon: LayoutGrid,
                   current: true,
                 }
               : {
                   key: "listings",
                   label: t.profile.myListings,
                   count: listings.length,
+                  icon: LayoutGrid,
                   href: routes.profile as Route,
                 },
             tab === "favorites"
@@ -113,28 +145,22 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
                   key: "favorites",
                   label: t.profile.favorites,
                   count: favorites.total,
+                  icon: Heart,
                   current: true,
                 }
               : {
                   key: "favorites",
                   label: t.profile.favorites,
                   count: favorites.total,
+                  icon: Heart,
                   href: routes.profileFavorites,
                 },
           ]}
-          trailing={
-            tab === "listings" && listings.length > 0 ? (
-              <Button asChild size="sm">
-                <Link href={routes.sell}>
-                  <Plus aria-hidden="true" />
-                  <span className="max-[359px]:sr-only">{t.profilePages.sell}</span>
-                </Link>
-              </Button>
-            ) : null
-          }
         />
         {searchParams.annonce === "supprimee" ? (
-          <Alert variant="success">{t.profilePages.listingDeleted}</Alert>
+          <AutoDismiss>
+            <Alert variant="success">{t.profilePages.listingDeleted}</Alert>
+          </AutoDismiss>
         ) : null}
         {tab === "favorites" ? (
           favorites.items.length > 0 ? (

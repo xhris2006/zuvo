@@ -1,5 +1,7 @@
 import {
   Ban,
+  Flag,
+  Headset,
   Heart,
   LifeBuoy,
   Megaphone,
@@ -27,6 +29,8 @@ const icons = {
   support_reply: LifeBuoy,
   admin_message: Megaphone,
   install_guide: Smartphone,
+  support_message: Headset,
+  staff_report: Flag,
 } satisfies Record<NotificationType, unknown>;
 
 export async function NotificationList({ items }: { items: NotificationItem[] }) {
@@ -47,7 +51,9 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                 )}
               >
                 <span className="relative shrink-0">
-                  {item.type === "listing_removed" || item.type === "moderation_warning" ? (
+                  {item.type === "listing_removed" ||
+                  item.type === "moderation_warning" ||
+                  item.type === "staff_report" ? (
                     <span className="flex size-10 items-center justify-center rounded-full bg-danger-soft text-danger">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
@@ -69,7 +75,10 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {item.type === "moderation_warning" ? (
                     <span className="text-sm font-semibold text-danger">{item.title}</span>
-                  ) : item.type === "admin_message" || item.type === "install_guide" ? (
+                  ) : item.type === "admin_message" ||
+                    item.type === "install_guide" ||
+                    item.type === "staff_report" ||
+                    item.type === "support_message" ? (
                     <span className="text-sm font-semibold text-primary-ink">{item.title}</span>
                   ) : null}
                   <span
@@ -79,6 +88,8 @@ export async function NotificationList({ items }: { items: NotificationItem[] })
                         item.type !== "moderation_warning" &&
                         item.type !== "admin_message" &&
                         item.type !== "install_guide" &&
+                        item.type !== "staff_report" &&
+                        item.type !== "support_message" &&
                         "font-semibold",
                     )}
                   >

@@ -1,4 +1,4 @@
-import { Inbox, RotateCcw } from "lucide-react";
+import { Inbox, MessagesSquare, RotateCcw } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
@@ -6,10 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
-import { adminUserHref, routes } from "@/config/routes";
+import { adminSupportThreadHref, adminUserHref, routes } from "@/config/routes";
 import { restoreListingWithReasonAction } from "@/features/admin/actions";
 import { ModerationDialog } from "@/features/admin/components/moderation-dialog";
-import { SupportAnswerForm } from "@/features/admin/components/support-answer-form";
 import {
   getSupportRequests,
   type SupportInboxStatus,
@@ -131,17 +130,35 @@ export default async function AdminSupportPage(props: PageProps<"/admin/assistan
                   )}
                 </div>
               ) : null}
-              <p className="text-sm whitespace-pre-line">{request.message}</p>
-              {request.response ? (
-                <div className="rounded-xl bg-secondary/60 p-3 text-sm">
-                  <p className="mb-1 text-xs font-semibold text-secondary-foreground">
-                    {t.adminPages.support.replySent}
-                    {request.handledAt ? ` · ${t.format.dateTime(request.handledAt)}` : ""}
-                  </p>
-                  <p className="whitespace-pre-line">{request.response}</p>
-                </div>
-              ) : null}
-              {request.status === "closed" ? null : <SupportAnswerForm requestId={request.id} />}
+              <p className="line-clamp-3 text-sm whitespace-pre-line">
+                {request.lastMessage ? (
+                  <>
+                    {request.lastMessage.fromStaff ? (
+                      <span className="font-medium text-muted-foreground">
+                        {t.adminPages.support.lastFromTeam}
+                      </span>
+                    ) : null}
+                    {request.lastMessage.body}
+                  </>
+                ) : (
+                  request.message
+                )}
+              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {t.adminPages.support.messageCount(request.messageCount + 1)}
+                </span>
+                <Button
+                  asChild
+                  size="sm"
+                  variant={request.status === "open" ? "primary" : "outline"}
+                >
+                  <Link href={adminSupportThreadHref(request.id)}>
+                    <MessagesSquare aria-hidden="true" />
+                    {t.adminPages.support.openConversation}
+                  </Link>
+                </Button>
+              </div>
             </li>
           ))}
         </ul>

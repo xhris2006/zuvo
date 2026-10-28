@@ -3,6 +3,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
+import { AutoDismiss } from "@/components/ui/auto-dismiss";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,9 +128,11 @@ export default async function AdminUsersPage(props: PageProps<"/admin/utilisateu
     <>
       <PageHeader title={t.adminUi.nav.users} />
       {deleted ? (
-        <Alert variant="success" role="status">
-          {t.adminPages.users.deleted}
-        </Alert>
+        <AutoDismiss>
+          <Alert variant="success" role="status">
+            {t.adminPages.users.deleted}
+          </Alert>
+        </AutoDismiss>
       ) : null}
       {role === "admin" ? <ContactSearch contact={contact} results={contactResults} /> : null}
       <form role="search" className="flex flex-wrap gap-2" action={routes.adminUsers}>

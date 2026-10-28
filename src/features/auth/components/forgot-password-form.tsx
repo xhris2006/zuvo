@@ -17,7 +17,7 @@ export function ForgotPasswordForm() {
   useFocusFirstError(formRef, state);
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-4" noValidate>
-      <FormMessage state={state} />
+      <FormMessage state={state} persist={state.status === "success"} />
       {state.status === "success" ? null : (
         <>
           <Field id="email" label={t.authForms.email} error={state.fieldErrors?.email}>

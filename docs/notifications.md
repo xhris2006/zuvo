@@ -17,19 +17,37 @@ Les notifications sont créées **uniquement par la base de données**
 `20261018150000_notification_triggers.sql`) ; aucun utilisateur ne peut en
 créer via l'API.
 
-| Type                    | Événement                                                          | Préférence                                                        |
-| ----------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `new_message`           | message reçu (une seule notification non lue par conversation)     | « Nouveaux messages »                                             |
-| `new_follower`          | nouvel abonné (au plus une par abonné et par jour)                 | « Nouveaux abonnés »                                              |
-| `listing_favorited`     | annonce ajoutée aux favoris (une par utilisateur, annonce et jour) | « Activité de mes annonces »                                      |
-| `followed_user_listing` | première publication d'une annonce d'un profil suivi               | « Nouvelles annonces des profils suivis » (désactivée par défaut) |
-| `listing_removed`       | annonce retirée par la modération                                  | toujours envoyée                                                  |
-| `moderation_warning`    | avertissement de la modération                                     | toujours envoyée                                                  |
-| `support_reply`         | réponse de l'équipe à une demande d'assistance ou une contestation | toujours envoyée                                                  |
-| `admin_message`         | message de l'équipe à un membre, ou d'un administrateur à tous     | toujours envoyée                                                  |
-| `install_guide`         | invitation à installer l'application (une fois, sur téléphone)     | toujours envoyée (sans push)                                      |
+| Type                    | Événement                                                            | Préférence                                                        |
+| ----------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `new_message`           | message reçu (une seule notification non lue par conversation)       | « Nouveaux messages »                                             |
+| `new_follower`          | nouvel abonné (au plus une par abonné et par jour)                   | « Nouveaux abonnés »                                              |
+| `listing_favorited`     | annonce ajoutée aux favoris (une par utilisateur, annonce et jour)   | « Activité de mes annonces »                                      |
+| `followed_user_listing` | première publication d'une annonce d'un profil suivi                 | « Nouvelles annonces des profils suivis » (désactivée par défaut) |
+| `listing_removed`       | annonce retirée par la modération                                    | toujours envoyée                                                  |
+| `moderation_warning`    | avertissement de la modération                                       | toujours envoyée                                                  |
+| `support_reply`         | réponse de l'équipe à une demande d'assistance ou une contestation   | toujours envoyée                                                  |
+| `admin_message`         | message de l'équipe à un membre, ou d'un administrateur à tous       | toujours envoyée                                                  |
+| `install_guide`         | invitation à installer l'application (une fois, sur téléphone)       | toujours envoyée (sans push)                                      |
+| `support_message`       | équipe : nouvelle demande ou nouveau message d'assistance            | toujours envoyée (une non lue par demande et par personne)        |
+| `staff_report`          | équipe : nouveau signalement, ou publication bloquée par l'anti-spam | toujours envoyée                                                  |
 
 Aucune notification n'est créée entre deux utilisateurs qui se sont bloqués.
+
+Alertes de l'équipe (migration `20261028100100_support_chat.sql`) : chaque
+administrateur et modérateur non suspendu est prévenu d'une nouvelle demande
+d'assistance, d'un nouveau message dans une conversation d'assistance et d'un
+nouveau signalement (motif dans la note). Une publication refusée par
+l'anti-spam est annulée avec sa transaction : l'application appelle ensuite
+`report_spam_block`, qui revérifie le refus (mot interdit ou limite d'un compte
+récent) avant d'alerter l'équipe, au plus une fois par membre et par heure.
+
+Assistance en conversation : `support_messages` (lecture et écriture réservées
+à l'auteur de la demande et à l'équipe, rôle décidé par la base, 50 messages par
+jour pour un membre, aucune modification ni suppression). Un message de
+l'équipe passe la demande à « répondue » et notifie le membre ; un message du
+membre la rouvre. Les conversations se mettent à jour en temps réel si la table
+est publiée dans `supabase_realtime` (fait par la migration quand la
+publication existe).
 
 Messages de l'équipe (Administration → Messages aux membres, ou « Envoyer un
 message » sur la fiche d'un utilisateur) : fonctions `admin_message_user`

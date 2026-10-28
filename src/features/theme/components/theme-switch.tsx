@@ -4,7 +4,7 @@ import { Moon } from "lucide-react";
 import { useId, useState } from "react";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { THEME_COOKIE, THEME_COOKIE_MAX_AGE, type Theme, themeColors } from "../theme";
+import { applyTheme, type Theme } from "../theme";
 
 /**
  * Interrupteur « Mode sombre » : applique le thème immédiatement et le
@@ -19,10 +19,7 @@ export function ThemeSwitch({ initial }: { initial: Theme }) {
   function toggle() {
     const next: Theme = dark ? "light" : "dark";
     setTheme(next);
-    document.documentElement.dataset.theme = next;
-    const secure = window.location.protocol === "https:" ? "; secure" : "";
-    document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=${THEME_COOKIE_MAX_AGE}; samesite=lax${secure}`;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColors[next]);
+    applyTheme(next);
   }
 
   return (

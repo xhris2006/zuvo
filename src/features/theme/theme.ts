@@ -11,8 +11,19 @@ export const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 /** Couleur de la barre du navigateur (mobile) pour chaque thème. */
 export const themeColors: Record<Theme, string> = {
   light: siteConfig.themeColor,
-  dark: "#111827",
+  dark: "#080a0d",
 };
+
+/**
+ * Applique le thème tout de suite (navigateur uniquement) et le mémorise sur
+ * cet appareil : le cookie est relu par le serveur au prochain affichage.
+ */
+export function applyTheme(next: Theme) {
+  document.documentElement.dataset.theme = next;
+  const secure = window.location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=${THEME_COOKIE_MAX_AGE}; samesite=lax${secure}`;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColors[next]);
+}
 
 /** Toute valeur inconnue ou absente retombe sur le thème clair. */
 export function parseTheme(value: unknown): Theme {

@@ -6,12 +6,28 @@ import { getFeedListings } from "@/features/listings/feed";
 import { getNotifications } from "@/features/notifications/queries";
 import { getProfileByUsername } from "@/features/profiles/queries";
 import { searchShops } from "@/features/profiles/shops";
-import { createSupportRequestAction } from "@/features/support/actions";
-import { getAppealableListing, getMySupportRequests } from "@/features/support/queries";
+import { getSearchSuggestions } from "@/features/search/suggestions";
+import { createSupportRequestAction, sendSupportMessageAction } from "@/features/support/actions";
+import {
+  getAppealableListing,
+  getMySupportRequests,
+  getSupportThread,
+} from "@/features/support/queries";
 import { asOwner, createActiveListing, createUser, makeAdmin } from "../support/db";
 import { actAs } from "./support/context";
+import { RedirectError } from "./support/setup";
 
 const idle = { status: "idle" as const };
+
+/** URL de redirection d'une action (la création d'une demande ouvre sa conversation). */
+async function redirectOf(promise: Promise<unknown>) {
+  const error = await promise.then(
+    () => null,
+    (caught: unknown) => caught,
+  );
+  if (!(error instanceof RedirectError)) throw error ?? new Error("redirection attendue");
+  return error.url;
+}
 
 function form(fields: Record<string, string>) {
   const data = new FormData();
@@ -47,16 +63,18 @@ describe("assistance et badge vérifié (actions et requêtes réelles)", () => 
       removed_reason: "Contrefaçon",
     });
     expect(
-      await createSupportRequestAction(
-        idle,
-        form({
-          kind: "appeal",
-          listingId,
-          subject: "Contestation du retrait",
-          message: "Le sac est authentique, j'ai la facture du magasin.",
-        }),
+      await redirectOf(
+        createSupportRequestAction(
+          idle,
+          form({
+            kind: "appeal",
+            listingId,
+            subject: "Contestation du retrait",
+            message: "Le sac est authentique, j'ai la facture du magasin.",
+          }),
+        ),
       ),
-    ).toMatchObject({ status: "success" });
+    ).toMatch(/^\/assistance\/[0-9a-f-]{36}$/);
     expect(
       await createSupportRequestAction(
         idle,
@@ -93,7 +111,7 @@ describe("assistance et badge vérifié (actions et requêtes réelles)", () => 
     const [mine] = await getMySupportRequests(seller.id);
     expect(mine).toMatchObject({
       status: "answered",
-      response: "Annonce rétablie après vérification.",
+      lastMessage: { body: "Annonce rétablie après vérification.", fromStaff: true },
     });
     const notifications = await getNotifications();
     expect(notifications.items[0]).toMatchObject({
@@ -101,6 +119,67 @@ describe("assistance et badge vérifié (actions et requêtes réelles)", () => 
       title: "Réponse de l'assistance",
     });
     expect(notifications.items[0]!.body).toContain("Contestation du retrait");
+  });
+
+  it("conversation d'assistance entre un membre et l'équipe, privée", async () => {
+    const member = await createUser();
+    const moderator = await createModerator();
+    const other = await createUser();
+
+    actAs(member);
+    const url = await redirectOf(
+      createSupportRequestAction(
+        idle,
+        form({
+          kind: "contact",
+          listingId: "",
+          subject: "Paiement bloqué",
+          message: "Bonjour, mon acheteur dit avoir payé mais je n'ai rien reçu.",
+        }),
+      ),
+    );
+    const requestId = url.split("/").at(-1)!;
+    expect(
+      await sendSupportMessageAction(idle, form({ requestId, body: "Référence : 12345." })),
+    ).toEqual({ status: "success" });
+    expect(await sendSupportMessageAction(idle, form({ requestId, body: "   " }))).toMatchObject({
+      status: "error",
+      fieldErrors: { body: "Écrivez un message." },
+    });
+
+    actAs(moderator);
+    const notifications = await getNotifications();
+    expect(notifications.items.filter((item) => item.supportRequestId === requestId)).toMatchObject(
+      [{ type: "support_message", title: "Message à l'assistance" }],
+    );
+    expect(
+      await answerSupportRequestAction(idle, form({ requestId, response: "Nous vérifions." })),
+    ).toMatchObject({ status: "success" });
+
+    actAs(member);
+    const thread = await getSupportThread(requestId);
+    expect(thread?.messages.map((message) => [message.body, message.fromStaff])).toEqual([
+      ["Bonjour, mon acheteur dit avoir payé mais je n'ai rien reçu.", false],
+      ["Référence : 12345.", false],
+      ["Nous vérifions.", true],
+    ]);
+    expect(thread?.status).toBe("answered");
+
+    actAs(other);
+    expect(await getSupportThread(requestId)).toBeNull();
+    expect(
+      await sendSupportMessageAction(idle, form({ requestId, body: "Intrusion" })),
+    ).toMatchObject({ status: "error", message: "Demande introuvable." });
+  });
+
+  it("les suggestions de recherche trouvent aussi un membre sans annonce", async () => {
+    const name = `Zebulon${Date.now().toString(36)}`;
+    const member = await createUser({ display_name: `${name} Atangana` });
+    actAs(null);
+    const suggestions = await getSearchSuggestions(name.toLowerCase());
+    expect(suggestions.members).toEqual([
+      expect.objectContaining({ username: member.username, displayName: `${name} Atangana` }),
+    ]);
   });
 
   it("attribue le badge vérifié, visible sur le profil, le fil et les boutiques", async () => {

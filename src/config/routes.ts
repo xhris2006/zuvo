@@ -10,6 +10,11 @@ export const routes = {
   profile: "/profil",
   editProfile: "/profil/modifier",
   settings: "/parametres",
+  settingsAccount: "/parametres/compte",
+  settingsNotifications: "/parametres/notifications",
+  settingsDisplay: "/parametres/affichage",
+  settingsPrivacy: "/parametres/confidentialite",
+  settingsDelete: "/parametres/suppression",
   favorites: "/favoris",
   profileFavorites: "/profil?onglet=favoris",
   feed: "/fil",
@@ -43,6 +48,9 @@ export const routes = {
   support: "/assistance",
   install: "/installer",
 } as const satisfies Record<string, Route>;
+
+/** Suggestions de la barre de recherche (route API, hors navigation). */
+export const searchSuggestionsEndpoint = "/api/recherche/suggestions";
 
 /** Pages réservées aux utilisateurs connectés (préfixes). */
 export const protectedRoutePrefixes = [
@@ -91,6 +99,16 @@ export function publicProfileHref(username: string): Route {
 
 export function followersHref(username: string): Route {
   return `/u/${encodeURIComponent(username)}/abonnes` as Route;
+}
+
+/** Conversation d'une demande d'assistance (côté membre). */
+export function supportThreadHref(requestId: string): Route {
+  return `/assistance/${encodeURIComponent(requestId)}` as Route;
+}
+
+/** Conversation d'une demande d'assistance (côté équipe). */
+export function adminSupportThreadHref(requestId: string): Route {
+  return `/admin/assistance/${encodeURIComponent(requestId)}` as Route;
 }
 
 /** Fiche d'un utilisateur dans l'administration. */

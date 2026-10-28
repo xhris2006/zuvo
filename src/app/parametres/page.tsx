@@ -1,25 +1,33 @@
+import {
+  Bell,
+  FileText,
+  Headset,
+  Heart,
+  KeyRound,
+  LifeBuoy,
+  Lock,
+  Palette,
+  PencilLine,
+  Rss,
+  ShieldCheck,
+  Smartphone,
+  Trash2,
+  UserX,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SettingsGroup, SettingsRow } from "@/components/ui/settings-list";
 import { routes } from "@/config/routes";
+import { isCurrentUserStaff } from "@/features/admin/queries";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
-import { UpdatePasswordForm } from "@/features/auth/components/update-password-form";
-import { DeleteAccountDialog } from "@/features/account/components/delete-account-dialog";
 import { requireUser } from "@/features/auth/session";
-import { BlockedList } from "@/features/moderation/components/blocked-list";
 import { getBlockedUsers } from "@/features/moderation/queries";
-import { PreferencesForm } from "@/features/notifications/components/preferences-form";
-import { PushSettings } from "@/features/notifications/components/push-settings";
-import { getLastPushResult, getNotificationPreferences } from "@/features/notifications/queries";
-import { isCurrentUserAdmin } from "@/features/admin/queries";
 import { getCurrentProfile } from "@/features/profiles/queries";
-import { ClearHistoryForm } from "@/features/recommendations/components/clear-history-form";
-import { ThemeSwitch } from "@/features/theme/components/theme-switch";
 import { parseTheme, THEME_COOKIE } from "@/features/theme/theme";
-import { LanguageSwitch } from "@/features/language/components/language-switch";
-import { getT } from "@/i18n/server";
+import { localeNames } from "@/i18n/config";
+import { getLocale, getT } from "@/i18n/server";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,107 +35,91 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t.settingsPage.title, robots: { index: false } };
 }
 
+/**
+ * Paramètres et activité : réglages classés par groupes (compte, affichage,
+ * confidentialité, activités, assistance, administration), chaque ligne
+ * menant à sa sous-page ou à la page concernée.
+ */
 export default async function SettingsPage() {
   if (!isSupabaseConfigured()) redirect(routes.profile);
   const { user } = await requireUser(routes.settings);
-  const t = await getT();
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const [preferences, blockedUsers, profile, lastPush, isAdmin] = await Promise.all([
-    getNotificationPreferences(),
+  const [t, locale, store, blockedUsers, profile, isStaff] = await Promise.all([
+    getT(),
+    getLocale(),
+    cookies(),
     getBlockedUsers(user.id),
     getCurrentProfile(),
-    getLastPushResult().catch(() => null),
-    isCurrentUserAdmin(),
+    isCurrentUserStaff(),
   ]);
+  const theme = parseTheme(store.get(THEME_COOKIE)?.value);
+  const s = t.settingsPage;
 
   return (
-    <div className="container-page flex max-w-2xl flex-col gap-4 pt-4 sm:gap-6 sm:pt-10">
-      <PageHeader title={t.settingsPage.title} />
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.settingsPage.account}</CardTitle>
-          <CardDescription>
-            {t.settingsPage.loginEmail} <strong>{user.email ?? t.settingsPage.emailMissing}</strong>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SignOutButton variant="outline" />
-        </CardContent>
-      </Card>
-      <Card id="langue">
-        <CardHeader>
-          <CardTitle>{t.language.title}</CardTitle>
-          <CardDescription>{t.language.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LanguageSwitch />
-        </CardContent>
-      </Card>
-      <Card id="apparence">
-        <CardHeader>
-          <CardTitle>{t.appearance.title}</CardTitle>
-          <CardDescription>{t.appearance.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ThemeSwitch initial={theme} />
-        </CardContent>
-      </Card>
-      <Card id="notifications">
-        <CardHeader>
-          <CardTitle>{t.settingsPage.notifications}</CardTitle>
-          <CardDescription>{t.settingsPage.notificationsDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PreferencesForm preferences={preferences} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.settingsPage.push}</CardTitle>
-          <CardDescription>{t.settingsPage.pushDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PushSettings lastPush={lastPush} isAdmin={isAdmin} />
-        </CardContent>
-      </Card>
-      <Card id="recommandations">
-        <CardHeader>
-          <CardTitle>{t.settingsPage.recommendations}</CardTitle>
-          <CardDescription>{t.settingsPage.recommendationsDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ClearHistoryForm />
-        </CardContent>
-      </Card>
-      <Card id="blocages">
-        <CardHeader>
-          <CardTitle>{t.settingsPage.blocked}</CardTitle>
-          <CardDescription>{t.settingsPage.blockedDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BlockedList users={blockedUsers} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.settingsPage.password}</CardTitle>
-          <CardDescription>{t.settingsPage.passwordDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <UpdatePasswordForm />
-        </CardContent>
-      </Card>
-      {profile ? (
-        <Card id="suppression" className="border-danger/30">
-          <CardHeader>
-            <CardTitle>{t.settingsPage.deleteAccount}</CardTitle>
-            <CardDescription>{t.settingsPage.deleteAccountDescription}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DeleteAccountDialog username={profile.username} />
-          </CardContent>
-        </Card>
+    <div className="container-page flex max-w-2xl flex-col gap-5 pt-3 pb-4 sm:gap-6 sm:pt-8">
+      <PageHeader title={s.title} />
+
+      {isStaff ? (
+        <SettingsGroup title={s.groups.admin}>
+          <SettingsRow href={routes.admin} icon={ShieldCheck} label={s.rows.admin} tone="brand" />
+        </SettingsGroup>
       ) : null}
+
+      <SettingsGroup title={s.groups.account}>
+        <SettingsRow href={routes.editProfile} icon={PencilLine} label={s.rows.editProfile} />
+        <SettingsRow
+          href={routes.settingsAccount}
+          icon={KeyRound}
+          label={s.rows.account}
+          value={user.email ?? undefined}
+        />
+        <SettingsRow href={routes.settingsNotifications} icon={Bell} label={s.notifications} />
+      </SettingsGroup>
+
+      <SettingsGroup title={s.groups.display}>
+        <SettingsRow
+          href={routes.settingsDisplay}
+          icon={Palette}
+          label={s.rows.display}
+          value={`${localeNames[locale]} · ${theme === "dark" ? s.rows.themeDark : s.rows.themeLight}`}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title={s.groups.privacy}>
+        <SettingsRow
+          href={routes.settingsPrivacy}
+          icon={UserX}
+          label={s.rows.privacy}
+          value={blockedUsers.length > 0 ? s.rows.blockedCount(blockedUsers.length) : undefined}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title={s.groups.activity}>
+        <SettingsRow href={routes.profileFavorites} icon={Heart} label={s.rows.favorites} />
+        <SettingsRow href={routes.feed} icon={Rss} label={s.rows.feed} />
+      </SettingsGroup>
+
+      <SettingsGroup title={s.groups.support}>
+        <SettingsRow href={routes.support} icon={Headset} label={s.rows.supportChat} />
+        <SettingsRow href={routes.help} icon={LifeBuoy} label={s.rows.help} />
+        <SettingsRow href={routes.safety} icon={ShieldCheck} label={s.rows.safety} />
+        <SettingsRow href={routes.install} icon={Smartphone} label={s.rows.install} />
+        <SettingsRow href={routes.terms} icon={FileText} label={s.rows.terms} />
+        <SettingsRow href={routes.privacy} icon={Lock} label={s.rows.privacyPolicy} />
+      </SettingsGroup>
+
+      <div className="flex flex-col gap-3">
+        {profile ? (
+          <SettingsGroup>
+            <SettingsRow
+              href={routes.settingsDelete}
+              icon={Trash2}
+              label={s.deleteAccount}
+              tone="danger"
+            />
+          </SettingsGroup>
+        ) : null}
+        <SignOutButton variant="soft" className="w-full" />
+      </div>
     </div>
   );
 }

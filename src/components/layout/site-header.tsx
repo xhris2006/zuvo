@@ -5,6 +5,7 @@ import { type ReactNode, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { isCurrentUserStaff } from "@/features/admin/queries";
+import { PushAttentionDot } from "@/features/notifications/components/push-attention-dot";
 import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/unread-counts";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
@@ -21,12 +22,15 @@ function IconLink({
   href,
   label,
   unread,
+  attention = false,
   className,
   children,
 }: {
   href: Route;
   label: string;
   unread?: "messages" | "notifications";
+  /** Point clignotant tant que les notifications ne sont pas activées (membres). */
+  attention?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -41,6 +45,7 @@ function IconLink({
             <UnreadBadge kind={unread} className="top-0.5 right-0.5" />
           </>
         ) : null}
+        {attention ? <PushAttentionDot className="bottom-1.5 left-1.5" /> : null}
       </Link>
     </Button>
   );
@@ -56,7 +61,7 @@ export async function SiteHeader() {
     <HideOnScrollHeader
       data-site-header
       style={{ viewTransitionName: "site-header" }}
-      className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:hidden"
+      className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:hidden dark:bg-chrome/95 dark:supports-[backdrop-filter]:bg-chrome/90"
     >
       <div className="container-page flex h-14 items-center gap-3 md:h-16 lg:gap-6">
         {/* Mobile : logo centré entre deux colonnes de même largeur. */}
@@ -86,6 +91,7 @@ export async function SiteHeader() {
             href={routes.notifications}
             label={t.nav.notifications}
             unread="notifications"
+            attention={Boolean(profile)}
             className="max-md:-mr-2"
           >
             <Bell className="size-5" aria-hidden="true" />

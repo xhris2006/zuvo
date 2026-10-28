@@ -47,6 +47,10 @@
   --inverse: #1f2937;
   --inverse-foreground: #ffffff;
 
+  /* Barres (en-tête, navigation) et champs de saisie : identiques aux cartes en clair. */
+  --chrome: #ffffff;
+  --field: #ffffff;
+
   --border: #e5e1d8;
   --input: #8a8d93;
   --ring: #c25600;
@@ -72,56 +76,63 @@
 }
 
 /*
- * Mode sombre, choisi dans les paramètres (cookie lu côté serveur, donc sans
- * flash au chargement). Contrastes vérifiés (WCAG AA) : texte principal 16:1,
- * texte secondaire 7,8:1, texte orange 8,8:1, texte sur orange 7,9:1.
+ * Mode sombre « noir profond », choisi dans les paramètres (cookie lu côté
+ * serveur, donc sans flash au chargement) : fond noir véritable, barres
+ * #080a0d, champs #17191d, cartes #202328, séparateurs #292d32. Contrastes
+ * vérifiés (WCAG AA) : texte principal 19:1 (14:1 sur les cartes), texte
+ * secondaire 8,3:1 (6,2:1 sur les cartes), texte orange 8,9:1, texte sur
+ * orange 7,6:1, bordures de champs 3,2:1 minimum.
  */
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --background: #111827;
-  --foreground: #f3f1ec;
+  --background: #000000;
+  --foreground: #f5f5f5;
 
-  --card: #1a2230;
-  --card-foreground: #f3f1ec;
-  --popover: #212b3b;
-  --popover-foreground: #f3f1ec;
+  --card: #202328;
+  --card-foreground: #f5f5f5;
+  --popover: #202328;
+  --popover-foreground: #f5f5f5;
 
-  --primary: #ff8a1f;
-  --primary-hover: #ff9d45;
-  --primary-foreground: #1a1206;
-  --primary-ink: #ffa04d;
-  --primary-ink-hover: #ffb676;
-  --primary-line: #ff8a1f;
+  --primary: #ff7a00;
+  --primary-hover: #ff8f2b;
+  --primary-foreground: #0a0a0a;
+  --primary-ink: #ff8a1f;
+  --primary-ink-hover: #ffa74f;
+  --primary-line: #ff7a00;
 
-  --secondary: #3a2512;
-  --secondary-hover: #4a2f17;
-  --secondary-foreground: #ffcb94;
+  --secondary: #2b1b0c;
+  --secondary-hover: #3a2511;
+  --secondary-foreground: #ffa726;
 
-  --muted: #1e2735;
-  --muted-foreground: #a5adba;
+  --muted: #111111;
+  --muted-foreground: #a3a3a3;
 
-  --accent: #2a1f14;
-  --accent-foreground: #ffcb94;
+  --accent: #1c1308;
+  --accent-foreground: #ffc27a;
 
-  --inverse: #263142;
+  --inverse: #202328;
   --inverse-foreground: #ffffff;
 
-  --border: #2e3846;
-  --input: #6f7988;
-  --ring: #ff9a3d;
+  /* Barres (en-tête, navigation) et champs de saisie. */
+  --chrome: #080a0d;
+  --field: #17191d;
+
+  --border: #292d32;
+  --input: #6b7079;
+  --ring: #ff8a1f;
 
   --success: #4cc38a;
-  --success-soft: #10291e;
+  --success-soft: #0d2219;
   --warning: #f0b453;
-  --warning-soft: #2e2210;
+  --warning-soft: #2a1f0d;
   --danger: #f2877f;
-  --danger-soft: #35171a;
+  --danger-soft: #2e1416;
   --danger-solid: #c53a32;
   --info: #5cc4e0;
-  --info-soft: #0f2a33;
+  --info-soft: #0b2229;
 
-  --hero-tint: #2a1c0f;
+  --hero-tint: #1a0f05;
 }
 
 @theme inline {
@@ -146,6 +157,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-inverse: var(--inverse);
   --color-inverse-foreground: var(--inverse-foreground);
+  --color-chrome: var(--chrome);
+  --color-field: var(--field);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -300,6 +313,16 @@ body:has([data-standalone]) :is([data-site-header], [data-bottom-nav], [data-sid
 body:has([data-standalone]) main,
 body:has([data-standalone]) [data-shell] {
   padding: 0;
+}
+
+/*
+ * Profils : leur barre (pseudo, notifications, menu) remplace l'en-tête du
+ * site sur téléphone et tablette, comme dans les applications sociales.
+ */
+@media (width < 64rem) {
+  body:has([data-own-header]) [data-site-header] {
+    display: none;
+  }
 }
 
 /*
@@ -731,6 +754,26 @@ body:has([data-admin]) main {
 }
 
 /* Logo animé (page de bienvenue) : le carré apparaît, le Z se trace, le point s'allume. */
+/* Cloche qui sonne (invitation à activer les notifications). */
+@keyframes bell-ring {
+  0%,
+  60%,
+  100% {
+    rotate: 0deg;
+  }
+  10%,
+  30% {
+    rotate: -14deg;
+  }
+  20%,
+  40% {
+    rotate: 14deg;
+  }
+  50% {
+    rotate: -6deg;
+  }
+}
+
 @keyframes logo-pop {
   from {
     opacity: 0;

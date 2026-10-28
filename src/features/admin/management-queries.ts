@@ -466,10 +466,12 @@ export type SupportInboxItem = {
   subject: string;
   message: string;
   status: SupportInboxStatus;
-  response: string | null;
   createdAt: string;
-  handledAt: string | null;
+  updatedAt: string;
   author: { id: string; username: string; displayName: string } | null;
+  /** Messages échangés après celui d'ouverture. */
+  messageCount: number;
+  lastMessage: { body: string; fromStaff: boolean } | null;
   listing: {
     id: string;
     title: string;
@@ -488,12 +490,14 @@ export async function getSupportRequests(
   const { data, error, count } = await supabase
     .from("support_requests")
     .select(
-      "id, kind, subject, message, status, response, created_at, handled_at, author:profiles!support_requests_user_id_fkey(id, username, display_name), listing:listings(id, title, removed_at, removed_reason)",
+      "id, kind, subject, message, status, created_at, updated_at, author:profiles!support_requests_user_id_fkey(id, username, display_name), listing:listings(id, title, removed_at, removed_reason), last:support_messages(body, from_staff, created_at), total:support_messages(count)",
       { count: "exact" },
     )
     .eq("status", status)
-    // Les plus anciennes d'abord tant qu'elles attendent une réponse.
-    .order("created_at", { ascending: status !== "open" ? false : true })
+    // En attente : celles qui attendent depuis le plus longtemps d'abord.
+    .order("updated_at", { ascending: status === "open" })
+    .order("created_at", { referencedTable: "last", ascending: false })
+    .limit(1, { referencedTable: "last" })
     .range(from, from + pageSize - 1);
   if (error && error.code !== "PGRST103") throw new ManagementQueryError();
   return {
@@ -503,9 +507,12 @@ export async function getSupportRequests(
       subject: row.subject,
       message: row.message,
       status: supportInboxStatuses.find((value) => value === row.status) ?? "open",
-      response: row.response,
       createdAt: row.created_at,
-      handledAt: row.handled_at,
+      updatedAt: row.updated_at,
+      messageCount: row.total[0]?.count ?? 0,
+      lastMessage: row.last[0]
+        ? { body: row.last[0].body, fromStaff: row.last[0].from_staff }
+        : null,
       author: row.author
         ? { id: row.author.id, username: row.author.username, displayName: row.author.display_name }
         : null,

@@ -16,7 +16,7 @@ import { getT } from "@/i18n/server";
 export async function WelcomeHeader() {
   const t = await getT();
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/75">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/75 dark:bg-chrome/95">
       <div className="container-page flex h-16 items-center gap-1 sm:gap-3">
         <Logo compact className="shrink-0" />
         <nav aria-label={t.nav.primary} className="ml-3 hidden items-center gap-1 lg:flex">
@@ -55,10 +55,15 @@ export async function WelcomeHeader() {
           >
             <Link href={routes.signUp}>{t.welcome.signUpShort}</Link>
           </Button>
-          <Button asChild size="sm" className="rounded-full max-sm:gap-1.5 max-sm:px-2.5">
+          {/* Très petits écrans (360 px) : bouton icône, libellé pour les lecteurs d'écran. */}
+          <Button
+            asChild
+            size="sm"
+            className="rounded-full max-sm:gap-1.5 max-sm:px-2.5 max-[25rem]:size-9 max-[25rem]:px-0"
+          >
             <Link href={routes.sell}>
               <Plus aria-hidden="true" />
-              <span className="sm:hidden">{t.nav.sell}</span>
+              <span className="max-[25rem]:sr-only sm:hidden">{t.nav.sell}</span>
               <span className="hidden sm:inline">{t.nav.sellCta}</span>
             </Link>
           </Button>

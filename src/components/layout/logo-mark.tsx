@@ -24,7 +24,7 @@ export function LogoMark({
     <svg
       viewBox="4 -14 260 260"
       aria-hidden="true"
-      className={cn("size-8 shrink-0", color, className)}
+      className={cn("size-9 shrink-0", color, className)}
     >
       <path
         d={logoPaths.handle}

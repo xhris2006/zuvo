@@ -1,4 +1,4 @@
-import { Inbox, Phone } from "lucide-react";
+import { ChevronRight, Headset, Inbox, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { routes } from "@/config/routes";
+import { routes, supportThreadHref } from "@/config/routes";
 import { formatSupportPhone, siteConfig } from "@/config/site";
 import { AuthRequired } from "@/features/auth/components/auth-required";
 import { requireUser } from "@/features/auth/session";
@@ -47,103 +47,116 @@ export default async function SupportPage(props: PageProps<"/assistance">) {
     contester ? getAppealableListing(user.id, contester) : Promise.resolve(null),
   ]);
 
+  const form = (
+    <Card>
+      <CardHeader>
+        <CardTitle>{appealListing ? copy.appealTitle : copy.newTitle}</CardTitle>
+        <CardDescription>
+          {appealListing ? copy.appealDescription : copy.newDescription}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {contester && !appealListing ? <Alert variant="warning">{copy.notAppealable}</Alert> : null}
+        {appealListing ? (
+          <Alert variant="danger" title={copy.removedListing(appealListing.title)}>
+            {appealListing.removed_reason ?? copy.noReason}{" "}
+            <Link href={listingHref(appealListing.id)} className="font-semibold underline">
+              {copy.viewListing}
+            </Link>
+          </Alert>
+        ) : null}
+        <SupportForm
+          appeal={
+            appealListing ? { listingId: appealListing.id, title: appealListing.title } : undefined
+          }
+        />
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Phone className="size-4" aria-hidden="true" />
+          {copy.phone}{" "}
+          <a
+            href={`tel:${siteConfig.supportPhone}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            {formatSupportPhone()}
+          </a>
+        </p>
+      </CardContent>
+    </Card>
+  );
+  const conversations = (
+    <section aria-labelledby="my-requests" className="flex flex-col gap-3">
+      <h2 id="my-requests" className="text-lg font-bold tracking-tight">
+        {copy.conversations}
+      </h2>
+      {requests.length === 0 ? (
+        <EmptyState icon={Inbox} headingLevel="h3" title={copy.none} />
+      ) : (
+        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+          {requests.map((request) => {
+            const last = request.lastMessage;
+            return (
+              <li key={request.id}>
+                <Link
+                  href={supportThreadHref(request.id)}
+                  className="flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted"
+                >
+                  <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                    <Headset className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate font-semibold">
+                        {request.subject}
+                      </span>
+                      <time
+                        dateTime={request.updatedAt}
+                        className="shrink-0 text-xs text-muted-foreground"
+                      >
+                        {t.format.relativeTime(request.updatedAt)}
+                      </time>
+                    </span>
+                    <span className="truncate text-sm text-muted-foreground">
+                      {last ? (last.fromStaff ? copy.lastFromTeam : copy.lastFromYou) : null}
+                      {last ? last.body : request.message}
+                    </span>
+                    <span className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {request.kind === "appeal" ? (
+                        <Badge variant="primary">{copy.appeal}</Badge>
+                      ) : null}
+                      <Badge variant={statusVariants[request.status]}>
+                        {copy.statuses[request.status]}
+                      </Badge>
+                    </span>
+                  </span>
+                  <ChevronRight
+                    className="mt-2.5 size-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+
   return (
     <div className="container-page flex max-w-3xl flex-col gap-6 pt-4 sm:gap-8 sm:pt-10">
       <PageHeader title={copy.title} description={copy.description} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{appealListing ? copy.appealTitle : copy.newTitle}</CardTitle>
-          <CardDescription>
-            {appealListing ? copy.appealDescription : copy.newDescription}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {contester && !appealListing ? (
-            <Alert variant="warning">{copy.notAppealable}</Alert>
-          ) : null}
-          {appealListing ? (
-            <Alert variant="danger" title={copy.removedListing(appealListing.title)}>
-              {appealListing.removed_reason ?? copy.noReason}{" "}
-              <Link href={listingHref(appealListing.id)} className="font-semibold underline">
-                {copy.viewListing}
-              </Link>
-            </Alert>
-          ) : null}
-          <SupportForm
-            appeal={
-              appealListing
-                ? { listingId: appealListing.id, title: appealListing.title }
-                : undefined
-            }
-          />
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="size-4" aria-hidden="true" />
-            {copy.phone}{" "}
-            <a
-              href={`tel:${siteConfig.supportPhone}`}
-              className="font-medium text-foreground hover:underline"
-            >
-              {formatSupportPhone()}
-            </a>
-          </p>
-        </CardContent>
-      </Card>
-
-      <section aria-labelledby="my-requests" className="flex flex-col gap-3">
-        <h2 id="my-requests" className="text-lg font-bold tracking-tight">
-          {copy.myRequests}
-        </h2>
-        {requests.length === 0 ? (
-          <EmptyState icon={Inbox} headingLevel="h3" title={copy.none} />
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {requests.map((request) => {
-              return (
-                <li
-                  key={request.id}
-                  className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-card"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="min-w-0 flex-1 font-semibold break-words">
-                      {request.subject}
-                    </span>
-                    {request.kind === "appeal" ? (
-                      <Badge variant="primary">{copy.appeal}</Badge>
-                    ) : null}
-                    <Badge variant={statusVariants[request.status]}>
-                      {copy.statuses[request.status]}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {copy.sentOn(t.format.dateTime(request.createdAt))}
-                    {request.listing ? (
-                      <>
-                        {" · "}
-                        <Link href={listingHref(request.listing.id)} className="hover:underline">
-                          {request.listing.title}
-                        </Link>
-                      </>
-                    ) : null}
-                  </p>
-                  <p className="text-sm whitespace-pre-line text-foreground/90">
-                    {request.message}
-                  </p>
-                  {request.response ? (
-                    <div className="rounded-xl bg-secondary/60 p-3 text-sm">
-                      <p className="mb-1 text-xs font-semibold text-secondary-foreground">
-                        {copy.teamReply}
-                        {request.handledAt ? ` · ${t.format.dateTime(request.handledAt)}` : ""}
-                      </p>
-                      <p className="whitespace-pre-line">{request.response}</p>
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      {/* Contestation en cours ou première demande : le formulaire d'abord. */}
+      {appealListing || contester || requests.length === 0 ? (
+        <>
+          {form}
+          {conversations}
+        </>
+      ) : (
+        <>
+          {conversations}
+          {form}
+        </>
+      )}
     </div>
   );
 }

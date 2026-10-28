@@ -75,34 +75,38 @@ Les deux vidéos se comprennent sans voix (textes à l'écran). Pour une voix of
 calés sur l'image (voix jeune et chaleureuse, qui tutoie). Envoyer la prise (MP3) pour qu'elle
 soit découpée et mixée comme pour les vidéos précédentes.
 
-**`seconde-vie/`**
+**`seconde-vie/`** (45 s) — chaque phrase doit tenir dans sa fenêtre
 
-| Début  | Texte                                                                                                                 |
-| ------ | --------------------------------------------------------------------------------------------------------------------- |
-| 4,4 s  | Chez toi, il y a une robe portée une seule fois… une manette oubliée sous le lit… un canapé qui prend toute la place. |
-| 8,6 s  | Sur MboaDeal, tout trouve preneur.                                                                                    |
-| 11,6 s | Achète et vends près de chez toi, partout au Cameroun.                                                                |
-| 17,5 s | Publie ton annonce en cinq étapes : des photos, un titre, un prix, ta ville… et c'est en ligne !                      |
-| 24,6 s | Tape deux lettres : MboaDeal devine la suite.                                                                         |
-| 31 s   | Partage ton annonce en un geste… et discute directement avec l'acheteur.                                              |
-| 36,3 s | Au lancement, publier ne coûte rien, et aucune commission sur tes ventes.                                             |
-| 40,6 s | MboaDeal. Achète, vends, donne une seconde vie.                                                                       |
+| Fenêtre       | Texte                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| 4,6 – 5,9 s   | Une robe portée une seule fois…                                                          |
+| 6,0 – 7,2 s   | une manette oubliée sous le lit…                                                         |
+| 7,3 – 8,5 s   | un canapé qui prend toute la place.                                                      |
+| 8,7 – 11 s    | Sur MboaDeal, tout trouve preneur.                                                       |
+| 11,7 – 16 s   | Achète et vends près de chez toi, partout au Cameroun.                                   |
+| 17,6 – 23,4 s | Publie ton annonce en cinq étapes : des photos, un prix, ta ville… et c'est en ligne !   |
+| 24,7 – 30 s   | Tape deux lettres : MboaDeal devine la suite. Annonces, catégories, et même les membres. |
+| 31,1 – 33,5 s | Partage-la en un geste…                                                                  |
+| 33,9 – 36 s   | et discute directement avec l'acheteur.                                                  |
+| 36,4 – 39,8 s | Au lancement, c'est gratuit : zéro franc pour publier, zéro commission.                  |
+| 40,8 – 44,5 s | MboaDeal. Achète, vends, donne une seconde vie.                                          |
 
-**`lumiere/`**
+**`lumiere/`** (31 s) — mots isolés détachés, ton plus posé
 
-| Début  | Texte                                           |
-| ------ | ----------------------------------------------- |
-| 0,5 s  | Chez toi, ça dort… Ici, ça se vend.             |
-| 4,9 s  | Achète.                                         |
-| 5,6 s  | Deux lettres suffisent.                         |
-| 10 s   | La bonne affaire, près de chez toi.             |
-| 12,7 s | Vends.                                          |
-| 14,4 s | Cinq étapes, une photo, un prix…                |
-| 17,9 s | Publiée.                                        |
-| 19,5 s | Partage.                                        |
-| 20,4 s | Un lien, WhatsApp, Facebook.                    |
-| 23,1 s | Ta vitrine.                                     |
-| 27 s   | MboaDeal. Achète, vends, donne une seconde vie. |
+| Fenêtre       | Texte                                           |
+| ------------- | ----------------------------------------------- |
+| 0,5 – 3,6 s   | Chez toi, ça dort… Ici, ça se vend.             |
+| 4,9 s         | Achète.                                         |
+| 5,8 – 9,2 s   | Deux lettres, et la suite s'écrit toute seule.  |
+| 9,9 – 12,3 s  | La bonne affaire, près de chez toi.             |
+| 12,7 s        | Vends.                                          |
+| 14,3 – 17,3 s | Cinq étapes. Une photo, un prix, ta ville.      |
+| 17,9 s        | Publiée !                                       |
+| 19,5 s        | Partage.                                        |
+| 20,4 – 22,5 s | Un lien, WhatsApp, Facebook.                    |
+| 23,1 s        | Ta vitrine.                                     |
+| 24,1 – 26 s   | Ton profil, tes favoris, tes abonnés.           |
+| 27 – 30,5 s   | MboaDeal. Achète, vends, donne une seconde vie. |
 
 ## À valider avant diffusion
 

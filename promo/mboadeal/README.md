@@ -75,39 +75,55 @@ Les deux vidéos se comprennent sans voix (textes à l'écran). Pour une voix of
 calés sur l'image (voix jeune et chaleureuse, qui tutoie). Envoyer la prise (MP3) pour qu'elle
 soit découpée et mixée comme pour les vidéos précédentes.
 
-**`seconde-vie/`** (45 s) — chaque phrase doit tenir dans sa fenêtre
+Règle : la voix dit ce qui s'affiche au même moment (titres, étapes, étiquettes). Les
+animations sont recalées sur chaque nouvelle prise.
 
-| Fenêtre       | Texte                                                                                    |
-| ------------- | ---------------------------------------------------------------------------------------- |
-| 1,3 – 4,2 s   | MboaDeal… la seconde vie de tes affaires.                                                |
-| 4,6 – 5,9 s   | Une robe portée une seule fois…                                                          |
-| 6,0 – 7,2 s   | une manette oubliée sous le lit…                                                         |
-| 7,3 – 8,5 s   | un canapé qui prend toute la place.                                                      |
-| 8,7 – 11 s    | Sur MboaDeal, tout trouve preneur.                                                       |
-| 11,7 – 16 s   | Achète et vends près de chez toi, partout au Cameroun.                                   |
-| 17,6 – 23,4 s | Publie ton annonce en cinq étapes : des photos, un prix, ta ville… et c'est en ligne !   |
-| 24,7 – 30 s   | Tape deux lettres : MboaDeal devine la suite. Annonces, catégories, et même les membres. |
-| 31,1 – 33,5 s | Partage-la en un geste…                                                                  |
-| 33,9 – 36 s   | et discute directement avec l'acheteur.                                                  |
-| 36,4 – 39,8 s | Au lancement, c'est gratuit : zéro franc pour publier, zéro commission.                  |
-| 40,8 – 44,5 s | MboaDeal. Achète, vends, donne une seconde vie.                                          |
+**Prononciation** : « Mboa » se dit comme « boa » (le serpent) précédé d'un « m » léger, en deux
+syllables « m-bo-a », jamais « bois ». « Deal » se dit « dil ». Dans ElevenLabs, écrire
+**« Mbo-a Dil »** (ou « M'bo-a Dil ») à la place de « MboaDeal » et vérifier à l'écoute.
+
+**Voix** : légère teinte africaine (Afrique centrale), jeune, chaleureuse, qui tutoie.
+
+**`seconde-vie/`** (45 s)
+
+| À l'écran                                       | Texte à dire                                                                                         |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Logo, « Achète. Vends. Donne une seconde vie. » | Mbo-a Dil. Achète. Vends. Donne une seconde vie.                                                     |
+| Une robe… une manette… un canapé                | Une robe portée une seule fois… une manette oubliée sous le lit… un canapé qui prend toute la place. |
+| « Ici, tout trouve preneur. »                   | Ici, tout trouve preneur.                                                                            |
+| « Achète et vends près de chez toi… »           | Achète et vends près de chez toi, partout au Cameroun.                                               |
+| « Ton annonce en 5 étapes. »                    | Ton annonce en cinq étapes :                                                                         |
+| Étape 1 « Photos »                              | les photos…                                                                                          |
+| Étape 2 « Description »                         | la description…                                                                                      |
+| Étape 3 « Catégorie »                           | la catégorie…                                                                                        |
+| Étape 4 « 12 000 FCFA · Douala »                | le prix et la ville…                                                                                 |
+| Étape 5 « Vérification », « Annonce publiée »   | tu vérifies… et c'est publié !                                                                       |
+| « Deux lettres, MboaDeal complète le reste. »   | Tape deux lettres… et Mbo-a Dil complète le reste.                                                   |
+| « Annonces », « Catégories », « Membres »       | Annonces, catégories, et même les membres.                                                           |
+| « Partage-la en un geste. »                     | Partage-la en un geste…                                                                              |
+| « Et discute directement. »                     | et discute directement.                                                                              |
+| « Au lancement, c'est gratuit. »                | Au lancement, c'est gratuit :                                                                        |
+| « 0 FCFA pour publier une annonce »             | zéro franc pour publier une annonce…                                                                 |
+| « 0 % de commission sur tes ventes »            | et zéro pour cent de commission sur tes ventes.                                                      |
+| Carte finale, « Découvre MboaDeal »             | Achète, vends, donne une seconde vie… Découvre Mbo-a Dil !                                           |
 
 **`lumiere/`** (31 s) — mots isolés détachés, ton plus posé
 
-| Fenêtre       | Texte                                           |
-| ------------- | ----------------------------------------------- |
-| 0,5 – 3,6 s   | Chez toi, ça dort… Ici, ça se vend.             |
-| 4,9 s         | Achète.                                         |
-| 5,8 – 9,2 s   | Deux lettres, et la suite s'écrit toute seule.  |
-| 9,9 – 12,3 s  | La bonne affaire, près de chez toi.             |
-| 12,7 s        | Vends.                                          |
-| 14,3 – 17,3 s | Cinq étapes. Une photo, un prix, ta ville.      |
-| 17,9 s        | Publiée !                                       |
-| 19,5 s        | Partage.                                        |
-| 20,4 – 22,5 s | Un lien, WhatsApp, Facebook.                    |
-| 23,1 s        | Ta vitrine.                                     |
-| 24,1 – 26 s   | Ton profil, tes favoris, tes abonnés.           |
-| 27 – 30,5 s   | MboaDeal. Achète, vends, donne une seconde vie. |
+| À l'écran                                      | Texte à dire                                                |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| « Chez toi, ça dort. Ici, ça se vend. »        | Chez toi, ça dort… Ici, ça se vend.                         |
+| « Achète. »                                    | Achète.                                                     |
+| « ro » puis la suite en grisé                  | Deux lettres… et Mbo-a Dil complète le reste.               |
+| L'annonce trouvée                              | La bonne affaire, près de chez toi.                         |
+| « Vends. »                                     | Vends.                                                      |
+| Les cinq cartes                                | En cinq étapes :                                            |
+| « Photos » … « Vérification » (compteur)       | photos… description… catégorie… prix et lieu… vérification. |
+| « Annonce publiée »                            | Publiée !                                                   |
+| « Partage. »                                   | Partage.                                                    |
+| « Copier le lien », « WhatsApp », « Facebook » | Un lien… WhatsApp… Facebook.                                |
+| « Ta vitrine. »                                | Ta vitrine.                                                 |
+| « Favoris », « Abonnés », « Messages »         | Tes favoris, tes abonnés, tes messages.                     |
+| Logo, slogan                                   | Mbo-a Dil. Achète, vends, donne une seconde vie.            |
 
 ### Mixage
 

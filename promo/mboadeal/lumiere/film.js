@@ -111,7 +111,9 @@
       <div class="s">${'<span class="ic">' + icon("search") + "</span>"}Baskets rouges, pointure 42</div>
       <div class="s">${'<span class="ic">' + icon("search") + "</span>"}Lot de 6 romans africains</div>
     </div>`);
-  const counter = add(`<div id="counter">Étape<b>1 sur 5</b></div>`);
+  const counter = add(`<div id="counter">Étape<b>1 sur 5</b><em>Photos</em></div>`);
+  // Noms des étapes de l'assistant de mise en vente du site, lus par la voix off.
+  const STEP_NAMES = ["Photos", "Description", "Catégorie", "Prix et lieu", "Vérification"];
   const done = add(`<div id="done" class="glass">
       <img src="../objets/watch.jpg" alt="">
       <div><div class="ok">${icon("circle-check")}Annonce publiée</div><div class="t">Montre dorée, bracelet cuir</div><div class="p">12 000 FCFA</div></div>
@@ -418,6 +420,7 @@
     counter.style.opacity = win(t, 14.2, 16.9, 0.3, 0.3);
     const step = clamp(Math.floor((t - 14.2) / 0.5) + 1, 1, 5);
     $("#counter b").textContent = `${step} sur 5`;
+    $("#counter em").textContent = STEP_NAMES[step - 1];
     // Bouton « Publier l'annonce » : impulsion de lumière, puis l'annonce publiée
     flash.style.opacity = 0.32 * Math.exp(-(((t - 17.85) / 0.12) ** 2));
     const r = clamp((t - 17.8) / 0.9);

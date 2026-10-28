@@ -79,6 +79,7 @@ soit découpée et mixée comme pour les vidéos précédentes.
 
 | Fenêtre       | Texte                                                                                    |
 | ------------- | ---------------------------------------------------------------------------------------- |
+| 1,3 – 4,2 s   | MboaDeal… la seconde vie de tes affaires.                                                |
 | 4,6 – 5,9 s   | Une robe portée une seule fois…                                                          |
 | 6,0 – 7,2 s   | une manette oubliée sous le lit…                                                         |
 | 7,3 – 8,5 s   | un canapé qui prend toute la place.                                                      |

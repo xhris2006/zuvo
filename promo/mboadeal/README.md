@@ -9,7 +9,7 @@ code de l'application.
 | ------------------------------------------- | ----------------------------------------------------------------------------- | ----- | ------ |
 | `seconde-vie/` « Ici, tout trouve preneur » | Clair et coloré : cartes d'objets, téléphone, étapes numérotées, carte finale | 52 s  | 60 i/s |
 | `lumiere/` « Achète. Vends. Partage. »      | Noir profond : point de lumière orange, panneaux de verre, mots isolés        | 31 s  | 30 i/s |
-| `premiere-annonce/` « Fais comme Adrien »   | Thème sombre du site : vraie notification, vraie annonce, appel à publier     | 33 s  | 60 i/s |
+| `premiere-annonce/` « Fais comme Adrien »   | Thème sombre du site : vraie notification, vraie annonce, appel à publier     | 37 s  | 60 i/s |
 
 ## Déroulé
 
@@ -49,12 +49,12 @@ abonnés.
 
 | Temps       | Plan                                                                                   |
 | ----------- | -------------------------------------------------------------------------------------- |
-| 0 – 4,75 s  | Téléphone verrouillé, la notification « Nouvelle annonce » tombe : « Ding ! »          |
-| 4,3 – 11,2  | Fondu vers l'annonce d'Adrien (photos, prix qui défile, Yaoundé, neuf avec étiquette)  |
-| 10,7 – 16   | « Tu publies, tes abonnés sont prévenus » : profil d'Adrien, notifications qui partent |
-| 15,6 – 23,6 | « À ton tour » : bouton +, les 5 étapes réelles, « Annonce publiée »                   |
-| 23,2 – 28,2 | « Pour le lancement, c'est gratuit » : 0 FCFA pour publier, 0 % de commission          |
-| 27,8 – 32,6 | « Fais comme Adrien. », « Publier sur MboaDeal », mboadeals.shop                       |
+| 0 – 4,7 s   | Téléphone verrouillé, la notification « Nouvelle annonce » tombe : « Ding ! »          |
+| 4,5 – 13,1  | Fondu vers l'annonce d'Adrien (photos, prix qui défile, Yaoundé, neuf avec étiquette)  |
+| 12,6 – 17   | « Tu publies, tes abonnés sont prévenus » : profil d'Adrien, notifications qui partent |
+| 16,6 – 25,8 | « À ton tour » : bouton +, les 5 étapes réelles, « Annonce publiée »                   |
+| 25,4 – 30,6 | « Pour le lancement, c'est gratuit » : 0 FCFA pour publier, 0 % de commission          |
+| 30,3 – 36,8 | « Fais comme Adrien. », « Publier sur MboaDeal », mboadeals.shop                       |
 
 Les photos (`premiere-annonce/medias/`) sont découpées dans les captures du site fournies par le
 propriétaire ; elles montrent un membre réel et ne sont pas versionnées. **Avant diffusion,
@@ -161,7 +161,7 @@ la bande-son suivent toutes les deux ce calage.
 | « Favoris », « Abonnés », « Messages »         | Tes favoris, tes abonnés, tes messages.                     |
 | Logo, slogan                                   | Mbo-a Dil. Achète, vends, donne une seconde vie.            |
 
-**`premiere-annonce/`** (33 s) — ton enjoué, qui tutoie
+**`premiere-annonce/`** (37 s) — ton enjoué, qui tutoie
 
 | À l'écran                                                        | Texte à dire                                                                                  |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -179,7 +179,7 @@ la bande-son suivent toutes les deux ce calage.
 `commun/voixoff.py` découpe la prise phrase par phrase, place chaque phrase sur son moment (léger
 accéléré possible, sans changer la hauteur de la voix) et baisse la musique sous la voix
 (−5 dB, et −13 dB entre 300 Hz et 4 kHz). Les positions des phrases dans la prise sont dans
-`seconde-vie/voix.py` et `lumiere/voix.py` (prises ElevenLabs du 28 octobre 2026, à placer
+`seconde-vie/voix.py`, `lumiere/voix.py` et `premiere-annonce/voix.py` (prises ElevenLabs, à placer
 dans `rendus/voix-off.mp3` de chaque vidéo) ; une nouvelle prise demande de les relever à nouveau.
 
 ```bash

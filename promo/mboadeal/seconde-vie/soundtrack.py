@@ -3,7 +3,7 @@ kalimba, shaker, congas, basse), bruitages calés sur l'image. Création origina
 numpy, sans droits tiers).
 
 Les bruitages sont écrits en temps de scène, comme les animations de la page, puis placés sur
-la voix par le calage (`calage.js`, lu par `calage.py`).
+la voix par le calage (`calage.js`, lu par `commun/calage.py`).
 
     python3 soundtrack.py rendus/bande-son.wav
 """
@@ -12,9 +12,9 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "commun"))
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from calage import DUREE, M  # noqa: E402
+ICI = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(ICI, "..", "commun"))
+from calage import charger  # noqa: E402
 from synthe import (  # noqa: E402
     Piste,
     bass,
@@ -38,6 +38,7 @@ from synthe import (  # noqa: E402
     whoosh,
 )
 
+DUREE, M = charger(os.path.join(ICI, "calage.js"))
 DUR = DUREE
 p = Piste(DUR)
 BEAT = 60 / 112

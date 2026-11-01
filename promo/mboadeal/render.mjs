@@ -8,9 +8,9 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
 const [film, ...args] = process.argv.slice(2);
-const FILMS = { "seconde-vie": { fps: 60 }, lumiere: { fps: 30 } };
+const FILMS = { "seconde-vie": { fps: 60 }, lumiere: { fps: 30 }, "premiere-annonce": { fps: 60 } };
 if (!FILMS[film]) {
-  console.error("Usage : node render.mjs seconde-vie|lumiere [--stills t1,t2,…]");
+  console.error(`Usage : node render.mjs ${Object.keys(FILMS).join("|")} [--stills t1,t2,…]`);
   process.exit(1);
 }
 const dir = fileURLToPath(new URL(`./${film}/`, import.meta.url));

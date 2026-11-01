@@ -1,13 +1,15 @@
 # Vidéos MboaDeal
 
-Deux vidéos motion design 9:16 (1080 × 1920) pour MboaDeal, dans le style des deux premières
-vidéos Zuvo, avec un nouveau scénario, l'identité orange et les **vrais écrans du site**
-(copie locale, données de démonstration). Ce dossier ne touche pas au code de l'application.
+Vidéos motion design 9:16 (1080 × 1920) pour MboaDeal, dans le style des deux premières
+vidéos Zuvo, avec l'identité orange et les **vrais écrans du site** (copie locale, données de
+démonstration), plus une vidéo autour de la première annonce réelle. Ce dossier ne touche pas au
+code de l'application.
 
 | Vidéo                                       | Style                                                                         | Durée | Images |
 | ------------------------------------------- | ----------------------------------------------------------------------------- | ----- | ------ |
 | `seconde-vie/` « Ici, tout trouve preneur » | Clair et coloré : cartes d'objets, téléphone, étapes numérotées, carte finale | 52 s  | 60 i/s |
 | `lumiere/` « Achète. Vends. Partage. »      | Noir profond : point de lumière orange, panneaux de verre, mots isolés        | 31 s  | 30 i/s |
+| `premiere-annonce/` « Fais comme Adrien »   | Thème sombre du site : vraie notification, vraie annonce, appel à publier     | 33 s  | 60 i/s |
 
 ## Déroulé
 
@@ -39,6 +41,32 @@ Temps de la version avec voix off (calage dans `calage.js`).
 | 23 – 26,4   | « Ta vitrine. » : le profil, balayé par un faisceau ; favoris, abonnés, messages             |
 | 26,4 – 31   | La lumière trace le logo ; slogan, « Découvre MboaDeal », offre de lancement                 |
 
+### `premiere-annonce/` — Fais comme Adrien
+
+Incite les visiteurs à publier en montrant la **première annonce réelle** du site (Adrien
+TCHOUPO, « Amiri, taille 40 à 43 », 13 000 FCFA, Yaoundé) et la notification reçue par ses
+abonnés.
+
+| Temps       | Plan                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------- |
+| 0 – 4,75 s  | Téléphone verrouillé, la notification « Nouvelle annonce » tombe : « Ding ! »          |
+| 4,3 – 11,2  | Fondu vers l'annonce d'Adrien (photos, prix qui défile, Yaoundé, neuf avec étiquette)  |
+| 10,7 – 16   | « Tu publies, tes abonnés sont prévenus » : profil d'Adrien, notifications qui partent |
+| 15,6 – 23,6 | « À ton tour » : bouton +, les 5 étapes réelles, « Annonce publiée »                   |
+| 23,2 – 28,2 | « Pour le lancement, c'est gratuit » : 0 FCFA pour publier, 0 % de commission          |
+| 27,8 – 32,6 | « Fais comme Adrien. », « Publier sur MboaDeal », mboadeals.shop                       |
+
+Les photos (`premiere-annonce/medias/`) sont découpées dans les captures du site fournies par le
+propriétaire ; elles montrent un membre réel et ne sont pas versionnées. **Avant diffusion,
+obtenir l'accord d'Adrien TCHOUPO** pour l'utilisation de son nom, de sa photo et de son annonce
+dans une publicité. Découpes :
+
+```bash
+ffmpeg -i accueil.jpg -vf "crop=845:680:39:692" medias/amiri-vitrine.jpg   # photo de l'annonce
+ffmpeg -i profil.jpg -vf "crop=392:385:46:978" medias/amiri-boite.jpg     # deuxième photo
+ffmpeg -i profil.jpg -vf "crop=170:170:37:302" medias/adrien.jpg          # photo de profil
+```
+
 ## Fichiers
 
 | Fichier ou dossier                  | Rôle                                                                              |
@@ -49,7 +77,7 @@ Temps de la version avec voix off (calage dans `calage.js`).
 | `commun/icones.js`                  | Icônes Lucide (les mêmes que sur le site, licence ISC)                            |
 | `commun/synthe.py`                  | Instruments et bruitages des bandes-son (synthèse numpy)                          |
 | `*/index.html`                      | Scène 1080 × 1920 ; `window.seek(t)` dessine l'instant t                          |
-| `seconde-vie/calage.js`             | Calage de l'image sur la voix off (lu par la page et par `calage.py`)             |
+| `*/calage.js`, `commun/calage.*`    | Calage de l'image et des bruitages sur la voix off (même fichier pour les deux)   |
 | `lumiere/film.js`                   | Plans et trajectoire de la lumière de la vidéo sombre                             |
 | `*/soundtrack.py`                   | Bande-son originale calée sur l'image                                             |
 | `render.mjs`                        | Rendu image par image (Playwright → ffmpeg), ou aperçus avec `--stills`           |
@@ -132,6 +160,19 @@ la bande-son suivent toutes les deux ce calage.
 | « Ta vitrine. »                                | Ta vitrine.                                                 |
 | « Favoris », « Abonnés », « Messages »         | Tes favoris, tes abonnés, tes messages.                     |
 | Logo, slogan                                   | Mbo-a Dil. Achète, vends, donne une seconde vie.            |
+
+**`premiere-annonce/`** (33 s) — ton enjoué, qui tutoie
+
+| À l'écran                                                        | Texte à dire                                                                                  |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Notification « Nouvelle annonce », « Ding ! »                    | Ding ! Une nouvelle annonce sur Mbo-a Dil.                                                    |
+| « Adrien l'a fait. », « La toute première annonce de MboaDeal. » | Adrien l'a fait : la toute première annonce de Mbo-a Dil !                                    |
+| Photos, « Amiri, taille 40 à 43 », 13 000 FCFA, Yaoundé          | Des Amiri, taille 40 à 43, à treize mille francs, à Yaoundé.                                  |
+| « Tu publies, tes abonnés sont prévenus. »                       | Tu publies, tes abonnés sont prévenus.                                                        |
+| « À ton tour. », bouton +                                        | À ton tour ! Appuie sur plus…                                                                 |
+| Les 5 étapes, « Annonce publiée »                                | tes photos, la description, la catégorie, le prix et la ville… tu vérifies, et c'est publié ! |
+| « Pour le lancement, c'est gratuit. », 0 FCFA, 0 %               | Pour le lancement, c'est gratuit : zéro franc pour publier, zéro commission.                  |
+| « Fais comme Adrien. », « Publier sur MboaDeal »                 | Fais comme Adrien : publie ta première annonce sur Mbo-a Dil.                                 |
 
 ### Mixage
 

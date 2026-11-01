@@ -41,15 +41,18 @@ import { getT } from "@/i18n/server";
 import { getCities } from "@/features/locations/queries";
 import { isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
+import { publicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(props: PageProps<"/explorer">): Promise<Metadata> {
   const t = await getT();
   const searchParams = await props.searchParams;
   if (parseExploreTab(searchParams.type) === "boutiques") {
     return {
-      title: t.explore.shopsTitle,
-      description: t.explore.shopsDescription,
-      alternates: { canonical: exploreTabHref("boutiques") },
+      ...publicPageMetadata({
+        title: t.explore.shopsTitle,
+        description: t.explore.shopsDescription,
+        path: exploreTabHref("boutiques"),
+      }),
       robots: sanitizeShopQuery(searchParams.q) ? { index: false } : undefined,
     };
   }
@@ -60,11 +63,13 @@ export async function generateMetadata(props: PageProps<"/explorer">): Promise<M
       )
     : undefined;
   return {
-    title: category ? t.explore.metaCategoryTitle(category.name) : t.explore.metaTitle,
-    description: t.explore.metaDescription,
-    alternates: {
-      canonical: category ? exploreHref(toSearchParams({ category: category.slug })) : "/explorer",
-    },
+    ...publicPageMetadata({
+      title: category ? t.explore.metaCategoryTitle(category.name) : t.explore.metaTitle,
+      description: category
+        ? t.explore.metaCategoryDescription(category.name)
+        : t.explore.metaDescription,
+      path: category ? exploreHref(toSearchParams({ category: category.slug })) : routes.explore,
+    }),
     // Les pages de résultats de recherche libre ne sont pas indexées.
     robots: filters.q ? { index: false } : undefined,
   };

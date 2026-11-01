@@ -349,12 +349,15 @@ export const enServer: ServerOnlyDictionary = {
   infoPages: {
     termsTitle: "Terms of use",
     termsHeading: "Terms of use",
-    termsDescription: (site: string) => `Terms of use of ${site}.`,
-    termsIntro: (site: string) => `The rules that govern the use of ${site} for everyone.`,
+    termsDescription: (site: string) =>
+      `Terms of use of ${site}: how the marketplace works, allowed listings, prohibited behaviour, reports, moderation and liability.`,
+    termsIntro: (site: string) =>
+      `The rules for using ${site}: what the platform does, what each member agrees to respect and how the team moderates.`,
     privacyTitle: "Privacy policy",
     privacyDescription: (site: string) =>
-      `How ${site} collects, uses and protects your personal data.`,
-    privacyIntro: "What data we collect, why, and what your rights are.",
+      `Data collected by ${site} (account, Google sign-in, profile, listings, photos, messages), uses, sharing, retention, cookies and user rights.`,
+    privacyIntro: (site: string) =>
+      `What data ${site} collects, where it comes from, what it is used for, who it is shared with, how long it is kept and how to exercise your rights.`,
     safetyTitle: "Safety tips",
     safetyDescription:
       "Our tips for selling and buying safely between individuals: meetings, Mobile Money payments, common scams.",

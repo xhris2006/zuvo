@@ -228,6 +228,8 @@ export const en: Dictionary = {
     metaTitle: "Explore listings",
     metaCategoryTitle: (category: string) => `Second-hand ${category.toLowerCase()}`,
     metaDescription: "Search second-hand items by category, city, condition and price.",
+    metaCategoryDescription: (category: string) =>
+      `“${category}” listings between individuals in Cameroon: new and second-hand items, prices in FCFA, sellers near you.`,
   },
   listing: {
     conditions,
@@ -476,11 +478,7 @@ export const en: Dictionary = {
     rights: "All rights reserved.",
   },
   legal: {
-    draftTitle: "Provisional document",
-    draftBody:
-      "This text is a draft. It must be reviewed and approved by a legal professional before going live.",
     lastUpdated: "Last updated",
-    toComplete: "To complete",
   },
   errors: {
     notFoundTitle: "Page not found",
@@ -587,6 +585,7 @@ export const en: Dictionary = {
     googleDev:
       "Development: Google sign-in will appear here once the Google provider is enabled in Supabase (see docs/supabase.md).",
     google: "Continue with Google",
+    googleLegalPrefix: "By continuing with Google, you accept the",
     or: "or",
     signOut: "Sign out",
     devSetupHint: "Development: set",

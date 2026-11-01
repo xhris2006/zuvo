@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { routes } from "@/config/routes";
 import { getT } from "@/i18n/server";
 import { signInWithGoogleAction } from "../actions";
 import type { AuthSettings } from "../settings";
@@ -46,12 +48,24 @@ export async function GoogleSignIn({
 
   return (
     <>
-      <form action={signInWithGoogleAction}>
+      <form action={signInWithGoogleAction} className="flex flex-col gap-2">
         <input type="hidden" name="next" value={next ?? ""} />
         <Button type="submit" variant="outline" className="w-full">
           <GoogleIcon />
           {t.authForms.google}
         </Button>
+        {/* Un compte peut être créé par Google sans passer par le formulaire d'inscription. */}
+        <p className="text-center text-xs text-muted-foreground">
+          {t.authForms.googleLegalPrefix}{" "}
+          <Link href={routes.terms} className="underline underline-offset-2">
+            {t.authForms.acceptTerms}
+          </Link>{" "}
+          {t.authForms.acceptAnd}{" "}
+          <Link href={routes.privacy} className="underline underline-offset-2">
+            {t.authForms.acceptPrivacy}
+          </Link>
+          .
+        </p>
       </form>
       <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
         <span className="h-px flex-1 bg-border" />

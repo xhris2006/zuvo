@@ -44,7 +44,13 @@ export async function generateMetadata(props: PageProps<"/u/[username]">): Promi
     title,
     description,
     alternates: { canonical: publicProfileHref(profile.username) },
-    openGraph: { title, description, type: "profile", images: image ? [image] : undefined },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: publicProfileHref(profile.username),
+      images: image ? [image] : undefined,
+    },
   };
 }
 

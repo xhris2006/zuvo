@@ -235,6 +235,8 @@ export const fr = {
     metaTitle: "Explorer les annonces",
     metaCategoryTitle: (category: string) => `${category} d'occasion`,
     metaDescription: "Recherchez des articles de seconde main par catégorie, ville, état et prix.",
+    metaCategoryDescription: (category: string) =>
+      `Annonces « ${category} » entre particuliers au Cameroun : articles neufs et d'occasion, prix en FCFA, vendeurs près de chez vous.`,
   },
   listing: {
     conditions,
@@ -485,11 +487,7 @@ export const fr = {
     rights: "Tous droits réservés.",
   },
   legal: {
-    draftTitle: "Document provisoire",
-    draftBody:
-      "Ce texte est un brouillon. Il doit être relu et validé par un professionnel du droit avant la mise en production.",
     lastUpdated: "Dernière mise à jour",
-    toComplete: "À compléter",
   },
   errors: {
     notFoundTitle: "Page introuvable",
@@ -596,6 +594,7 @@ export const fr = {
     googleDev:
       "Développement : la connexion Google apparaîtra ici une fois le fournisseur Google activé dans Supabase (voir docs/supabase.md).",
     google: "Continuer avec Google",
+    googleLegalPrefix: "En continuant avec Google, vous acceptez les",
     or: "ou",
     signOut: "Se déconnecter",
     devSetupHint: "Développement : renseignez",

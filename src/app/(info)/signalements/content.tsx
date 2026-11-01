@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ToComplete } from "@/components/layout/document-page";
 import { routes } from "@/config/routes";
 
 /** Signalements et blocage (brouillon), en français. */
@@ -35,8 +34,12 @@ export function ReportsFr({ name }: { name: string }) {
       <p>
         L&apos;utilisateur signalé n&apos;est pas informé de l&apos;identité de la personne qui
         l&apos;a signalé. Les signalements abusifs ou répétés sans fondement peuvent eux-mêmes
-        entraîner des sanctions.{" "}
-        <ToComplete>délais indicatifs de traitement et procédure de contestation</ToComplete>
+        entraîner des sanctions.
+      </p>
+      <p>
+        Aucun délai de traitement n&apos;est garanti. Une annonce retirée par la modération peut
+        être contestée depuis sa page ; pour toute autre décision, contactez{" "}
+        <Link href={routes.help}>l&apos;assistance</Link>.
       </p>
 
       <h2>Bloquer un utilisateur</h2>
@@ -93,8 +96,11 @@ export function ReportsEn({ name }: { name: string }) {
       </ol>
       <p>
         The reported user is not told who reported them. Abusive or repeated unfounded reports may
-        themselves lead to sanctions.{" "}
-        <ToComplete>indicative handling times and appeal procedure</ToComplete>
+        themselves lead to sanctions.
+      </p>
+      <p>
+        No handling time is guaranteed. A listing removed by moderation can be appealed from its
+        page; for any other decision, contact <Link href={routes.help}>support</Link>.
       </p>
 
       <h2>Blocking a user</h2>

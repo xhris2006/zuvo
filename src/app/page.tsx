@@ -1,13 +1,13 @@
 import { PackageOpen, Plus, ShieldCheck } from "lucide-react";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { SectionHeader } from "@/components/layout/section-header";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CategoryList } from "@/features/categories/components/category-list";
 import { routes } from "@/config/routes";
 import { getCurrentUser } from "@/features/auth/session";
+import { WelcomePage, welcomeMetadata } from "@/features/home/components/welcome-page";
 import { FeedResults } from "@/features/listings/components/feed-results";
 import { ListingResults } from "@/features/listings/components/listing-results";
 import { ListingViewToggle, parseListingView } from "@/features/listings/components/listing-view";
@@ -53,12 +53,22 @@ async function loadCategories(): Promise<Category[]> {
   }
 }
 
-/** Accueil des membres connectés ; les visiteurs sont dirigés vers la page de bienvenue. */
+export async function generateMetadata(): Promise<Metadata> {
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return welcomeMetadata();
+  return { alternates: { canonical: routes.home } };
+}
+
+/**
+ * Accueil : les visiteurs (et les moteurs de recherche) voient directement la
+ * page de bienvenue, sans redirection ; les membres connectés, leur fil.
+ */
 export default async function HomePage(props: PageProps<"/">) {
   const t = await getT();
   const user = await getCurrentUser().catch(() => null);
-  if (!user) redirect(routes.welcome);
-  const view = parseListingView((await props.searchParams).vue);
+  const searchParams = await props.searchParams;
+  if (!user) return <WelcomePage accountDeleted={searchParams.compte === "supprime"} />;
+  const view = parseListingView(searchParams.vue);
   const [{ recommended, recent, followed }, categories] = await Promise.all([
     loadHomeListings(user.id),
     loadCategories(),

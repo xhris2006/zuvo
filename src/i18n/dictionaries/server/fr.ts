@@ -359,13 +359,15 @@ export const frServer = {
   infoPages: {
     termsTitle: "Conditions d'utilisation",
     termsHeading: "Conditions générales d'utilisation",
-    termsDescription: (site: string) => `Conditions générales d'utilisation de ${site}.`,
+    termsDescription: (site: string) =>
+      `Conditions d'utilisation de ${site} : fonctionnement de la place de marché, annonces autorisées, comportements interdits, signalements, modération et responsabilité.`,
     termsIntro: (site: string) =>
-      `Les règles qui encadrent l'utilisation de ${site} par toutes et tous.`,
+      `Les règles qui encadrent l'utilisation de ${site} : ce que la plateforme fait, ce que chaque membre s'engage à respecter et comment l'équipe modère.`,
     privacyTitle: "Politique de confidentialité",
     privacyDescription: (site: string) =>
-      `Comment ${site} collecte, utilise et protège vos données personnelles.`,
-    privacyIntro: "Quelles données nous collectons, pourquoi, et quels sont vos droits.",
+      `Données collectées par ${site} (compte, connexion Google, profil, annonces, photos, messages), utilisations, partage, conservation, cookies et droits des utilisateurs.`,
+    privacyIntro: (site: string) =>
+      `Quelles données ${site} collecte, d'où elles viennent, à quoi elles servent, avec qui elles sont partagées, combien de temps elles sont conservées et comment exercer vos droits.`,
     safetyTitle: "Conseils de sécurité",
     safetyDescription:
       "Nos conseils pour vendre et acheter en toute sécurité entre particuliers : rencontres, paiement Mobile Money, arnaques courantes.",

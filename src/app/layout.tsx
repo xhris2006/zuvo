@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteSidebar } from "@/components/layout/site-sidebar";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
@@ -94,6 +95,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 className="min-h-dvh flex-1 pb-safe-nav outline-none md:pb-16"
               >
                 {children}
+                {user ? null : <SiteFooter />}
               </main>
             </div>
             <BottomNav />

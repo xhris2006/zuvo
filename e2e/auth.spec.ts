@@ -18,6 +18,13 @@ test.describe("authentification non configurée", () => {
     });
   }
 
+  test("la publication d'un service demande de se connecter", async ({ page }) => {
+    for (const path of ["/services/publier", "/services/mes-services"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(`/connexion?next=${encodeURIComponent(path)}`);
+    }
+  });
+
   test("les pages membres invitent à se connecter", async ({ page }) => {
     await page.goto("/messages");
     await expect(page.getByRole("heading", { name: "Connexion requise" })).toBeVisible();
@@ -44,6 +51,9 @@ test.describe("authentification configurée (service injoignable)", () => {
       "/notifications",
       "/admin",
       "/admin/signalements",
+      "/services/publier",
+      "/services/mes-services",
+      "/admin/services",
     ]) {
       await page.goto(path);
       await expect(page).toHaveURL(`/connexion?next=${encodeURIComponent(path)}`);

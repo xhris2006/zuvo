@@ -108,10 +108,12 @@ describe("garde-fous globaux du schéma", () => {
       ),
     );
     // app_schema_version renvoie une constante (diagnostic de configuration) ;
-    // similar_listings ne lit que des annonces publiques (droits de l'appelant).
+    // similar_listings et search_services ne lisent que des annonces et des
+    // services publics (droits de l'appelant).
     expect(rows.map((row) => row.proname)).toEqual([
       "app_schema_version",
       "is_username_available",
+      "search_services",
       "similar_listings",
     ]);
   });

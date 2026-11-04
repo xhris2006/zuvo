@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  BriefcaseBusiness,
+  Shapes,
   ArrowLeft,
   Building2,
   ClipboardList,
@@ -42,6 +44,7 @@ function navGroups(t: Dictionary, role: "admin" | "moderator"): Group[] {
       { href: routes.admin, label: nav.dashboard, icon: LayoutDashboard, exact: true },
       { href: routes.adminReports, label: nav.reports, icon: Flag },
       { href: routes.adminListings, label: nav.listings, icon: Package },
+      { href: routes.adminServices, label: nav.services, icon: BriefcaseBusiness, exact: true },
       { href: routes.adminUsers, label: nav.users, icon: Users },
       { href: routes.adminNotify, label: nav.notify, icon: Send },
       { href: routes.adminSupport, label: nav.support, icon: LifeBuoy },
@@ -56,6 +59,7 @@ function navGroups(t: Dictionary, role: "admin" | "moderator"): Group[] {
       items: [
         { href: routes.adminTeam, label: nav.team, icon: ShieldCheck },
         { href: routes.adminCategories, label: nav.categories, icon: FolderTree },
+        { href: routes.adminServiceCategories, label: nav.serviceCategories, icon: Shapes },
         { href: routes.adminCities, label: nav.cities, icon: Building2 },
         { href: routes.adminAnnouncements, label: nav.announcement, icon: Megaphone },
         { href: routes.adminAntiSpam, label: nav.antiSpam, icon: ShieldBan },

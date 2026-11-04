@@ -31,12 +31,14 @@ const buttonLabels = {
   listing: "reportListingButton",
   user: "report",
   message: "report",
+  service: "reportServiceButton",
 } as const satisfies Record<ReportTargetType, string>;
 
 const titles = {
   listing: "reportListing",
   user: "reportUser",
   message: "reportMessage",
+  service: "reportService",
 } as const satisfies Record<ReportTargetType, string>;
 
 type ReportDialogProps = {

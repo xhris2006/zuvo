@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, ImageOff } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, ChevronRight, ImageOff } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,6 +7,9 @@ import { Avatar } from "@/components/ui/avatar";
 import { publicProfileHref, routes } from "@/config/routes";
 import { requireUser } from "@/features/auth/session";
 import { listingImageUrl } from "@/features/listings/image-url";
+import { servicePriceLabel } from "@/features/services/format";
+import { serviceImageUrl } from "@/features/services/image-url";
+import { serviceHref } from "@/features/services/links";
 import { listingHref } from "@/features/listings/links";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
 import { ChatView } from "@/features/messaging/components/chat-view";
@@ -47,6 +50,10 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
   const mainImage = listing
     ? [...listing.images].sort((a, b) => a.sort_order - b.sort_order)[0]
     : undefined;
+  const service = conversation.service;
+  const serviceImage = service
+    ? [...service.images].sort((a, b) => a.sort_order - b.sort_order)[0]
+    : undefined;
   const name = other?.display_name ?? t.messaging.deletedUser;
 
   return (
@@ -75,7 +82,13 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
               )}
             </h1>
             <p className="truncate text-xs text-muted-foreground">
-              {isBuyer ? t.messagingPages.seller : t.messagingPages.interestedBuyer}
+              {service
+                ? isBuyer
+                  ? t.messagingPages.provider
+                  : t.messagingPages.interestedClient
+                : isBuyer
+                  ? t.messagingPages.seller
+                  : t.messagingPages.interestedBuyer}
             </p>
           </div>
           {other ? (
@@ -87,7 +100,36 @@ export default async function ConversationPage(props: PageProps<"/messages/[id]"
             />
           ) : null}
         </div>
-        {listing ? (
+        {service ? (
+          <Link
+            href={serviceHref(service.id)}
+            className="flex items-center gap-3 rounded-xl bg-muted/70 p-2 transition-colors hover:bg-muted"
+          >
+            <span className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-card">
+              {serviceImage ? (
+                <Image
+                  src={serviceImageUrl(serviceImage.storage_path) ?? ""}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              ) : (
+                <BriefcaseBusiness
+                  className="absolute inset-0 m-auto size-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              )}
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-medium">{service.title}</span>
+              <span className="text-sm font-bold">
+                {servicePriceLabel(t, service.pricing_type, service.price)}
+              </span>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </Link>
+        ) : listing ? (
           <Link
             href={listingHref(listing.id)}
             className="flex items-center gap-3 rounded-xl bg-muted/70 p-2 transition-colors hover:bg-muted"

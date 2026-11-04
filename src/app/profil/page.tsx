@@ -1,11 +1,12 @@
-import { Heart, LayoutGrid, PackageOpen, Plus, Settings } from "lucide-react";
+import { BriefcaseBusiness, Heart, LayoutGrid, PackageOpen, Plus, Settings } from "lucide-react";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NotificationsLink } from "@/components/layout/notifications-link";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AutoDismiss } from "@/components/ui/auto-dismiss";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
@@ -23,6 +24,10 @@ import { OwnProfileMenu } from "@/features/profiles/components/own-profile-menu"
 import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileById, getProfileStats } from "@/features/profiles/queries";
+import { ServiceCard } from "@/features/services/components/service-card";
+import { ServiceFavoriteButton } from "@/features/services/components/service-favorite-button";
+import { ServiceGrid } from "@/features/services/components/service-grid";
+import { getFavoriteServices, getMyServices } from "@/features/services/queries";
 import { getT } from "@/i18n/server";
 import { getSiteUrl, isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
@@ -47,13 +52,20 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
   const profile = await getProfileById(user.id);
   // Profil absent : compte supprimé entre-temps ou incohérence ; on repart de zéro.
   if (!profile) redirect(routes.signIn);
-  // Onglet « Favoris » affiché sur la page même, comme les annonces.
-  const tab = searchParams.onglet === "favoris" ? "favorites" : "listings";
+  // Onglets « Favoris » et « Services » affichés sur la page même, comme les annonces.
+  const tab =
+    searchParams.onglet === "favoris"
+      ? "favorites"
+      : searchParams.onglet === "services"
+        ? "services"
+        : "listings";
   const favoritesPage = tab === "favorites" ? parsePageParam(searchParams.page) : 1;
-  const [stats, listings, favorites, isStaff] = await Promise.all([
+  const [stats, listings, favorites, services, favoriteServices, isStaff] = await Promise.all([
     getProfileStats(user.id),
     getOwnListings(user.id),
     getFavoriteListings(user.id, favoritesPage),
+    getMyServices(user.id),
+    getFavoriteServices(user.id),
     isCurrentUserStaff(),
   ]);
   const t = await getT();
@@ -140,18 +152,33 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
                   icon: LayoutGrid,
                   href: routes.profile as Route,
                 },
+            tab === "services"
+              ? {
+                  key: "services",
+                  label: t.servicesPages.profileTab,
+                  count: services.length,
+                  icon: BriefcaseBusiness,
+                  current: true,
+                }
+              : {
+                  key: "services",
+                  label: t.servicesPages.profileTab,
+                  count: services.length,
+                  icon: BriefcaseBusiness,
+                  href: routes.profileServices,
+                },
             tab === "favorites"
               ? {
                   key: "favorites",
                   label: t.profile.favorites,
-                  count: favorites.total,
+                  count: favorites.total + favoriteServices.length,
                   icon: Heart,
                   current: true,
                 }
               : {
                   key: "favorites",
                   label: t.profile.favorites,
-                  count: favorites.total,
+                  count: favorites.total + favoriteServices.length,
                   icon: Heart,
                   href: routes.profileFavorites,
                 },
@@ -162,15 +189,90 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
             <Alert variant="success">{t.profilePages.listingDeleted}</Alert>
           </AutoDismiss>
         ) : null}
-        {tab === "favorites" ? (
-          favorites.items.length > 0 ? (
+        {tab === "services" ? (
+          services.length > 0 ? (
             <>
-              <ListingResults listings={favorites.items} />
-              <Pagination
-                page={favoritesPage}
-                pageCount={Math.ceil(favorites.total / favorites.pageSize)}
-                hrefFor={favoritesHref}
-              />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm text-muted-foreground">{t.servicesPages.mineIntro}</p>
+                <Button asChild variant="soft" size="sm">
+                  <Link href={routes.myServices}>
+                    <BriefcaseBusiness aria-hidden="true" />
+                    {t.servicesPages.manageServices}
+                  </Link>
+                </Button>
+              </div>
+              <ServiceGrid>
+                {services.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    footer={
+                      service.removedAt || service.status === "paused" ? (
+                        <div className="px-3 pt-3">
+                          {service.removedAt ? (
+                            <Badge variant="danger">{t.services.statuses.removed}</Badge>
+                          ) : (
+                            <Badge variant="warning">{t.services.statuses.paused}</Badge>
+                          )}
+                        </div>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </ServiceGrid>
+            </>
+          ) : (
+            <EmptyState
+              icon={BriefcaseBusiness}
+              headingLevel="h3"
+              title={t.servicesPages.mineEmptyTitle}
+              description={t.servicesPages.mineEmptyBody}
+              action={
+                <Button asChild>
+                  <Link href={routes.publishService}>
+                    <Plus aria-hidden="true" />
+                    {t.servicesPages.publishService}
+                  </Link>
+                </Button>
+              }
+            />
+          )
+        ) : tab === "favorites" ? (
+          favorites.items.length > 0 || favoriteServices.length > 0 ? (
+            <>
+              {favorites.items.length > 0 ? (
+                <>
+                  <ListingResults listings={favorites.items} />
+                  <Pagination
+                    page={favoritesPage}
+                    pageCount={Math.ceil(favorites.total / favorites.pageSize)}
+                    hrefFor={favoritesHref}
+                  />
+                </>
+              ) : null}
+              {favoriteServices.length > 0 ? (
+                <section aria-labelledby="saved-services" className="flex flex-col gap-3 pt-2">
+                  <h3 id="saved-services" className="text-base font-semibold">
+                    {t.servicesPages.favoritesTitle}
+                  </h3>
+                  <ServiceGrid>
+                    {favoriteServices.map((service) => (
+                      <ServiceCard
+                        key={service.id}
+                        service={service}
+                        action={
+                          <ServiceFavoriteButton
+                            serviceId={service.id}
+                            initialFavorited
+                            signedIn
+                            returnTo={routes.profileFavorites}
+                          />
+                        }
+                      />
+                    ))}
+                  </ServiceGrid>
+                </section>
+              ) : null}
             </>
           ) : (
             <EmptyState

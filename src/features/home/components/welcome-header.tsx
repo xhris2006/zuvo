@@ -2,6 +2,7 @@ import { Plus, UserRound } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 import { SearchForm } from "@/components/layout/search-form";
+import { SpaceSwitch } from "@/components/layout/space-switch";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { LanguageToggle } from "@/features/language/components/language-switch";
@@ -68,6 +69,9 @@ export async function WelcomeHeader() {
             </Link>
           </Button>
         </div>
+      </div>
+      <div className="container-page flex justify-center pb-2.5">
+        <SpaceSwitch />
       </div>
     </header>
   );

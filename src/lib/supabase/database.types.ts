@@ -195,6 +195,7 @@ export type Database = {
           last_message_at: string;
           listing_id: string | null;
           seller_id: string | null;
+          service_id: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -204,6 +205,7 @@ export type Database = {
           last_message_at?: string;
           listing_id?: string | null;
           seller_id?: string | null;
+          service_id?: string | null;
         };
         Update: {
           buyer_id?: string | null;
@@ -212,6 +214,7 @@ export type Database = {
           last_message_at?: string;
           listing_id?: string | null;
           seller_id?: string | null;
+          service_id?: string | null;
         };
         Relationships: [
           {
@@ -233,6 +236,13 @@ export type Database = {
             columns: ["seller_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversations_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
             referencedColumns: ["id"];
           },
         ];
@@ -840,6 +850,229 @@ export type Database = {
           },
         ];
       };
+      service_categories: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          slug: string;
+          sort_order: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          slug: string;
+          sort_order?: number;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          slug?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      service_favorites: {
+        Row: {
+          created_at: string;
+          service_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          service_id: string;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          service_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_favorites_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_favorites_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      service_images: {
+        Row: {
+          created_at: string;
+          id: string;
+          service_id: string;
+          sort_order: number;
+          storage_path: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          service_id: string;
+          sort_order: number;
+          storage_path: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          service_id?: string;
+          sort_order?: number;
+          storage_path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_images_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      service_views: {
+        Row: {
+          first_viewed_at: string;
+          service_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          first_viewed_at?: string;
+          service_id: string;
+          user_id: string;
+        };
+        Update: {
+          first_viewed_at?: string;
+          service_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "service_views_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_views_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      services: {
+        Row: {
+          availability: Database["public"]["Enums"]["service_availability"];
+          availability_note: string | null;
+          category_id: string;
+          city: string;
+          contact_phone: string | null;
+          created_at: string;
+          description: string;
+          district: string | null;
+          extra_info: string | null;
+          featured_at: string | null;
+          id: string;
+          price: number | null;
+          pricing_type: Database["public"]["Enums"]["service_pricing"];
+          provider_id: string;
+          published_at: string;
+          removed_at: string | null;
+          removed_reason: string | null;
+          search_vector: unknown;
+          status: Database["public"]["Enums"]["service_status"];
+          title: string;
+          updated_at: string;
+          whatsapp: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          availability?: Database["public"]["Enums"]["service_availability"];
+          availability_note?: string | null;
+          category_id: string;
+          city: string;
+          contact_phone?: string | null;
+          created_at?: string;
+          description: string;
+          district?: string | null;
+          extra_info?: string | null;
+          featured_at?: string | null;
+          id?: string;
+          price?: number | null;
+          pricing_type?: Database["public"]["Enums"]["service_pricing"];
+          provider_id?: string;
+          published_at?: string;
+          removed_at?: string | null;
+          removed_reason?: string | null;
+          search_vector?: never;
+          status?: Database["public"]["Enums"]["service_status"];
+          title: string;
+          updated_at?: string;
+          whatsapp?: boolean;
+        };
+        Update: {
+          availability?: Database["public"]["Enums"]["service_availability"];
+          availability_note?: string | null;
+          category_id?: string;
+          city?: string;
+          contact_phone?: string | null;
+          created_at?: string;
+          description?: string;
+          district?: string | null;
+          extra_info?: string | null;
+          featured_at?: string | null;
+          id?: string;
+          price?: number | null;
+          pricing_type?: Database["public"]["Enums"]["service_pricing"];
+          provider_id?: string;
+          published_at?: string;
+          removed_at?: string | null;
+          removed_reason?: string | null;
+          search_vector?: never;
+          status?: Database["public"]["Enums"]["service_status"];
+          title?: string;
+          updated_at?: string;
+          whatsapp?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "service_categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "services_provider_id_fkey";
+            columns: ["provider_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       site_announcements: {
         Row: {
           created_at: string;
@@ -1092,6 +1325,10 @@ export type Database = {
         Args: { p_listing_id: string; p_reason: string; p_report_id?: string };
         Returns: undefined;
       };
+      admin_remove_service: {
+        Args: { p_reason: string; p_report_id?: string; p_service_id: string };
+        Returns: undefined;
+      };
       admin_remove_user_listings: {
         Args: { p_reason: string; p_user_id: string };
         Returns: number;
@@ -1110,6 +1347,10 @@ export type Database = {
         Args: { p_listing_id: string; p_note?: string };
         Returns: undefined;
       };
+      admin_restore_service: {
+        Args: { p_note?: string; p_service_id: string };
+        Returns: undefined;
+      };
       admin_set_role: {
         Args: {
           p_granted: boolean;
@@ -1120,6 +1361,10 @@ export type Database = {
       };
       admin_set_seller_verification: {
         Args: { p_note?: string; p_user_id: string; p_verified: boolean };
+        Returns: undefined;
+      };
+      admin_set_service_featured: {
+        Args: { p_featured: boolean; p_service_id: string };
         Returns: undefined;
       };
       admin_set_user_suspension: {
@@ -1163,10 +1408,22 @@ export type Database = {
           other_display_name: string;
           other_user_id: string;
           other_username: string;
+          service_id: string;
+          service_image_path: string;
+          service_title: string;
           unread_count: number;
         }[];
       };
+      get_my_service_stats: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          requests: number;
+          service_id: string;
+          views: number;
+        }[];
+      };
       get_or_create_conversation: { Args: { p_listing_id: string }; Returns: string };
+      get_or_create_service_conversation: { Args: { p_service_id: string }; Returns: string };
       get_unread_messages_count: { Args: Record<PropertyKey, never>; Returns: number };
       is_username_available: { Args: { p_username: string }; Returns: boolean };
       mark_all_notifications_read: { Args: Record<PropertyKey, never>; Returns: number };
@@ -1179,6 +1436,7 @@ export type Database = {
         }[];
       };
       record_listing_view: { Args: { p_listing_id: string }; Returns: undefined };
+      record_service_view: { Args: { p_service_id: string }; Returns: undefined };
       register_push_subscription: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string; p_user_agent?: string };
         Returns: undefined;
@@ -1189,6 +1447,44 @@ export type Database = {
       };
       report_spam_block: { Args: { p_description: string; p_title: string }; Returns: boolean };
       request_install_guide: { Args: Record<PropertyKey, never>; Returns: boolean };
+      search_services: {
+        Args: {
+          p_availability?: Database["public"]["Enums"]["service_availability"];
+          p_category?: string;
+          p_city?: string;
+          p_district?: string;
+          p_limit?: number;
+          p_max_price?: number;
+          p_min_price?: number;
+          p_offset?: number;
+          p_pricing?: Database["public"]["Enums"]["service_pricing"];
+          p_recent_days?: number;
+          p_sort?: string;
+          p_text?: string;
+          p_tsquery?: string;
+        };
+        Returns: {
+          availability: Database["public"]["Enums"]["service_availability"];
+          category_name: string;
+          category_slug: string;
+          city: string;
+          cover_path: string;
+          description: string;
+          district: string;
+          featured_at: string;
+          id: string;
+          price: number;
+          pricing_type: Database["public"]["Enums"]["service_pricing"];
+          provider_avatar_path: string;
+          provider_display_name: string;
+          provider_id: string;
+          provider_username: string;
+          provider_verified: boolean;
+          published_at: string;
+          title: string;
+          total_count: number;
+        }[];
+      };
       similar_listings: {
         Args: { p_limit?: number; p_listing_id: string };
         Returns: {
@@ -1197,6 +1493,7 @@ export type Database = {
         }[];
       };
       sync_listing_images: { Args: { p_images: Json; p_listing_id: string }; Returns: string[] };
+      sync_service_images: { Args: { p_images: Json; p_service_id: string }; Returns: string[] };
     };
     Enums: {
       app_role: "admin" | "moderator";
@@ -1221,7 +1518,11 @@ export type Database = {
         | "seller_verified"
         | "seller_unverified"
         | "support_answered"
-        | "user_messaged";
+        | "user_messaged"
+        | "service_removed"
+        | "service_restored"
+        | "service_featured"
+        | "service_unfeatured";
       notification_type:
         | "new_message"
         | "new_follower"
@@ -1244,7 +1545,10 @@ export type Database = {
         | "fake_account"
         | "other";
       report_status: "pending" | "in_review" | "resolved" | "dismissed";
-      report_target_type: "listing" | "user" | "message";
+      report_target_type: "listing" | "user" | "message" | "service";
+      service_availability: "immediate" | "weekdays" | "weekends" | "appointment";
+      service_pricing: "fixed" | "from" | "hourly" | "daily" | "quote";
+      service_status: "active" | "paused";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1385,6 +1689,10 @@ export const Constants = {
         "seller_unverified",
         "support_answered",
         "user_messaged",
+        "service_removed",
+        "service_restored",
+        "service_featured",
+        "service_unfeatured",
       ],
       notification_type: [
         "new_message",
@@ -1410,7 +1718,10 @@ export const Constants = {
         "other",
       ],
       report_status: ["pending", "in_review", "resolved", "dismissed"],
-      report_target_type: ["listing", "user", "message"],
+      report_target_type: ["listing", "user", "message", "service"],
+      service_availability: ["immediate", "weekdays", "weekends", "appointment"],
+      service_pricing: ["fixed", "from", "hourly", "daily", "quote"],
+      service_status: ["active", "paused"],
     },
   },
 } as const;

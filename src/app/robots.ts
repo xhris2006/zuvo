@@ -2,6 +2,11 @@ import type { MetadataRoute } from "next";
 import { routes } from "@/config/routes";
 import { getSiteUrl } from "@/lib/env";
 
+/**
+ * Pages publiques ouvertes à l'exploration ; espaces membres, administration,
+ * authentification et API exclus. Ce n'est pas une protection : ces pages
+ * exigent une session (src/proxy.ts) et la base applique ses politiques RLS.
+ */
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = getSiteUrl();
   return {
@@ -14,12 +19,19 @@ export default function robots(): MetadataRoute.Robots {
         routes.favorites,
         routes.notifications,
         routes.sell,
-        routes.signIn,
-        routes.signUp,
         routes.settings,
         routes.feed,
+        routes.publishService,
+        routes.myServices,
+        "/services/*/modifier",
+        routes.support,
         routes.admin,
+        routes.signIn,
+        routes.signUp,
+        routes.forgotPassword,
+        routes.resetPassword,
         routes.offline,
+        "/auth/",
         "/api/",
       ],
     },

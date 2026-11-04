@@ -120,6 +120,93 @@ export async function restoreListingWithReasonAction(
   return { status: "success", message: tx.listingRestored };
 }
 
+// -----------------------------------------------------------------------------
+// Services : retrait, rétablissement et mise en avant
+// -----------------------------------------------------------------------------
+const removeServiceSchema = z.object({
+  serviceId: z.uuid(),
+  reason: z.string().trim().min(3).max(500),
+  reportId: optionalUuid,
+});
+
+function revalidateServicePages(serviceId: string) {
+  revalidateAdmin();
+  revalidatePath(`/services/${serviceId}`);
+  revalidatePath(routes.services);
+}
+
+/** Retire un service (modération), avec un motif visible par le prestataire. */
+export async function removeServiceAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const tx = await texts();
+  const parsed = removeServiceSchema.safeParse({
+    serviceId: formText(formData, "serviceId"),
+    reason: formText(formData, "reason"),
+    reportId: formText(formData, "reportId"),
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      fieldErrors: { reason: tx.reasonMin },
+      values: { reason: formText(formData, "reason") },
+    };
+  }
+  const supabase = await staffContext();
+  if (!supabase) return { status: "error", message: tx.forbidden };
+  const { error } = await supabase.rpc("admin_remove_service", {
+    p_service_id: parsed.data.serviceId,
+    p_reason: parsed.data.reason,
+    p_report_id: parsed.data.reportId ?? undefined,
+  });
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
+  revalidateServicePages(parsed.data.serviceId);
+  return { status: "success", message: tx.serviceRemoved };
+}
+
+/** Rétablit un service retiré, avec un motif inscrit au journal. */
+export async function restoreServiceAction(
+  _previous: FormState<ModerationField>,
+  formData: FormData,
+): Promise<FormState<ModerationField>> {
+  const tx = await texts();
+  const parsed = removeServiceSchema.safeParse({
+    serviceId: formText(formData, "serviceId"),
+    reason: formText(formData, "reason"),
+    reportId: "",
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      fieldErrors: { reason: tx.reasonMin },
+      values: { reason: formText(formData, "reason") },
+    };
+  }
+  const supabase = await staffContext();
+  if (!supabase) return { status: "error", message: tx.forbidden };
+  const { error } = await supabase.rpc("admin_restore_service", {
+    p_service_id: parsed.data.serviceId,
+    p_note: parsed.data.reason,
+  });
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
+  revalidateServicePages(parsed.data.serviceId);
+  return { status: "success", message: tx.serviceRestored };
+}
+
+/** Met en avant un service ou retire sa mise en avant (administrateurs). */
+export async function setServiceFeaturedAction(formData: FormData): Promise<void> {
+  const serviceId = z.uuid().safeParse(formText(formData, "serviceId"));
+  const featured = formText(formData, "featured") === "true";
+  const supabase = await staffContext();
+  if (!serviceId.success || !supabase) return;
+  await supabase.rpc("admin_set_service_featured", {
+    p_service_id: serviceId.data,
+    p_featured: featured,
+  });
+  revalidateServicePages(serviceId.data);
+}
+
 const suspensionSchema = z.object({
   userId: z.uuid(),
   suspended: z.enum(["true", "false"]).transform((value) => value === "true"),

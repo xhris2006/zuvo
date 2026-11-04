@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
 import { DocumentPage } from "@/components/layout/document-page";
-import { legalDraftUpdatedAt } from "@/config/legal";
+import { legalUpdatedAt, publisher } from "@/config/legal";
 import { routes } from "@/config/routes";
-import { siteConfig } from "@/config/site";
+import { formatSupportPhone, siteConfig } from "@/config/site";
 import { getLocale, getT } from "@/i18n/server";
+import { getSiteUrl, publicEnv } from "@/lib/env";
 import { TermsEn, TermsFr } from "./content";
+import { publicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  return {
+  return publicPageMetadata({
     title: t.infoPages.termsTitle,
     description: t.infoPages.termsDescription(siteConfig.name),
-    alternates: { canonical: routes.terms },
-  };
+    path: routes.terms,
+    type: "article",
+  });
 }
 
 export default async function TermsPage() {
@@ -22,10 +25,17 @@ export default async function TermsPage() {
     <DocumentPage
       title={t.infoPages.termsHeading}
       intro={t.infoPages.termsIntro(siteConfig.name)}
-      updatedAt={legalDraftUpdatedAt}
-      draft
+      updatedAt={legalUpdatedAt.terms}
     >
-      <Content name={siteConfig.name} country={t.site.country} />
+      <Content
+        name={siteConfig.name}
+        country={t.site.country}
+        host={new URL(getSiteUrl()).host}
+        phone={formatSupportPhone()}
+        phoneHref={`tel:${siteConfig.supportPhone}`}
+        contactEmail={publicEnv.NEXT_PUBLIC_CONTACT_EMAIL}
+        publisher={publisher}
+      />
     </DocumentPage>
   );
 }

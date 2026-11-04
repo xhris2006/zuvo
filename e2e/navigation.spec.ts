@@ -21,6 +21,9 @@ const publicPages = [
   "/auth/confirm",
   "/fil",
   "/installer",
+  "/services",
+  "/services/recherche",
+  "/services/recherche?categorie=batiment-travaux&tri=price_asc",
 ];
 
 test.describe("pages publiques", () => {
@@ -41,11 +44,19 @@ test.describe("pages publiques", () => {
   }
 });
 
-test("les visiteurs arrivent sur la page de bienvenue, sans en-tête ni navigation", async ({
+test("les visiteurs voient la page de bienvenue directement à « / », sans en-tête ni navigation", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page).toHaveURL(/\/bienvenue$/);
+  const response = await page.goto("/");
+  // Pas de redirection : l'accueil est indexable à son URL canonique.
+  expect(response?.status()).toBe(200);
+  expect(response?.request().redirectedFrom()).toBeNull();
+  await expect(page).toHaveURL(/\/$/);
+  // URL canonique de l'accueil : la racine du site (Next.js l'écrit sans « / » final).
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /^https?:\/\/[^/]+\/?$/,
+  );
   await expect(
     page.getByRole("heading", { level: 1, name: "Achète. Vends. Donne une seconde vie." }),
   ).toBeVisible();
@@ -258,10 +269,137 @@ test("les en-têtes de sécurité sont présents", async ({ request }) => {
   expect(headers["x-powered-by"]).toBeUndefined();
 });
 
-test("les documents juridiques sont marqués comme brouillons", async ({ page }) => {
-  for (const path of ["/conditions", "/confidentialite", "/signalements"]) {
-    await page.goto(path);
-    await expect(page.getByText("Document provisoire")).toBeVisible();
+test("les documents juridiques sont publics, complets et indexables", async ({ page }) => {
+  // Nombre minimal de sections attendues dans chaque document.
+  const documents = { "/conditions": 12, "/confidentialite": 15, "/signalements": 3 };
+  for (const [path, sections] of Object.entries(documents)) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(200);
+    expect(page.url()).toContain(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+    await expect(page.getByText(/À compléter|Document provisoire/)).toHaveCount(0);
+    expect(await page.locator("main h2").count()).toBeGreaterThanOrEqual(sections);
+  }
+});
+
+test("robots.txt et sitemap.xml ne listent que des pages publiques", async ({ request }) => {
+  const robots = await (await request.get("/robots.txt")).text();
+  expect(robots).toContain("Allow: /");
+  for (const path of [
+    "/admin",
+    "/messages",
+    "/parametres",
+    "/profil",
+    "/api/",
+    "/services/publier",
+    "/services/mes-services",
+  ]) {
+    expect(robots).toContain(`Disallow: ${path}`);
+  }
+  expect(robots).toMatch(/Sitemap: .+\/sitemap\.xml/);
+
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  for (const path of [
+    "/explorer",
+    "/confidentialite",
+    "/conditions",
+    "/services",
+    "/services/recherche",
+  ]) {
+    expect(sitemap).toContain(`${path}</loc>`);
+  }
+  for (const path of [
+    "/bienvenue",
+    "/admin",
+    "/messages",
+    "/parametres",
+    "/connexion",
+    "/services/publier",
+    "/services/mes-services",
+  ]) {
+    expect(sitemap).not.toContain(`${path}</loc>`);
+  }
+});
+
+test("la politique de confidentialité décrit la connexion Google et la suppression du compte", async ({
+  page,
+}) => {
+  await page.goto("/confidentialite");
+  await expect(page).toHaveTitle(/Politique de confidentialité/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /Google/);
+  await expect(page.getByRole("heading", { name: /Connexion avec Google/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Supprimer votre compte et vos données/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Cookies, stockage local et sessions/ }),
+  ).toBeVisible();
+});
+
+test("l'accueil Services présente la recherche, les catégories et la publication", async ({
+  page,
+}) => {
+  await page.goto("/services");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Trouvez le bon professionnel pour vos besoins" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Découvrez des prestataires près de chez vous ou proposez vos services à des milliers de personnes",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Trouver un service" })).toHaveAttribute(
+    "href",
+    "/services/recherche",
+  );
+  await expect(page.getByRole("link", { name: "Publier mon service" }).first()).toHaveAttribute(
+    "href",
+    "/services/publier",
+  );
+  for (const name of ["Informatique et technologie", "Bâtiment et travaux", "Autres services"]) {
+    await expect(page.getByRole("link", { name: new RegExp(name) }).first()).toBeVisible();
+  }
+});
+
+test("le sélecteur Marketplace / Services met en évidence l'espace actif", async ({ page }) => {
+  await page.goto("/explorer");
+  const switcher = page
+    .getByRole("navigation", { name: "Espaces de MboaDeal" })
+    .filter({ visible: true })
+    .first();
+  await expect(switcher.getByRole("link", { name: "Marketplace" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await switcher.getByRole("link", { name: "Services" }).click();
+  await expect(page).toHaveURL("/services");
+  const servicesSwitcher = page
+    .getByRole("navigation", { name: "Espaces de MboaDeal" })
+    .filter({ visible: true })
+    .first();
+  await expect(servicesSwitcher.getByRole("link", { name: "Services" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+});
+
+test("la recherche de services conserve la requête et la ville dans l'URL", async ({ page }) => {
+  await page.goto("/services");
+  const form = page.getByRole("main").getByRole("search");
+  await form.getByLabel("Rechercher un service").fill("plombier");
+  await form.getByRole("button", { name: "Rechercher" }).click();
+  await expect(page).toHaveURL(/\/services\/recherche\?q=plombier/);
+  await expect(page.locator("h1").first()).toBeVisible();
+});
+
+test("un service inexistant renvoie une 404", async ({ page }) => {
+  const paths = ["/services/pas-un-uuid"];
+  if (process.env.E2E_SUPABASE !== "unreachable") {
+    paths.push("/services/00000000-0000-4000-8000-000000000000");
+  }
+  for (const path of paths) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(404);
   }
 });
 

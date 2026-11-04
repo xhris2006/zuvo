@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import { DocumentPage } from "@/components/layout/document-page";
-import { legalDraftUpdatedAt } from "@/config/legal";
+import { legalUpdatedAt } from "@/config/legal";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { getLocale, getT } from "@/i18n/server";
 import { ReportsEn, ReportsFr } from "./content";
+import { publicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  return {
+  return publicPageMetadata({
     title: t.infoPages.reportsTitle,
     description: t.infoPages.reportsDescription(siteConfig.name),
-    alternates: { canonical: routes.reportsInfo },
-  };
+    path: routes.reportsInfo,
+  });
 }
 
 export default async function ReportsInfoPage() {
@@ -22,8 +23,7 @@ export default async function ReportsInfoPage() {
     <DocumentPage
       title={t.infoPages.reportsTitle}
       intro={t.infoPages.reportsIntro}
-      updatedAt={legalDraftUpdatedAt}
-      draft
+      updatedAt={legalUpdatedAt.reports}
     >
       <Content name={siteConfig.name} />
     </DocumentPage>

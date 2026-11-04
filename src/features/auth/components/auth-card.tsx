@@ -126,6 +126,24 @@ export async function AuthCard({ title, description, children, footer }: AuthCar
               {footer}
             </div>
           ) : null}
+          <nav
+            aria-label={t.footer.legal}
+            className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground"
+          >
+            {[
+              { href: routes.terms, label: t.footer.terms },
+              { href: routes.privacy, label: t.footer.privacy },
+              { href: routes.help, label: t.footer.contact },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="underline-offset-2 hover:text-foreground hover:underline"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
     </div>

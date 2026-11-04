@@ -12,6 +12,8 @@ const pages = [
   "/aide",
   "/installer",
   "/conditions",
+  "/services",
+  "/services/recherche",
   "/hors-ligne",
   "/page-inexistante",
 ];

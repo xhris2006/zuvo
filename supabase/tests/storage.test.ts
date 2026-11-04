@@ -31,6 +31,7 @@ describe("configuration des buckets", () => {
       { id: "avatars", public: true, limit: 2097152, allowed_mime_types: images },
       { id: "listing-images", public: true, limit: 8388608, allowed_mime_types: images },
       { id: "message-attachments", public: false, limit: 8388608, allowed_mime_types: images },
+      { id: "service-images", public: true, limit: 8388608, allowed_mime_types: images },
     ]);
   });
 });

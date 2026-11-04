@@ -10,7 +10,9 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { adminUserHref, publicProfileHref, routes } from "@/config/routes";
 import {
   removeListingAction,
+  removeServiceAction,
   restoreListingAction,
+  restoreServiceAction,
   setUserSuspensionAction,
 } from "@/features/admin/actions";
 import { ModerationDialog } from "@/features/admin/components/moderation-dialog";
@@ -22,6 +24,7 @@ import { isSuspensionActive } from "@/features/admin/suspension";
 import { ListingStatusBadge } from "@/features/listings/components/listing-status-badge";
 import { listingHref } from "@/features/listings/links";
 import type { ReportStatus } from "@/features/moderation/schemas";
+import { serviceHref } from "@/features/services/links";
 import { getT } from "@/i18n/server";
 import { parsePageParam } from "@/lib/pagination";
 import { Constants } from "@/lib/supabase/database.types";
@@ -92,6 +95,63 @@ async function Target({ report }: { report: AdminReport }) {
             confirmLabel={t.adminPages.remove}
             action={removeListingAction}
             fields={{ listingId: target.id, reportId: report.id }}
+          />
+        )}
+      </div>
+    );
+  }
+  if (target.kind === "service") {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={serviceHref(target.id)}
+            className="inline-flex items-center gap-1 font-medium hover:underline"
+          >
+            {target.title}
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+          </Link>
+          {target.status === "paused" ? (
+            <Badge variant="warning">{t.services.statuses.paused}</Badge>
+          ) : null}
+          {target.removedAt ? <Badge variant="danger">{t.services.statuses.removed}</Badge> : null}
+        </div>
+        {target.provider ? (
+          <p className="text-sm text-muted-foreground">
+            {t.adminPages.reports.providerLabel}{" "}
+            <Link href={publicProfileHref(target.provider.username)} className="hover:underline">
+              {target.provider.displayName} (@{target.provider.username})
+            </Link>
+          </p>
+        ) : null}
+        {target.removedAt ? (
+          <ModerationDialog
+            trigger={
+              <Button variant="outline" size="sm" className="self-start">
+                <RotateCcw aria-hidden="true" />
+                {t.adminPages.reports.restoreService}
+              </Button>
+            }
+            title={t.adminServices.restoreTitle}
+            description={t.adminServices.restoreDescription}
+            confirmLabel={t.adminServices.restore}
+            action={restoreServiceAction}
+            fields={{ serviceId: target.id }}
+            confirmVariant="primary"
+          />
+        ) : (
+          <ModerationDialog
+            trigger={
+              <Button variant="destructive" size="sm" className="self-start">
+                <Ban aria-hidden="true" />
+                {t.adminPages.reports.removeService}
+              </Button>
+            }
+            title={t.adminServices.removeTitle}
+            description={t.adminPages.reports.removeServiceDescription}
+            confirmLabel={t.adminPages.remove}
+            action={removeServiceAction}
+            fields={{ serviceId: target.id, reportId: report.id }}
           />
         )}
       </div>

@@ -4,14 +4,15 @@ import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { getLocale, getT } from "@/i18n/server";
 import { SafetyEn, SafetyFr } from "./content";
+import { publicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  return {
+  return publicPageMetadata({
     title: t.infoPages.safetyTitle,
     description: t.infoPages.safetyDescription,
-    alternates: { canonical: routes.safety },
-  };
+    path: routes.safety,
+  });
 }
 
 export default async function SafetyPage() {

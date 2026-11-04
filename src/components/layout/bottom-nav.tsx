@@ -6,12 +6,13 @@ import { UnreadBadge, UnreadLabel } from "@/features/notifications/components/un
 import { LinkPending } from "@/components/ui/link-pending";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import { spaceOf } from "@/features/services/space";
 import { getPrimaryNavItems, isNavItemActive } from "./nav-items";
 
 export function BottomNav() {
   const pathname = usePathname();
   const t = useT();
-  const items = getPrimaryNavItems(t);
+  const items = getPrimaryNavItems(t, spaceOf(pathname));
 
   return (
     <nav

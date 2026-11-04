@@ -30,8 +30,13 @@ type ListingJsonLdProps = {
   category?: string | null;
 };
 
-/** Données structurées schema.org (Product) pour les moteurs de recherche. */
+/**
+ * Données structurées schema.org (Product) pour les moteurs de recherche. Sans
+ * prix, l'annonce n'a pas d'offre valide : rien n'est publié plutôt qu'un
+ * Product incomplet (aucun avis ni note n'est jamais inventé).
+ */
 export function ListingJsonLd(props: ListingJsonLdProps) {
+  if (props.price === null) return null;
   const data = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -40,17 +45,14 @@ export function ListingJsonLd(props: ListingJsonLdProps) {
     image: props.images,
     category: props.category ?? undefined,
     url: props.url,
-    offers:
-      props.price === null
-        ? undefined
-        : {
-            "@type": "Offer",
-            price: props.price,
-            priceCurrency: siteConfig.currency,
-            availability: availability[props.status],
-            itemCondition: props.condition ? itemCondition[props.condition] : undefined,
-            url: props.url,
-          },
+    offers: {
+      "@type": "Offer",
+      price: props.price,
+      priceCurrency: siteConfig.currency,
+      availability: availability[props.status],
+      itemCondition: props.condition ? itemCondition[props.condition] : undefined,
+      url: props.url,
+    },
   };
   return <JsonLd data={data} />;
 }

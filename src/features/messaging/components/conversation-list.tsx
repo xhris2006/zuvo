@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { listingImageUrl } from "@/features/listings/image-url";
+import { serviceImageUrl } from "@/features/services/image-url";
 import { cn } from "@/lib/utils";
 import { createMessageFormatters } from "../format";
 import { conversationHref } from "../links";
@@ -23,9 +24,11 @@ export async function ConversationList({
     <ul className="-mx-4 border-y border-border bg-card sm:mx-0 sm:overflow-hidden sm:rounded-2xl sm:border sm:shadow-card">
       {conversations.map((conversation) => {
         const name = conversation.other_display_name ?? t.messaging.deletedUser;
-        const image = conversation.listing_image_path
-          ? listingImageUrl(conversation.listing_image_path)
-          : null;
+        const image = conversation.service_image_path
+          ? serviceImageUrl(conversation.service_image_path)
+          : conversation.listing_image_path
+            ? listingImageUrl(conversation.listing_image_path)
+            : null;
         const unread = conversation.unread_count > 0;
         return (
           <li
@@ -74,7 +77,9 @@ export async function ConversationList({
                   </span>
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {conversation.listing_title ?? t.messaging.listingUnavailable}
+                  {conversation.service_title ??
+                    conversation.listing_title ??
+                    t.messaging.listingUnavailable}
                 </span>
                 <span className="mt-0.5 flex items-center gap-2">
                   <span

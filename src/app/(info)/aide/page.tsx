@@ -6,14 +6,15 @@ import { formatSupportPhone, siteConfig } from "@/config/site";
 import { getLocale, getT } from "@/i18n/server";
 import { HelpEn, HelpFr } from "./content";
 import { publicEnv } from "@/lib/env";
+import { publicPageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  return {
+  return publicPageMetadata({
     title: t.infoPages.helpTitle,
     description: t.infoPages.helpDescription(siteConfig.name),
-    alternates: { canonical: routes.help },
-  };
+    path: routes.help,
+  });
 }
 
 export default async function HelpPage() {

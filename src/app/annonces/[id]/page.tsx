@@ -26,7 +26,7 @@ import { localizedCategoryName } from "@/features/categories/data";
 import { getSimilarListings, recordListingView } from "@/features/recommendations/queries";
 import { toSearchParams } from "@/features/search/schema";
 import { getT } from "@/i18n/server";
-import { getSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(props: PageProps<"/annonces/[id]">): Promise<Metadata> {
@@ -76,7 +76,7 @@ export default async function ListingPage(props: PageProps<"/annonces/[id]">) {
     // Historique privé du membre connecté (recommandations) ; jamais bloquant.
     viewer && !isOwner ? recordListingView(listing.id).catch(() => undefined) : null,
   ]);
-  const url = `${getSiteUrl()}${listingHref(listing.id)}`;
+  const url = `${getPublicSiteUrl()}${listingHref(listing.id)}`;
   // Texte du partage : titre et prix (aperçu WhatsApp et autres messageries).
   const shareText =
     listing.price === null ? listing.title : `${listing.title} – ${t.format.price(listing.price)}`;

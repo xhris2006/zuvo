@@ -12,7 +12,7 @@ import {
 import type { ListingCardData } from "@/features/listings/types";
 import { getLocale, getT } from "@/i18n/server";
 import { intlLocales } from "@/i18n";
-import { getSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl } from "@/lib/env";
 import { WelcomeScreen } from "./welcome-screen";
 
 /** Métadonnées de l'accueil des visiteurs, servi à « / » (URL canonique). */
@@ -52,7 +52,7 @@ async function loadCategories(): Promise<Category[]> {
 export async function WelcomePage({ accountDeleted = false }: { accountDeleted?: boolean }) {
   const [t, locale] = await Promise.all([getT(), getLocale()]);
   const [listings, categories] = await Promise.all([loadRecentListings(), loadCategories()]);
-  const siteUrl = getSiteUrl();
+  const siteUrl = getPublicSiteUrl();
   return (
     <div data-standalone>
       <JsonLd

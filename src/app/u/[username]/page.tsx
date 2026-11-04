@@ -28,7 +28,7 @@ import { ServiceFavoriteButton } from "@/features/services/components/service-fa
 import { ServiceGrid } from "@/features/services/components/service-grid";
 import { getProviderServices, getServiceFavoriteIds } from "@/features/services/queries";
 import { getT } from "@/i18n/server";
-import { getSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl } from "@/lib/env";
 
 async function loadProfile(rawUsername: string) {
   const username = decodeURIComponent(rawUsername).toLowerCase();
@@ -93,7 +93,7 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
     <ShareButton
       title={`${profile.display_name} (@${profile.username})`}
       text={t.profilePages.discover(profile.display_name, siteConfig.name)}
-      url={`${getSiteUrl()}${profilePath}`}
+      url={`${getPublicSiteUrl()}${profilePath}`}
       label={t.profilePages.shareProfile}
       tone="soft"
       // 360 px : sans icône pour que les deux libellés tiennent sur une ligne.

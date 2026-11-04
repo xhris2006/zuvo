@@ -314,10 +314,38 @@ test("robots.txt et sitemap.xml ne listent que des pages publiques", async ({ re
     "/messages",
     "/parametres",
     "/connexion",
+    "/inscription",
     "/services/publier",
     "/services/mes-services",
   ]) {
     expect(sitemap).not.toContain(`${path}</loc>`);
+  }
+
+  // Une seule origine (celle annoncée par robots.txt), aucune URL en double,
+  // aucune ancienne adresse, dates au format W3C.
+  const sitemapUrl = /Sitemap: (\S+)/.exec(robots)?.[1] ?? "";
+  const origin = new URL(sitemapUrl).origin;
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1] ?? "");
+  expect(locs.length).toBeGreaterThan(0);
+  for (const loc of locs) expect(new URL(loc).origin).toBe(origin);
+  expect(new Set(locs).size).toBe(locs.length);
+  expect(sitemap).not.toContain("vercel.app");
+  for (const [, lastmod] of sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)) {
+    expect(lastmod).toMatch(
+      /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/,
+    );
+  }
+});
+
+test("les pages d'authentification ne sont pas indexables mais restent lisibles par les robots", async ({
+  page,
+  request,
+}) => {
+  const robots = await (await request.get("/robots.txt")).text();
+  for (const path of ["/connexion", "/inscription", "/mot-de-passe-oublie"]) {
+    expect(robots).not.toContain(`Disallow: ${path}\n`);
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   }
 });
 

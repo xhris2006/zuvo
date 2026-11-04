@@ -33,7 +33,7 @@ import {
 } from "@/features/services/queries";
 import { serviceSearchParams } from "@/features/services/schemas";
 import { getT } from "@/i18n/server";
-import { getSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata(props: PageProps<"/services/[id]">): Promise<Metadata> {
@@ -94,7 +94,7 @@ export default async function ServicePage(props: PageProps<"/services/[id]">) {
   ]);
 
   const returnTo = serviceHref(service.id);
-  const url = `${getSiteUrl()}${returnTo}`;
+  const url = `${getPublicSiteUrl()}${returnTo}`;
   const category = localizedServiceCategory(t.serviceCategoryNames, {
     ...service.category,
     description: null,

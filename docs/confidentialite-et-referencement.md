@@ -54,16 +54,34 @@ définitifs. Après chaque modification, mettre à jour la date dans `legalUpdat
 
 1. Ajouter une propriété « Domaine » `mboadeals.shop` et la valider par un enregistrement DNS TXT
    chez le registraire.
-2. Envoyer le sitemap `https://mboadeals.shop/sitemap.xml`.
-3. Inspecter puis « Demander l'indexation » pour `/`, `/explorer`, `/confidentialite`,
-   `/conditions` et quelques annonces.
+2. Envoyer le sitemap `https://mboadeals.shop/sitemap.xml` (Indexation → Sitemaps).
+3. Inspecter puis « Demander l'indexation » pour `/`, `/explorer`, `/services`,
+   `/confidentialite`, `/conditions` et quelques annonces et services.
 4. Après quelques jours : rapports « Pages » et « robots.txt », test des résultats enrichis sur une
    annonce (Product) et sur l'accueil (Organization).
 
 ## 5. Réglages de déploiement
 
-- Définir `NEXT_PUBLIC_SITE_URL=https://mboadeals.shop` dans Vercel (URL canoniques, sitemap,
-  robots.txt, liens de partage), puis redéployer.
+- **Domaine officiel** : `https://mboadeals.shop`, défini dans `src/config/site.ts`
+  (`siteConfig.url`). Sur un déploiement de production Vercel (`VERCEL_ENV=production`), les URL
+  canoniques, `sitemap.xml`, `robots.txt`, les données structurées, les aperçus de partage et les
+  liens « Partager » l'utilisent toujours (fonction `getPublicSiteUrl`), même si
+  `NEXT_PUBLIC_SITE_URL` contient encore `https://zuvo-beta.vercel.app` et même si le site est
+  ouvert par son adresse `*.vercel.app`. Les déploiements de prévisualisation et le poste local
+  gardent leur propre adresse.
+- **`NEXT_PUBLIC_SITE_URL`** ne sert plus qu'aux liens des e-mails d'authentification et au
+  retour de la connexion Google (`/auth/callback`). Pour qu'ils utilisent aussi le domaine
+  officiel, sans rien casser :
+  1. Supabase → Authentication → URL Configuration : _Site URL_ `https://mboadeals.shop`, et
+     ajouter `https://mboadeals.shop/**` aux _Redirect URLs_ (garder l'ancienne adresse le temps
+     de la transition) ;
+  2. Vercel → Settings → Environment Variables (Production) :
+     `NEXT_PUBLIC_SITE_URL=https://mboadeals.shop`, puis redéployer ;
+  3. tester une inscription, un « mot de passe oublié » et « Continuer avec Google ».
+- **Ancienne adresse** : une fois l'étape précédente vérifiée, configurer dans Vercel → Settings →
+  Domains une redirection permanente (308) de `zuvo-beta.vercel.app` vers `mboadeals.shop`. En
+  attendant, les balises canoniques de chaque page désignent déjà `mboadeals.shop`, ce qui
+  permet à Google de regrouper les deux adresses.
 - Choisir une seule adresse : rediriger `www.mboadeals.shop` vers `mboadeals.shop` (ou
   l'inverse) dans Vercel → Domains.
 - Ces modifications ne sont visibles en ligne qu'une fois la branche déployée en production.
@@ -72,12 +90,35 @@ définitifs. Après chaque modification, mettre à jour la date dans `legalUpdat
 
 - `/` sert l'accueil des visiteurs directement (statut 200, URL canonique) ; `/bienvenue` affiche
   le même contenu avec `/` pour URL canonique.
-- `sitemap.xml` : pages publiques, catégories contenant au moins une annonce en vente, annonces
-  en vente et profils de leurs vendeurs. Aucune page privée.
-- `robots.txt` : pages publiques ouvertes ; espaces membres, administration, authentification et
-  API exclus (ce n'est pas une protection : ces pages exigent une session et la base applique ses
-  politiques d'accès).
+- `sitemap.xml` (régénéré au plus une fois par heure, `src/app/sitemap.ts`), uniquement sur le
+  domaine officiel et à l'URL canonique de chaque page, sans doublon :
+  - pages publiques : `/`, `/explorer`, `/services`, `/services/recherche`, `/securite`,
+    `/aide`, `/installer`, `/signalements`, `/conditions`, `/confidentialite` ;
+  - annonces en vente ou réservées, non retirées, de vendeurs visibles (`/annonces/<id>`) ;
+  - services en ligne, ni en pause ni retirés (`/services/<id>`) ;
+  - profils publics des vendeurs et prestataires concernés (`/u/<nom>`), une fois chacun ;
+  - pages de catégorie contenant au moins une annonce ou un service en ligne, à leur URL
+    canonique (`/explorer?category=…`, `/services/recherche?categorie=…`). Les autres
+    combinaisons de filtres, le tri et la pagination renvoient par leur balise canonique vers
+    ces pages et ne figurent pas dans le sitemap ; la recherche libre (`q=`) est en `noindex`.
+  - `lastmod` uniquement lorsqu'elle est exacte : date des documents juridiques, dernière
+    modification d'une annonce, d'un service ou d'un profil (profil ou contenu), élément le plus
+    récemment modifié pour les pages de liste. Aucune date pour l'accueil, l'aide, la sécurité
+    et l'installation.
+  - Aucune page privée : un dernier filtre écarte toute URL d'espace membre ou
+    d'authentification.
+- `robots.txt` : pages publiques ouvertes et `Sitemap: https://mboadeals.shop/sitemap.xml` ;
+  espaces membres, administration, retours d'authentification et API exclus (ce n'est pas une
+  protection : ces pages exigent une session et la base applique ses politiques d'accès). Les
+  formulaires de connexion, d'inscription et de mot de passe oublié restent explorables pour que
+  les moteurs lisent leur balise `noindex`.
+- Pages privées : `noindex` sur toutes les pages membres, d'authentification et
+  d'administration ; sans session, les espaces membres redirigent (307) vers `/connexion`, elle
+  aussi en `noindex`.
 - Données structurées : `WebSite` et `Organization` sur l'accueil (nom, logo, téléphone
   d'assistance réel), `Product` sur les annonces ayant un prix (aucun avis ni note).
 - Titre, description, URL canonique et aperçu de partage sur chaque page publique ; recherche
-  libre, pages privées et annonces non publiées en `noindex`.
+  libre, pages privées, annonces non publiées et services en pause ou retirés en `noindex`.
+- Les robots reconnus par Next.js (Googlebot, Bingbot…) reçoivent titre, description et
+  canonique dans le `<head>` ; les navigateurs les reçoivent en flux (« streaming metadata »),
+  ce qui est le comportement normal de Next.js 16.

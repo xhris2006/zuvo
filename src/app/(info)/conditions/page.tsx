@@ -4,7 +4,7 @@ import { legalUpdatedAt, publisher } from "@/config/legal";
 import { routes } from "@/config/routes";
 import { formatSupportPhone, siteConfig } from "@/config/site";
 import { getLocale, getT } from "@/i18n/server";
-import { getSiteUrl, publicEnv } from "@/lib/env";
+import { getPublicSiteUrl, publicEnv } from "@/lib/env";
 import { TermsEn, TermsFr } from "./content";
 import { publicPageMetadata } from "@/lib/seo";
 
@@ -30,7 +30,7 @@ export default async function TermsPage() {
       <Content
         name={siteConfig.name}
         country={t.site.country}
-        host={new URL(getSiteUrl()).host}
+        host={new URL(getPublicSiteUrl()).host}
         phone={formatSupportPhone()}
         phoneHref={`tel:${siteConfig.supportPhone}`}
         contactEmail={publicEnv.NEXT_PUBLIC_CONTACT_EMAIL}

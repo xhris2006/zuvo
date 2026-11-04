@@ -4,7 +4,7 @@ import { legalUpdatedAt, publisher } from "@/config/legal";
 import { routes } from "@/config/routes";
 import { formatSupportPhone, siteConfig } from "@/config/site";
 import { getLocale, getT } from "@/i18n/server";
-import { getSiteUrl, publicEnv } from "@/lib/env";
+import { getPublicSiteUrl, publicEnv } from "@/lib/env";
 import { PrivacyEn, PrivacyFr } from "./content";
 import { publicPageMetadata } from "@/lib/seo";
 
@@ -30,7 +30,7 @@ export default async function PrivacyPage() {
     >
       <Content
         name={siteConfig.name}
-        host={new URL(getSiteUrl()).host}
+        host={new URL(getPublicSiteUrl()).host}
         phone={formatSupportPhone()}
         phoneHref={`tel:${siteConfig.supportPhone}`}
         contactEmail={publicEnv.NEXT_PUBLIC_CONTACT_EMAIL}

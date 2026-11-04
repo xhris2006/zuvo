@@ -17,7 +17,7 @@ import { getUnreadCounts } from "@/features/notifications/queries";
 import { parseTheme, THEME_COOKIE, themeColors } from "@/features/theme/theme";
 import { LocaleProvider } from "@/i18n/client";
 import { getLocale, getT } from "@/i18n/server";
-import { getSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl } from "@/lib/env";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const [t, locale] = await Promise.all([getT(), getLocale()]);
   const title = `${siteConfig.name} — ${t.site.title}`;
   return {
-    metadataBase: new URL(getSiteUrl()),
+    metadataBase: new URL(getPublicSiteUrl()),
     title: { default: title, template: `%s · ${siteConfig.name}` },
     description: t.site.description,
     applicationName: siteConfig.name,

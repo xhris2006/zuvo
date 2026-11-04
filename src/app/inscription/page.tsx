@@ -12,7 +12,11 @@ import { isSupabaseConfigured } from "@/lib/env";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
-  return { title: t.authPages.signUpTitle, description: t.authPages.signUpMetaDescription };
+  return {
+    title: t.authPages.signUpTitle,
+    description: t.authPages.signUpMetaDescription,
+    robots: { index: false },
+  };
 }
 
 export default async function SignUpPage() {

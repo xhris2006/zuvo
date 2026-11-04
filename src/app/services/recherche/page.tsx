@@ -20,11 +20,7 @@ import {
   getServiceFavoriteIds,
   searchServices,
 } from "@/features/services/queries";
-import {
-  countServiceFilters,
-  parseServiceSearchParams,
-  serviceSearchParams,
-} from "@/features/services/schemas";
+import { parseServiceSearchParams, serviceSearchParams } from "@/features/services/schemas";
 import type { ServiceCardData } from "@/features/services/types";
 import { getT } from "@/i18n/server";
 import { publicPageMetadata } from "@/lib/seo";
@@ -38,8 +34,6 @@ export async function generateMetadata(props: PageProps<"/services/recherche">):
   const name = category
     ? localizedServiceCategory(t.serviceCategoryNames, category).name
     : undefined;
-  // Pages indexées : la recherche sans filtre et chaque catégorie seule.
-  const onlyCategory = countServiceFilters(filters) === (category ? 1 : 0);
   return {
     ...publicPageMetadata({
       title: name ? t.servicesPages.categoryMetaTitle(name) : t.servicesPages.searchTitle,
@@ -50,7 +44,10 @@ export async function generateMetadata(props: PageProps<"/services/recherche">):
         ? serviceSearchHref(serviceSearchParams({ category: category.slug }))
         : routes.servicesSearch,
     }),
-    robots: filters.q || !onlyCategory ? { index: false } : undefined,
+    // Comme Explorer : les combinaisons de filtres renvoient vers l'URL
+    // canonique (recherche ou catégorie seule) ; seule la recherche libre
+    // n'est pas indexée.
+    robots: filters.q ? { index: false } : undefined,
   };
 }
 

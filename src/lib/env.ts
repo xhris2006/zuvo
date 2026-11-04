@@ -1,3 +1,5 @@
+import { siteConfig } from "@/config/site";
+
 /*
  * Variables d'environnement publiques (exposées au navigateur). Validation
  * volontairement sans bibliothèque : ce module est chargé sur toutes les
@@ -61,11 +63,33 @@ export function isSupabaseConfigured(env: PublicEnv = publicEnv): boolean {
   return Boolean(env.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 }
 
-/** URL absolue du site, sans slash final. */
+/**
+ * URL absolue de l'application, sans slash final : liens des e-mails et
+ * retour de connexion (doivent figurer dans les « Redirect URLs » de
+ * Supabase Auth). Pour le référencement, utiliser getPublicSiteUrl.
+ */
 export function getSiteUrl(env: PublicEnv = publicEnv): string {
   const explicit = env.NEXT_PUBLIC_SITE_URL;
   if (explicit) return explicit.replace(/\/+$/, "");
   const vercelProduction = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercelProduction) return `https://${vercelProduction}`;
   return "http://localhost:3000";
+}
+
+/**
+ * Adresse publique officielle, sans slash final : URL canoniques, sitemap,
+ * robots.txt, données structurées et liens de partage. Un déploiement de
+ * production Vercel utilise toujours le domaine officiel (siteConfig.url),
+ * même si NEXT_PUBLIC_SITE_URL désigne encore une ancienne adresse ou si le
+ * site est consulté par son adresse *.vercel.app. Ailleurs (prévisualisation,
+ * poste local, tests), l'adresse de getSiteUrl.
+ *
+ * Côté serveur uniquement : VERCEL_ENV n'est pas transmise au navigateur.
+ */
+export function getPublicSiteUrl(
+  env: PublicEnv = publicEnv,
+  vercelEnv: string | undefined = process.env.VERCEL_ENV,
+): string {
+  if (vercelEnv === "production") return siteConfig.url;
+  return getSiteUrl(env);
 }

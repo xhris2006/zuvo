@@ -79,7 +79,7 @@ Dans **Authentication** :
   production) ; longueur minimale du mot de passe : **8** ; exigences :
   **lettres et chiffres** ; activez **Secure password change**.
 - **URL Configuration** :
-  - _Site URL_ : l'URL de production (ex. `https://zuvo.vercel.app`) ;
+  - _Site URL_ : l'URL de production (`https://mboadeals.shop`) ;
   - _Redirect URLs_ : `http://localhost:3000/**` et l'URL de production suivie
     de `/**` (ajoutez aussi les URL de prévisualisation Vercel si nécessaire).
 - **Emails → SMTP Settings** : le service d'envoi intégré de Supabase est

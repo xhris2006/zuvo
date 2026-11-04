@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSiteUrl, isSupabaseConfigured, parsePublicEnv } from "./env";
+import { getPublicSiteUrl, getSiteUrl, isSupabaseConfigured, parsePublicEnv } from "./env";
 
 describe("parsePublicEnv", () => {
   it("treats empty strings as missing", () => {
@@ -42,6 +42,25 @@ describe("getSiteUrl", () => {
     expect(getSiteUrl(parsePublicEnv({ NEXT_PUBLIC_SITE_URL: "https://zuvo.example/" }))).toBe(
       "https://zuvo.example",
     );
+  });
+});
+
+describe("getPublicSiteUrl", () => {
+  const stale = parsePublicEnv({ NEXT_PUBLIC_SITE_URL: "https://zuvo-beta.vercel.app" });
+
+  it("uses the official domain on a Vercel production deployment, whatever the configured URL", () => {
+    expect(getPublicSiteUrl(stale, "production")).toBe("https://mboadeals.shop");
+    expect(getPublicSiteUrl(parsePublicEnv({}), "production")).toBe("https://mboadeals.shop");
+  });
+
+  it("keeps the configured URL for previews and local runs", () => {
+    expect(getPublicSiteUrl(stale, "preview")).toBe("https://zuvo-beta.vercel.app");
+    expect(
+      getPublicSiteUrl(
+        parsePublicEnv({ NEXT_PUBLIC_SITE_URL: "http://localhost:3000/" }),
+        undefined,
+      ),
+    ).toBe("http://localhost:3000");
   });
 });
 

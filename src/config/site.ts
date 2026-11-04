@@ -4,6 +4,12 @@
  */
 export const siteConfig = {
   name: "MboaDeal",
+  /**
+   * Domaine officiel, sans slash final : URL canoniques, sitemap, robots.txt,
+   * données structurées et liens de partage en production (voir
+   * getPublicSiteUrl dans src/lib/env.ts).
+   */
+  url: "https://mboadeals.shop",
   /** Les deux parties du nom, mises en forme séparément (« Deal » en orange). */
   brand: { first: "Mboa", second: "Deal" },
   tagline: "Achète. Vends. Donne une seconde vie.",

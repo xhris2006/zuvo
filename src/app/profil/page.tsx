@@ -29,7 +29,7 @@ import { ServiceFavoriteButton } from "@/features/services/components/service-fa
 import { ServiceGrid } from "@/features/services/components/service-grid";
 import { getFavoriteServices, getMyServices } from "@/features/services/queries";
 import { getT } from "@/i18n/server";
-import { getSiteUrl, isSupabaseConfigured } from "@/lib/env";
+import { getPublicSiteUrl, isSupabaseConfigured } from "@/lib/env";
 import { parsePageParam } from "@/lib/pagination";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -114,7 +114,7 @@ export default async function ProfilePage(props: PageProps<"/profil">) {
             <ShareButton
               title={`${profile.display_name} (@${profile.username})`}
               text={t.profilePages.discover(profile.display_name, siteConfig.name)}
-              url={`${getSiteUrl()}${publicProfileHref(profile.username)}`}
+              url={`${getPublicSiteUrl()}${publicProfileHref(profile.username)}`}
               label={t.profilePages.shareProfile}
               tone="soft"
               // 360 px : sans icône pour que les deux libellés tiennent sur une ligne.

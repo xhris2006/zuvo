@@ -574,3 +574,110 @@ export async function setSellerVerificationAction(
     message: parsed.data.verified ? tx.badgeGranted : tx.badgeRevoked,
   };
 }
+
+// -----------------------------------------------------------------------------
+// Catégories de services
+// -----------------------------------------------------------------------------
+function revalidateServiceCatalog() {
+  revalidatePath(routes.services, "layout");
+  revalidatePath(routes.adminServiceCategories);
+}
+
+export async function createServiceCategoryAction(
+  _previous: FormState<ReferenceField>,
+  formData: FormData,
+): Promise<FormState<ReferenceField>> {
+  const t = await getT();
+  const tx = t.adminActions;
+  const values = { name: formText(formData, "name"), slug: formText(formData, "slug") };
+  const parsed = categoryFormSchema.safeParse(values);
+  if (!parsed.success) {
+    return { status: "error", fieldErrors: fieldErrorsFrom(parsed.error, t), values };
+  }
+  const context = await adminContext();
+  if (!context) return { status: "error", message: tx.forbidden };
+  const { data: last } = await context.supabase
+    .from("service_categories")
+    .select("sort_order")
+    .lt("sort_order", 1000)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { error } = await context.supabase.from("service_categories").insert({
+    name: parsed.data.name,
+    slug: parsed.data.slug,
+    sort_order: (last?.sort_order ?? 0) + 10,
+  });
+  if (error) return { status: "error", message: adminErrorMessage(tx, error), values };
+  revalidateServiceCatalog();
+  return { status: "success", message: tx.categoryAdded(parsed.data.name) };
+}
+
+export async function renameServiceCategoryAction(
+  _previous: FormState<ReferenceField>,
+  formData: FormData,
+): Promise<FormState<ReferenceField>> {
+  const t = await getT();
+  const tx = t.adminActions;
+  const parsed = renameSchema.safeParse({
+    id: formText(formData, "id"),
+    name: formText(formData, "name"),
+    region: "",
+  });
+  if (!parsed.success || !z.uuid().safeParse(parsed.data.id).success) {
+    return {
+      status: "error",
+      fieldErrors: parsed.success ? {} : fieldErrorsFrom(parsed.error, t),
+      message: parsed.success ? tx.invalidRequest : undefined,
+    };
+  }
+  const context = await adminContext();
+  if (!context) return { status: "error", message: tx.forbidden };
+  const { error } = await context.supabase
+    .from("service_categories")
+    .update({ name: parsed.data.name })
+    .eq("id", parsed.data.id);
+  if (error) return { status: "error", message: adminErrorMessage(tx, error) };
+  revalidateServiceCatalog();
+  return { status: "success", message: tx.nameSaved };
+}
+
+/** Active ou désactive une catégorie de services (formulaire sans JavaScript). */
+export async function toggleServiceCategoryAction(formData: FormData): Promise<void> {
+  const id = z.uuid().safeParse(formText(formData, "id"));
+  const active = formText(formData, "active") === "true";
+  const context = await adminContext();
+  if (!id.success || !context) return;
+  await context.supabase.from("service_categories").update({ is_active: active }).eq("id", id.data);
+  revalidateServiceCatalog();
+}
+
+/** Échange la position d'une catégorie de services avec sa voisine. */
+export async function moveServiceCategoryAction(formData: FormData): Promise<void> {
+  const parsed = moveSchema.safeParse({
+    id: formText(formData, "id"),
+    direction: formText(formData, "direction"),
+  });
+  const context = await adminContext();
+  if (!parsed.success || !z.uuid().safeParse(parsed.data.id).success || !context) return;
+  const { supabase } = context;
+  const rows =
+    (
+      await supabase
+        .from("service_categories")
+        .select("id, sort_order")
+        .order("sort_order")
+        .order("name")
+    ).data ?? [];
+  const index = rows.findIndex((row) => row.id === parsed.data.id);
+  const target = index + parsed.data.direction;
+  if (index < 0 || target < 0 || target >= rows.length) return;
+  const order = rows.map((row) => row.id);
+  [order[index], order[target]] = [order[target]!, order[index]!];
+  for (const [position, id] of order.entries()) {
+    const sortOrder = (position + 1) * 10;
+    if (rows.find((row) => row.id === id)?.sort_order === sortOrder) continue;
+    await supabase.from("service_categories").update({ sort_order: sortOrder }).eq("id", id);
+  }
+  revalidateServiceCatalog();
+}

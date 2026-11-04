@@ -1,6 +1,7 @@
 import { Compass, House, type LucideIcon, MessageCircle, Plus, UserRound } from "lucide-react";
 import type { Route } from "next";
 import { routes } from "@/config/routes";
+import type { Space } from "@/features/services/space";
 import type { Dictionary } from "@/i18n";
 
 export type NavItem = {
@@ -14,11 +15,25 @@ export type NavItem = {
   badge?: "messages" | "notifications";
 };
 
-export function getPrimaryNavItems(t: Dictionary): NavItem[] {
+/**
+ * Rubriques principales. Dans l'espace Services, l'accueil, l'exploration et
+ * le bouton central mènent à leurs équivalents « services », aux mêmes places.
+ */
+export function getPrimaryNavItems(t: Dictionary, space: Space = "marketplace"): NavItem[] {
+  const services = space === "services";
   return [
-    { href: routes.home, label: t.nav.home, icon: House, exact: true },
-    { href: routes.explore, label: t.nav.explore, icon: Compass },
-    { href: routes.sell, label: t.nav.sell, icon: Plus, emphasis: true },
+    { href: services ? routes.services : routes.home, label: t.nav.home, icon: House, exact: true },
+    {
+      href: services ? routes.servicesSearch : routes.explore,
+      label: t.nav.explore,
+      icon: Compass,
+    },
+    {
+      href: services ? routes.publishService : routes.sell,
+      label: services ? t.nav.publishService : t.nav.sell,
+      icon: Plus,
+      emphasis: true,
+    },
     { href: routes.messages, label: t.nav.messages, icon: MessageCircle, badge: "messages" },
     { href: routes.profile, label: t.nav.profile, icon: UserRound },
   ];

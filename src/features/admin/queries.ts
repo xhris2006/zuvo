@@ -103,6 +103,16 @@ type UserTarget = {
   suspendedUntil: string | null;
 };
 
+type ServiceTarget = {
+  kind: "service";
+  id: string;
+  title: string;
+  status: Database["public"]["Enums"]["service_status"];
+  removedAt: string | null;
+  removedReason: string | null;
+  provider: { username: string; displayName: string } | null;
+};
+
 type MessageTarget = { kind: "message"; id: string };
 
 export type AdminReport = {
@@ -117,7 +127,7 @@ export type AdminReport = {
   resolutionNote: string | null;
   reporter: { username: string; displayName: string } | null;
   /** null : la cible a été supprimée. */
-  target: ListingTarget | UserTarget | MessageTarget | null;
+  target: ListingTarget | UserTarget | ServiceTarget | MessageTarget | null;
 };
 
 export async function getAdminReports(
@@ -143,8 +153,9 @@ export async function getAdminReports(
     rows.filter((row) => row.target_type === type).map((row) => row.target_id);
   const listingIds = idsOf("listing");
   const userIds = idsOf("user");
+  const serviceIds = idsOf("service");
 
-  const [listings, users] = await Promise.all([
+  const [listings, users, services] = await Promise.all([
     listingIds.length
       ? supabase
           .from("listings")
@@ -159,9 +170,18 @@ export async function getAdminReports(
           .select("id, username, display_name, suspended_at, suspended_until")
           .in("id", userIds)
       : Promise.resolve({ data: [] }),
+    serviceIds.length
+      ? supabase
+          .from("services")
+          .select(
+            "id, title, status, removed_at, removed_reason, provider:profiles!services_provider_id_fkey(username, display_name)",
+          )
+          .in("id", serviceIds)
+      : Promise.resolve({ data: [] }),
   ]);
   const listingById = new Map((listings.data ?? []).map((row) => [row.id, row]));
   const userById = new Map((users.data ?? []).map((row) => [row.id, row]));
+  const serviceById = new Map((services.data ?? []).map((row) => [row.id, row]));
 
   const items = rows.map((row): AdminReport => {
     let target: AdminReport["target"] = null;
@@ -190,6 +210,21 @@ export async function getAdminReports(
             displayName: user.display_name,
             suspendedAt: user.suspended_at,
             suspendedUntil: user.suspended_until,
+          }
+        : null;
+    } else if (row.target_type === "service") {
+      const service = serviceById.get(row.target_id);
+      target = service
+        ? {
+            kind: "service",
+            id: service.id,
+            title: service.title,
+            status: service.status,
+            removedAt: service.removed_at,
+            removedReason: service.removed_reason,
+            provider: service.provider
+              ? { username: service.provider.username, displayName: service.provider.display_name }
+              : null,
           }
         : null;
     } else {

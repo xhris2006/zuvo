@@ -13,6 +13,7 @@ export const reasonsByTarget: Record<ReportTargetType, ReportReason[]> = {
   listing: ["scam", "prohibited_item", "counterfeit", "inappropriate", "spam", "other"],
   user: ["scam", "harassment", "fake_account", "inappropriate", "spam", "other"],
   message: ["harassment", "scam", "spam", "inappropriate", "other"],
+  service: ["scam", "inappropriate", "spam", "other"],
 };
 
 export const reportSchema = z

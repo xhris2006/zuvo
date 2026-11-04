@@ -17,6 +17,7 @@ import {
   requireStaff,
 } from "@/features/admin/queries";
 import { listingHref } from "@/features/listings/links";
+import { serviceHref } from "@/features/services/links";
 import { getT } from "@/i18n/server";
 import type { ServerDictionary } from "@/i18n/server-dictionaries";
 import { parsePageParam } from "@/lib/pagination";
@@ -291,7 +292,9 @@ export default async function AdminLogPage(props: PageProps<"/admin/journal">) {
                         href={
                           entry.targetType === "user"
                             ? adminUserHref(entry.targetId)
-                            : listingHref(entry.targetId)
+                            : entry.targetType === "service"
+                              ? serviceHref(entry.targetId)
+                              : listingHref(entry.targetId)
                         }
                         className="font-mono text-xs text-primary-ink hover:underline"
                       >

@@ -33,8 +33,9 @@ export const getConversation = cache(async (id: string) => {
   const { data, error } = await supabase
     .from("conversations")
     .select(
-      `id, buyer_id, seller_id, listing_id,
+      `id, buyer_id, seller_id, listing_id, service_id,
        listing:listings(id, title, price, status, images:listing_images(storage_path, sort_order)),
+       service:services(id, title, price, pricing_type, images:service_images(storage_path, sort_order)),
        buyer:profiles!conversations_buyer_id_fkey(id, username, display_name, avatar_path),
        seller:profiles!conversations_seller_id_fkey(id, username, display_name, avatar_path)`,
     )

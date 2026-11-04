@@ -1,5 +1,5 @@
-import { LayoutGrid, PackageOpen } from "lucide-react";
-import type { Metadata } from "next";
+import { BriefcaseBusiness, LayoutGrid, PackageOpen } from "lucide-react";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/ui/back-button";
@@ -23,6 +23,10 @@ import { ProfileHeader } from "@/features/profiles/components/profile-header";
 import { ProfileTabs } from "@/features/profiles/components/profile-tabs";
 import { getProfileByUsername, getProfileStats, isFollowing } from "@/features/profiles/queries";
 import { USERNAME_PATTERN } from "@/features/profiles/username";
+import { ServiceCard } from "@/features/services/components/service-card";
+import { ServiceFavoriteButton } from "@/features/services/components/service-favorite-button";
+import { ServiceGrid } from "@/features/services/components/service-grid";
+import { getProviderServices, getServiceFavoriteIds } from "@/features/services/queries";
 import { getT } from "@/i18n/server";
 import { getSiteUrl } from "@/lib/env";
 
@@ -62,15 +66,25 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
 
   const requestedPage = Number(searchParams.page);
   const page = Number.isInteger(requestedPage) && requestedPage >= 1 ? requestedPage : 1;
+  const servicesTab = searchParams.onglet === "services";
 
   const isOwnProfile = viewer?.id === profile.id;
-  const [stats, following, blocked, listings] = await Promise.all([
+  const [stats, following, blocked, listings, services] = await Promise.all([
     getProfileStats(profile.id),
     viewer && !isOwnProfile ? isFollowing(viewer.id, profile.id) : Promise.resolve(false),
     viewer && !isOwnProfile ? hasBlocked(viewer.id, profile.id) : Promise.resolve(false),
-    getSellerListings(profile.id, page, searchLimits.pageSize),
+    getSellerListings(profile.id, servicesTab ? 1 : page, searchLimits.pageSize),
+    // Au plus 30 services en ligne par prestataire (limite de la base).
+    getProviderServices(profile.id, { limit: 30 }),
   ]);
+  const favoriteServiceIds = servicesTab
+    ? await getServiceFavoriteIds(
+        viewer?.id ?? null,
+        services.map((service) => service.id),
+      )
+    : new Set<string>();
   const profilePath = publicProfileHref(profile.username);
+  const servicesPath = `${profilePath}?onglet=services` as Route;
   const pageCount = Math.ceil(listings.total / searchLimits.pageSize);
 
   let actions;
@@ -156,16 +170,71 @@ export default async function PublicProfilePage(props: PageProps<"/u/[username]"
         <ProfileTabs
           labelledBy="profile-listings"
           tabs={[
-            {
-              key: "on-sale",
-              label: t.profile.onSale,
-              count: listings.total,
-              icon: LayoutGrid,
-              current: true,
-            },
+            servicesTab
+              ? {
+                  key: "on-sale",
+                  label: t.profile.onSale,
+                  count: listings.total,
+                  icon: LayoutGrid,
+                  href: profilePath,
+                }
+              : {
+                  key: "on-sale",
+                  label: t.profile.onSale,
+                  count: listings.total,
+                  icon: LayoutGrid,
+                  current: true,
+                },
+            // Onglet affiché seulement si le membre propose des services.
+            ...(services.length > 0 || servicesTab
+              ? [
+                  servicesTab
+                    ? {
+                        key: "services",
+                        label: t.servicesPages.profileTab,
+                        count: services.length,
+                        icon: BriefcaseBusiness,
+                        current: true as const,
+                      }
+                    : {
+                        key: "services",
+                        label: t.servicesPages.profileTab,
+                        count: services.length,
+                        icon: BriefcaseBusiness,
+                        href: servicesPath,
+                      },
+                ]
+              : []),
           ]}
         />
-        {listings.items.length > 0 ? (
+        {servicesTab ? (
+          services.length > 0 ? (
+            <ServiceGrid>
+              {services.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  action={
+                    isOwnProfile ? undefined : (
+                      <ServiceFavoriteButton
+                        serviceId={service.id}
+                        initialFavorited={favoriteServiceIds.has(service.id)}
+                        signedIn={Boolean(viewer)}
+                        returnTo={servicesPath}
+                      />
+                    )
+                  }
+                />
+              ))}
+            </ServiceGrid>
+          ) : (
+            <EmptyState
+              icon={BriefcaseBusiness}
+              headingLevel="h3"
+              title={t.servicesPages.profileEmpty}
+            />
+          )
+        ) : listings.items.length > 0 ? (
           <>
             <ListingResults listings={listings.items} />
             <Pagination

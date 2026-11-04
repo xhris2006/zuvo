@@ -1,8 +1,8 @@
 /** Dates de dernière mise à jour des documents d'information (format ISO). */
 export const legalUpdatedAt = {
-  privacy: "2026-11-01",
-  terms: "2026-11-01",
-  reports: "2026-11-01",
+  privacy: "2026-11-04",
+  terms: "2026-11-04",
+  reports: "2026-11-04",
 } as const;
 
 export type Publisher = {

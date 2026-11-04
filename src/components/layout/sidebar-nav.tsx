@@ -34,6 +34,7 @@ import { PushAttentionDot } from "@/features/notifications/components/push-atten
 import { PushEndpointField } from "@/features/notifications/components/push-endpoint-field";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import { spaceOf } from "@/features/services/space";
 import { isNavItemActive } from "./nav-items";
 
 type SidebarItem = {
@@ -58,9 +59,14 @@ const itemClass =
 export function SidebarNav({ account, isStaff }: SidebarNavProps) {
   const pathname = usePathname();
   const t = useT();
+  const services = spaceOf(pathname) === "services";
   const items: SidebarItem[] = [
-    { href: routes.home, label: t.nav.home, icon: House, exact: true },
-    { href: routes.explore, label: t.nav.explore, icon: Compass },
+    { href: services ? routes.services : routes.home, label: t.nav.home, icon: House, exact: true },
+    {
+      href: services ? routes.servicesSearch : routes.explore,
+      label: t.nav.explore,
+      icon: Compass,
+    },
     { href: routes.messages, label: t.nav.messages, icon: MessageCircle, badge: "messages" },
     { href: routes.notifications, label: t.nav.notifications, icon: Bell, badge: "notifications" },
   ];
@@ -125,11 +131,11 @@ export function SidebarNav({ account, isStaff }: SidebarNavProps) {
 
       <div className="px-3 pt-4">
         <Link
-          href={routes.sell}
+          href={services ? routes.publishService : routes.sell}
           className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-raised transition-colors hover:bg-primary-hover"
         >
           <Plus className="size-5" strokeWidth={2.4} aria-hidden="true" />
-          {t.nav.sellCta}
+          {services ? t.nav.publishServiceCta : t.nav.sellCta}
         </Link>
       </div>
 

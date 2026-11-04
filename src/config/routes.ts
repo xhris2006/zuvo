@@ -17,6 +17,7 @@ export const routes = {
   settingsDelete: "/parametres/suppression",
   favorites: "/favoris",
   profileFavorites: "/profil?onglet=favoris",
+  profileServices: "/profil?onglet=services",
   feed: "/fil",
   notifications: "/notifications",
   signIn: "/connexion",
@@ -47,6 +48,12 @@ export const routes = {
   adminNotify: "/admin/notifications",
   support: "/assistance",
   install: "/installer",
+  services: "/services",
+  servicesSearch: "/services/recherche",
+  publishService: "/services/publier",
+  myServices: "/services/mes-services",
+  adminServices: "/admin/services",
+  adminServiceCategories: "/admin/services/categories",
 } as const satisfies Record<string, Route>;
 
 /** Suggestions de la barre de recherche (route API, hors navigation). */
@@ -64,6 +71,8 @@ export const protectedRoutePrefixes = [
   routes.resetPassword,
   routes.admin,
   routes.support,
+  routes.publishService,
+  routes.myServices,
 ] as const;
 
 /** Pages d'authentification inutiles une fois connecté. */

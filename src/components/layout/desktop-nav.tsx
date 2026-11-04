@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { routes } from "@/config/routes";
+import { spaceOf } from "@/features/services/space";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { isNavItemActive } from "./nav-items";
@@ -12,7 +13,10 @@ export function DesktopNav() {
   const pathname = usePathname();
   const t = useT();
   const links = [
-    { href: routes.explore, label: t.nav.explore },
+    {
+      href: spaceOf(pathname) === "services" ? routes.servicesSearch : routes.explore,
+      label: t.nav.explore,
+    },
     { href: routes.help, label: t.nav.helpShort },
   ];
 

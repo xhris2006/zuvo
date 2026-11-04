@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, MessageCircle, Plus } from "lucide-react";
+import { Bell, CircleHelp, MessageCircle } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { type ReactNode, Suspense } from "react";
@@ -15,7 +15,9 @@ import { DesktopNav } from "./desktop-nav";
 import { HideOnScrollHeader } from "./hide-on-scroll-header";
 import { Logo } from "./logo";
 import { MobileSearchRow } from "./mobile-search-row";
-import { SearchForm } from "./search-form";
+import { SpaceSearchForm } from "./space-search-form";
+import { SpaceSellButton } from "./space-sell-button";
+import { SpaceSwitchRow } from "./space-switch";
 import { UserMenu } from "./user-menu";
 
 function IconLink({
@@ -75,7 +77,7 @@ export async function SiteHeader() {
 
         <Logo className="shrink-0" />
 
-        <SearchForm id="header-search" className="hidden max-w-xl md:block" />
+        <SpaceSearchForm id="header-search" className="hidden max-w-xl md:block" />
 
         <div className="flex flex-1 items-center justify-end gap-1 md:ml-auto md:flex-none lg:gap-2">
           <DesktopNav />
@@ -96,12 +98,7 @@ export async function SiteHeader() {
           >
             <Bell className="size-5" aria-hidden="true" />
           </IconLink>
-          <Button asChild className="ml-1 hidden md:inline-flex">
-            <Link href={routes.sell}>
-              <Plus aria-hidden="true" />
-              {t.nav.sell}
-            </Link>
-          </Button>
+          <SpaceSellButton className="ml-1 hidden md:inline-flex" />
           {profile ? (
             <div className="ml-1 hidden md:block">
               <UserMenu
@@ -119,6 +116,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
+      <SpaceSwitchRow />
       <Suspense>
         <MobileSearchRow />
       </Suspense>

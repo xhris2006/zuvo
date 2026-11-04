@@ -2,8 +2,9 @@ import { isCurrentUserStaff } from "@/features/admin/queries";
 import { avatarUrl } from "@/features/profiles/avatar-url";
 import { getCurrentProfile } from "@/features/profiles/queries";
 import { Logo } from "./logo";
-import { SearchForm } from "./search-form";
+import { SpaceSearchForm } from "./space-search-form";
 import { SidebarNav } from "./sidebar-nav";
+import { SpaceSwitch } from "./space-switch";
 
 /**
  * Barre latérale de navigation sur ordinateur (à partir de 1024 px), à la
@@ -22,8 +23,9 @@ export async function SiteSidebar() {
       <div className="flex h-20 shrink-0 items-center px-6">
         <Logo />
       </div>
-      <div className="px-3 pb-4">
-        <SearchForm id="sidebar-search" />
+      <div className="flex flex-col gap-3 px-3 pb-4">
+        <SpaceSwitch className="max-w-none" />
+        <SpaceSearchForm id="sidebar-search" />
       </div>
       <SidebarNav
         account={

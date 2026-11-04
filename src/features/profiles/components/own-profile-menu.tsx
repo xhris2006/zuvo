@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BriefcaseBusiness,
   EllipsisVertical,
   Eye,
   LifeBuoy,
@@ -95,6 +96,12 @@ export function OwnProfileMenu({ username, isStaff = false }: OwnProfileMenuProp
           <Link href={routes.feed}>
             <Rss aria-hidden="true" />
             {t.profile.feed}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.myServices}>
+            <BriefcaseBusiness aria-hidden="true" />
+            {t.profile.myServices}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

@@ -97,8 +97,9 @@ export function PrivacyFr({
         {name} est une plateforme de petites annonces entre particuliers au Cameroun. Elle permet de
         publier des annonces pour vendre des objets, de rechercher des annonces, de contacter les
         vendeurs par messagerie, d&apos;enregistrer des favoris et de suivre d&apos;autres membres.
-        Le service est accessible sur le site <strong>{host}</strong> et peut être installé sur un
-        téléphone comme une application web.
+        Son espace Services permet aussi de présenter ses prestations et de contacter des
+        prestataires. Le service est accessible sur le site <strong>{host}</strong> et peut être
+        installé sur un téléphone comme une application web.
       </p>
       <p>
         {publisher ? (
@@ -115,11 +116,11 @@ export function PrivacyFr({
       </p>
       <p>
         Cette politique s&apos;applique aux données personnelles traitées lorsque vous consultez le
-        site, créez un compte (avec une adresse e-mail ou avec Google), publiez des annonces,
-        échangez des messages, activez les notifications ou contactez l&apos;assistance. Elle ne
-        couvre pas les services externes vers lesquels vous pouvez être dirigé, par exemple Google
-        lors de la connexion, ou WhatsApp et Facebook lorsque vous partagez une annonce : ces
-        services appliquent leurs propres règles.
+        site, créez un compte (avec une adresse e-mail ou avec Google), publiez des annonces ou des
+        services, échangez des messages, activez les notifications ou contactez l&apos;assistance.
+        Elle ne couvre pas les services externes vers lesquels vous pouvez être dirigé, par exemple
+        Google lors de la connexion, ou WhatsApp et Facebook lorsque vous partagez une annonce ou
+        contactez un prestataire sur WhatsApp : ces services appliquent leurs propres règles.
       </p>
 
       {title(1)}
@@ -175,13 +176,28 @@ export function PrivacyFr({
           pas transmises.
         </li>
       </ul>
+      <h3>Services proposés</h3>
+      <ul>
+        <li>
+          Pour chaque service que vous publiez : titre, catégorie, description, ville et quartier
+          (facultatif), tarif et type de tarification, disponibilité et précision éventuelle,
+          informations complémentaires, statut (en ligne, en pause, retiré), dates de publication et
+          de modification, et photos (traitées comme celles des annonces, sans les métadonnées du
+          fichier d&apos;origine).
+        </li>
+        <li>
+          Numéro de téléphone de contact et option WhatsApp, uniquement si vous les renseignez sur
+          le service. Ce numéro n&apos;est jamais repris de votre profil sans votre action, et il
+          est public (<a href="#partage">section 7</a>).
+        </li>
+      </ul>
       <h3>Messages et activité sur le site</h3>
       <ul>
         <li>
-          Conversations avec d&apos;autres membres : textes, photos, annonce concernée, dates
-          d&apos;envoi et de lecture.
+          Conversations avec d&apos;autres membres : textes, photos, annonce ou service concerné,
+          dates d&apos;envoi et de lecture.
         </li>
-        <li>Annonces ajoutées en favori, profils suivis et membres bloqués.</li>
+        <li>Annonces et services ajoutés en favori, profils suivis et membres bloqués.</li>
         <li>
           Signalements que vous effectuez (motif et précisions éventuelles) et demandes
           d&apos;assistance (objet, message et échanges avec l&apos;équipe).
@@ -193,8 +209,14 @@ export function PrivacyFr({
           plus).
         </li>
         <li>
-          Décisions de modération qui vous concernent : retrait d&apos;annonce, avertissement,
-          suspension, et note éventuelle de l&apos;équipe.
+          Consultations de services : lorsque vous êtes connecté et ouvrez le service d&apos;un
+          autre membre, une consultation est enregistrée (une seule par membre et par service, avec
+          sa date). Le prestataire voit seulement le nombre total de vues de chacun de ses services,
+          jamais qui l&apos;a consulté.
+        </li>
+        <li>
+          Décisions de modération qui vous concernent : retrait d&apos;annonce ou de service,
+          avertissement, suspension, et note éventuelle de l&apos;équipe.
         </li>
       </ul>
       <h3>Notifications push</h3>
@@ -235,8 +257,8 @@ export function PrivacyFr({
       {title(2)}
       <ul>
         <li>
-          <strong>Vous-même</strong> : formulaire d&apos;inscription, profil, annonces, messages,
-          favoris, signalements et demandes d&apos;assistance.
+          <strong>Vous-même</strong> : formulaire d&apos;inscription, profil, annonces, services,
+          messages, favoris, signalements et demandes d&apos;assistance.
         </li>
         <li>
           <strong>Google</strong>, uniquement si vous choisissez « Continuer avec Google » et
@@ -249,11 +271,11 @@ export function PrivacyFr({
         </li>
         <li>
           <strong>Les autres membres</strong> : lorsqu&apos;un membre vous écrit, vous suit, ajoute
-          votre annonce en favori ou vous signale.
+          votre annonce ou votre service en favori, consulte votre service ou vous signale.
         </li>
         <li>
-          <strong>L&apos;équipe {name}</strong> : décisions de modération, badge « vendeur vérifié »
-          et réponses de l&apos;assistance.
+          <strong>L&apos;équipe {name}</strong> : décisions de modération, badge « vendeur vérifié
+          », sélection des services « à la une » et réponses de l&apos;assistance.
         </li>
       </ul>
 
@@ -264,13 +286,15 @@ export function PrivacyFr({
           e-mail, mot de passe ou compte Google, sessions et journaux de connexion.
         </li>
         <li>
-          <strong>Afficher votre profil et vos annonces</strong> aux visiteurs et aux membres :
-          profil public, annonces et photos.
+          <strong>Afficher votre profil, vos annonces et vos services</strong> aux visiteurs et aux
+          membres : profil public, annonces, services et photos.
         </li>
         <li>
-          <strong>Faire fonctionner la place de marché</strong> : recherche, catégories, favoris,
-          abonnements, messagerie entre acheteurs et vendeurs, partage d&apos;annonces et
-          notifications.
+          <strong>Faire fonctionner la place de marché et l&apos;espace Services</strong> :
+          recherche, catégories, favoris, abonnements, messagerie entre acheteurs et vendeurs ou
+          entre clients et prestataires, partage d&apos;annonces et de services, notifications, et
+          statistiques de vos services (nombre de vues et de demandes reçues) affichées dans « Mes
+          services ».
         </li>
         <li>
           <strong>Vous proposer des annonces susceptibles de vous intéresser</strong>, à partir de
@@ -281,9 +305,9 @@ export function PrivacyFr({
         </li>
         <li>
           <strong>Prévenir les abus et protéger les membres</strong> : limites automatiques (nombre
-          d&apos;annonces, de messages ou de signalements sur une période), filtrage de mots
-          interdits, traitement des signalements, blocage entre membres et sanctions (retrait
-          d&apos;annonce, avertissement, suspension).
+          d&apos;annonces, de services, de messages ou de signalements sur une période), filtrage de
+          mots interdits, traitement des signalements, blocage entre membres et sanctions (retrait
+          d&apos;annonce ou de service, avertissement, suspension).
         </li>
         <li>
           <strong>Vous assister</strong> : répondre à vos demandes et aux contestations de retrait
@@ -430,12 +454,18 @@ export function PrivacyFr({
         </li>
         <li>
           vos annonces en vente, réservées ou vendues : titre, description, prix, catégorie, état,
-          ville, photos, date de publication et lien vers votre profil.
+          ville, photos, date de publication et lien vers votre profil ;
+        </li>
+        <li>
+          vos services en ligne : titre, catégorie, description, ville et quartier, tarif,
+          disponibilité, informations complémentaires, photos, date de publication, lien vers votre
+          profil et, si vous les avez renseignés, le numéro de téléphone et le bouton WhatsApp du
+          service.
         </li>
       </ul>
       <p>
-        Vos brouillons et vos annonces retirées ne sont visibles que par vous et par l&apos;équipe
-        de modération.
+        Vos brouillons, vos annonces retirées et vos services en pause ou retirés ne sont visibles
+        que par vous et par l&apos;équipe de modération.
       </p>
       <h3>Ce que voient les autres membres concernés</h3>
       <ul>
@@ -451,20 +481,21 @@ export function PrivacyFr({
       </ul>
       <h3>Ce qui n&apos;est jamais affiché</h3>
       <p>
-        Votre adresse e-mail, votre numéro de téléphone, votre mot de passe, vos messages, vos
-        favoris, votre historique de consultation, vos notifications, vos blocages, vos signalements
-        et vos demandes d&apos;assistance ne sont jamais affichés publiquement. Le site ne
-        communique votre numéro de téléphone à aucun membre : c&apos;est vous qui décidez de le
-        partager dans une conversation.
+        Votre adresse e-mail, le numéro de téléphone de votre profil, votre mot de passe, vos
+        messages, vos favoris, votre historique de consultation, les services que vous avez
+        consultés, vos notifications, vos blocages, vos signalements et vos demandes
+        d&apos;assistance ne sont jamais affichés publiquement. Le site ne communique le numéro de
+        votre profil à aucun membre : c&apos;est vous qui décidez de le partager dans une
+        conversation ou de l&apos;afficher sur un service.
       </p>
       <h3>L&apos;équipe {name}</h3>
       <p>
         Les administrateurs et modérateurs accèdent aux données nécessaires à la modération et à
-        l&apos;assistance : profils, annonces (y compris retirées), signalements et demandes
-        d&apos;assistance. Un message privé n&apos;est consulté que s&apos;il a été signalé, et
-        chaque consultation est enregistrée dans le journal de modération. Les administrateurs
-        peuvent retrouver un compte à partir de son adresse e-mail ou de son numéro de téléphone
-        pour traiter une demande ou un abus.
+        l&apos;assistance : profils, annonces et services (y compris retirés), signalements et
+        demandes d&apos;assistance. Un message privé n&apos;est consulté que s&apos;il a été
+        signalé, et chaque consultation est enregistrée dans le journal de modération. Les
+        administrateurs peuvent retrouver un compte à partir de son adresse e-mail ou de son numéro
+        de téléphone pour traiter une demande ou un abus.
       </p>
       <h3>Autres communications</h3>
       <p>
@@ -488,6 +519,12 @@ export function PrivacyFr({
           <strong>Annonces et leurs photos</strong> : jusqu&apos;à ce que vous les supprimiez ; une
           annonce vendue ou retirée reste dans votre compte tant que vous ne la supprimez pas. Les
           photos sont effacées du stockage avec l&apos;annonce.
+        </li>
+        <li>
+          <strong>Services et leurs photos</strong> : jusqu&apos;à ce que vous les supprimiez depuis
+          « Mes services » ; un service en pause ou retiré reste dans votre compte. Les photos et
+          les consultations du service sont effacées avec lui ; une conversation ouverte au sujet
+          d&apos;un service supprimé est conservée, sans lien vers le service.
         </li>
         <li>
           <strong>Historique de consultation</strong> : 90 jours au plus, limité aux 300 dernières
@@ -569,6 +606,10 @@ export function PrivacyFr({
         </li>
         <li>modifier ou supprimer vos annonces ;</li>
         <li>
+          modifier, mettre en pause ou supprimer vos services (
+          <Link href={routes.myServices}>Mes services</Link>) ;
+        </li>
+        <li>
           supprimer votre compte (<a href="#suppression">section 11</a>).
         </li>
       </ul>
@@ -596,10 +637,11 @@ export function PrivacyFr({
           votre compte de connexion (adresse e-mail, mot de passe, lien avec votre compte Google) ;
         </li>
         <li>votre profil, votre numéro de téléphone et votre photo de profil ;</li>
-        <li>vos annonces et leurs photos ;</li>
+        <li>vos annonces, vos services et leurs photos ;</li>
         <li>
           vos favoris, abonnements, blocages, notifications, préférences, abonnements aux
-          notifications push, historique de consultation et demandes d&apos;assistance.
+          notifications push, historique de consultation, consultations de services et demandes
+          d&apos;assistance.
         </li>
       </ul>
       <p>Sont conservés, sans lien avec un profil :</p>
@@ -771,8 +813,9 @@ export function PrivacyEn({
       <p>
         {name} is a classified ads platform between individuals in Cameroon. It lets people publish
         listings to sell items, search listings, contact sellers through messaging, save favourites
-        and follow other members. The service is available on the website <strong>{host}</strong>{" "}
-        and can be installed on a phone as a web app.
+        and follow other members. Its Services space also lets people present what they offer and
+        contact providers. The service is available on the website <strong>{host}</strong> and can
+        be installed on a phone as a web app.
       </p>
       <p>
         {publisher ? (
@@ -789,10 +832,10 @@ export function PrivacyEn({
       </p>
       <p>
         This policy applies to personal data processed when you browse the website, create an
-        account (with an email address or with Google), publish listings, exchange messages, enable
-        notifications or contact support. It does not cover external services you may be sent to,
-        such as Google during sign-in, or WhatsApp and Facebook when you share a listing: those
-        services apply their own rules.
+        account (with an email address or with Google), publish listings or services, exchange
+        messages, enable notifications or contact support. It does not cover external services you
+        may be sent to, such as Google during sign-in, or WhatsApp and Facebook when you share a
+        listing or contact a provider on WhatsApp: those services apply their own rules.
       </p>
 
       {title(1)}
@@ -840,12 +883,29 @@ export function PrivacyEn({
           device model, is not sent.
         </li>
       </ul>
+      <h3>Services you offer</h3>
+      <ul>
+        <li>
+          For each service you publish: title, category, description, city and optional district,
+          rate and pricing type, availability and any note, additional information, status (online,
+          paused, removed), publication and update dates, and photos (handled like listing photos,
+          without the original file&apos;s metadata).
+        </li>
+        <li>
+          Contact phone number and WhatsApp option, only if you fill them in on the service. This
+          number is never copied from your profile without your action, and it is public (
+          <a href="#partage">section 7</a>).
+        </li>
+      </ul>
       <h3>Messages and activity on the website</h3>
       <ul>
         <li>
-          Conversations with other members: texts, photos, related listing, sent and read dates.
+          Conversations with other members: texts, photos, related listing or service, sent and read
+          dates.
         </li>
-        <li>Listings saved as favourites, profiles you follow and members you block.</li>
+        <li>
+          Listings and services saved as favourites, profiles you follow and members you block.
+        </li>
         <li>
           Reports you make (reason and optional details) and support requests (subject, message and
           exchanges with the team).
@@ -856,8 +916,13 @@ export function PrivacyEn({
           number of views (last 90 days, 300 listings at most).
         </li>
         <li>
-          Moderation decisions about you: listing removal, warning, suspension, and any note from
-          the team.
+          Service views: when you are signed in and open another member&apos;s service, a view is
+          recorded (only one per member and per service, with its date). The provider only sees the
+          total number of views of each of their services, never who viewed it.
+        </li>
+        <li>
+          Moderation decisions about you: listing or service removal, warning, suspension, and any
+          note from the team.
         </li>
       </ul>
       <h3>Push notifications</h3>
@@ -895,8 +960,8 @@ export function PrivacyEn({
       {title(2)}
       <ul>
         <li>
-          <strong>You</strong>: sign-up form, profile, listings, messages, favourites, reports and
-          support requests.
+          <strong>You</strong>: sign-up form, profile, listings, services, messages, favourites,
+          reports and support requests.
         </li>
         <li>
           <strong>Google</strong>, only if you choose “Continue with Google” and accept it on
@@ -908,11 +973,11 @@ export function PrivacyEn({
         </li>
         <li>
           <strong>Other members</strong>: when a member writes to you, follows you, saves your
-          listing or reports you.
+          listing or service, views your service or reports you.
         </li>
         <li>
-          <strong>The {name} team</strong>: moderation decisions, “verified seller” badge and
-          support replies.
+          <strong>The {name} team</strong>: moderation decisions, “verified seller” badge, choice of
+          “featured” services and support replies.
         </li>
       </ul>
 
@@ -923,12 +988,14 @@ export function PrivacyEn({
           password or Google account, sessions and sign-in logs.
         </li>
         <li>
-          <strong>Showing your profile and listings</strong> to visitors and members: public
-          profile, listings and photos.
+          <strong>Showing your profile, listings and services</strong> to visitors and members:
+          public profile, listings, services and photos.
         </li>
         <li>
-          <strong>Running the marketplace</strong>: search, categories, favourites, follows,
-          messaging between buyers and sellers, listing sharing and notifications.
+          <strong>Running the marketplace and the Services space</strong>: search, categories,
+          favourites, follows, messaging between buyers and sellers or between clients and
+          providers, sharing of listings and services, notifications, and statistics for your
+          services (number of views and requests received) shown in “My services”.
         </li>
         <li>
           <strong>Suggesting listings you may like</strong>, based on what you view, your
@@ -938,8 +1005,9 @@ export function PrivacyEn({
         </li>
         <li>
           <strong>Preventing abuse and protecting members</strong>: automatic limits (number of
-          listings, messages or reports over a period), filtering of banned words, handling of
-          reports, blocking between members and sanctions (listing removal, warning, suspension).
+          listings, services, messages or reports over a period), filtering of banned words,
+          handling of reports, blocking between members and sanctions (listing or service removal,
+          warning, suspension).
         </li>
         <li>
           <strong>Helping you</strong>: answering your requests and appeals against listing
@@ -1072,10 +1140,18 @@ export function PrivacyEn({
         </li>
         <li>
           your listings for sale, reserved or sold: title, description, price, category, condition,
-          city, photos, publication date and a link to your profile.
+          city, photos, publication date and a link to your profile;
+        </li>
+        <li>
+          your online services: title, category, description, city and district, rate, availability,
+          additional information, photos, publication date, a link to your profile and, if you
+          filled them in, the service&apos;s phone number and WhatsApp button.
         </li>
       </ul>
-      <p>Your drafts and withdrawn listings are only visible to you and to the moderation team.</p>
+      <p>
+        Your drafts, withdrawn listings and paused or removed services are only visible to you and
+        to the moderation team.
+      </p>
       <h3>What other members involved can see</h3>
       <ul>
         <li>The messages of a conversation are visible to its participants.</li>
@@ -1087,17 +1163,17 @@ export function PrivacyEn({
       </ul>
       <h3>What is never shown</h3>
       <p>
-        Your email address, phone number, password, messages, favourites, viewing history,
-        notifications, blocks, reports and support requests are never shown publicly. The website
-        does not give your phone number to any member: you decide whether to share it in a
-        conversation.
+        Your email address, your profile phone number, password, messages, favourites, viewing
+        history, the services you viewed, notifications, blocks, reports and support requests are
+        never shown publicly. The website does not give your profile number to any member: you
+        decide whether to share it in a conversation or to show it on a service.
       </p>
       <h3>The {name} team</h3>
       <p>
         Administrators and moderators access the data needed for moderation and support: profiles,
-        listings (including withdrawn ones), reports and support requests. A private message is only
-        viewed if it has been reported, and each view is recorded in the moderation log.
-        Administrators can find an account from its email address or phone number to handle a
+        listings and services (including removed ones), reports and support requests. A private
+        message is only viewed if it has been reported, and each view is recorded in the moderation
+        log. Administrators can find an account from its email address or phone number to handle a
         request or an abuse.
       </p>
       <h3>Other disclosures</h3>
@@ -1121,6 +1197,12 @@ export function PrivacyEn({
           <strong>Listings and their photos</strong>: until you delete them; a sold or withdrawn
           listing stays in your account until you delete it. Photos are erased from storage with the
           listing.
+        </li>
+        <li>
+          <strong>Services and their photos</strong>: until you delete them from “My services”; a
+          paused or removed service stays in your account. The service&apos;s photos and views are
+          erased with it; a conversation started about a deleted service is kept, without a link to
+          the service.
         </li>
         <li>
           <strong>Viewing history</strong>: 90 days at most, limited to the last 300 listings; you
@@ -1198,6 +1280,9 @@ export function PrivacyEn({
         </li>
         <li>edit or delete your listings;</li>
         <li>
+          edit, pause or delete your services (<Link href={routes.myServices}>My services</Link>);
+        </li>
+        <li>
           delete your account (<a href="#suppression">section 11</a>).
         </li>
       </ul>
@@ -1222,10 +1307,10 @@ export function PrivacyEn({
       <ul>
         <li>your sign-in account (email address, password, link to your Google account);</li>
         <li>your profile, phone number and profile photo;</li>
-        <li>your listings and their photos;</li>
+        <li>your listings, your services and their photos;</li>
         <li>
           your favourites, follows, blocks, notifications, preferences, push notification
-          subscriptions, viewing history and support requests.
+          subscriptions, viewing history, service views and support requests.
         </li>
       </ul>
       <p>The following are kept, with no link to a profile:</p>

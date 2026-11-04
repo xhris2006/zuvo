@@ -50,6 +50,20 @@ l'authentification n'est pas encore disponible.
   retiré), modification, suppression, annonces similaires, partage.
 - **Recherche** : plein texte insensible aux accents, filtres (catégorie,
   ville, état, prix), tri, pagination.
+- **Services** (`/services`) : espace séparé de la marketplace, accessible par
+  la bascule « Marketplace / Services » en haut des pages de navigation.
+  Particuliers, professionnels, artisans et entreprises publient leurs
+  prestations (11 catégories administrables, jusqu'à 8 photos, ville et
+  quartier, tarif fixe / à partir de / à l'heure / à la journée / sur devis,
+  disponibilité, numéro et WhatsApp facultatifs et publics). Recherche plein
+  texte (titre, description, catégorie, prestataire) avec filtres, tri et
+  pagination ; fiche détaillée avec « Contacter le prestataire » (messagerie),
+  favoris, partage, signalement, autres services du prestataire et services
+  similaires. « Mes services » : modification, pause, suppression, vues
+  (une par membre connecté) et demandes reçues. Administration : retrait et
+  rétablissement, « À la une » choisi par l'équipe (sans paiement), catégories.
+  Badge « Professionnel vérifié » = le badge de vérification d'identité attribué
+  par l'équipe. Limites : 30 services par compte, 10 publications par jour.
 - **Social** : favoris (onglet du profil), abonnements, fil des profils suivis
   avec photos à faire défiler.
 - **Recommandations** : « Recommandé pour vous » sur l'accueil (d'après les
